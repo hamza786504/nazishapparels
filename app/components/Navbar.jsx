@@ -23,19 +23,19 @@ export default function Navbar() {
                 {/* Navigation Links (Desktop) */}
                 <nav className="hidden md:flex space-x-10">
                     <Link
-                        href="#"
+                        href="/collection/lawn"
                         className="text-on-surface-variant font-label-md hover:text-secondary transition-colors duration-300 nav-link-underline"
                     >
                         Lawn
                     </Link>
                     <Link
-                        href="#"
+                        href="/collection/chiffon"
                         className="text-on-surface-variant font-label-md hover:text-secondary transition-colors duration-300 nav-link-underline"
                     >
                         Chiffon
                     </Link>
                     <Link
-                        href="#"
+                        href="/collection/3pc"
                         className="text-on-surface-variant font-label-md hover:text-secondary transition-colors duration-300 nav-link-underline"
                     >
                         3pc
