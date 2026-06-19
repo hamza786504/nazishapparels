@@ -41,7 +41,7 @@ export default function Navbar() {
                         3pc
                     </Link>
                     <Link
-                        href="#"
+                        href="/collection/new-arrivals"
                         className="text-on-surface-variant font-label-md hover:text-secondary transition-colors duration-300 nav-link-underline"
                     >
                         New Arrivals
