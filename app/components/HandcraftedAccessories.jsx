@@ -78,7 +78,7 @@ export default function HandcraftedAccessories() {
                 </a>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-gutter">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-2 gap-y-4">
                 {accessories.map((item) => (
                     <ProductCard
                         key={item.id}

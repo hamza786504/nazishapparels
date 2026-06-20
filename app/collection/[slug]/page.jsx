@@ -119,18 +119,131 @@ const mockProducts = [
             'https://lh3.googleusercontent.com/aida-public/AB6AXuDaxl5u3hiELsutAT66gaLj6mFElJ1CjMIpoLir_6p_AJrPgy5d5iVH0Vb4BQdGnMBEU2DjjGgWZm5G7oZ2R0bom7DtrSfu1gN3HCUlpK181n9NwNvpK1y-FZulnm-Zdp2LpGSIi0RNc9DSyv6JlozN_Tg0cZdv4Nd6uiXTe_0bRRJHE68zBwgVUs2STDC_mcTBl5AtfoEz0iEDZq0CzI6YvXt4fTG5bIO1AR7JcajUUyl0bIRmbAeoLuCGI-NZFBb8M-LoelGfjELz',
     },
 ];
+const absoluteMin = 10000;
+const absoluteMax = 30000;
+
+function PriceRangeSlider({ min, max, initialMin, initialMax, onChange }) {
+    const [localMin, setLocalMin] = useState(initialMin);
+    const [localMax, setLocalMax] = useState(initialMax);
+
+    // Sync with parent resets (like Clear All)
+    useEffect(() => {
+        setLocalMin(initialMin);
+    }, [initialMin]);
+
+    useEffect(() => {
+        setLocalMax(initialMax);
+    }, [initialMax]);
+
+    const handleRelease = () => {
+        onChange(localMin, localMax);
+    };
+
+    return (
+        <div>
+            <div className="relative w-full h-6 flex items-center mt-6">
+                {/* Track Background */}
+                <div className="absolute left-0 right-0 h-1 bg-secondary/20 rounded-full" />
+                
+                {/* Active Track Highlight */}
+                <div 
+                    className="absolute h-1 bg-primary rounded-full" 
+                    style={{
+                        left: `${((localMin - min) / (max - min)) * 100}%`,
+                        right: `${100 - ((localMax - min) / (max - min)) * 100}%`
+                    }}
+                />
+
+                {/* Min Range Slider */}
+                <input 
+                    type="range"
+                    min={min}
+                    max={max}
+                    step="500"
+                    value={localMin}
+                    onChange={(e) => {
+                        const val = Math.min(Number(e.target.value), localMax - 500);
+                        setLocalMin(val);
+                    }}
+                    onMouseUp={handleRelease}
+                    onTouchEnd={handleRelease}
+                    className="absolute w-full h-1 pointer-events-none appearance-none bg-transparent [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-primary [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:pointer-events-auto"
+                    style={{ zIndex: localMin > max - 1000 ? 5 : 3 }}
+                />
+
+                {/* Max Range Slider */}
+                <input 
+                    type="range"
+                    min={min}
+                    max={max}
+                    step="500"
+                    value={localMax}
+                    onChange={(e) => {
+                        const val = Math.max(Number(e.target.value), localMin + 500);
+                        setLocalMax(val);
+                    }}
+                    onMouseUp={handleRelease}
+                    onTouchEnd={handleRelease}
+                    className="absolute w-full h-1 pointer-events-none appearance-none bg-transparent [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-primary [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:pointer-events-auto"
+                    style={{ zIndex: 4 }}
+                />
+            </div>
+
+            {/* Displaying Values */}
+            <div className="flex justify-between items-center text-label-sm font-semibold mt-4 text-on-surface-variant">
+                <span>PKR {localMin.toLocaleString()}</span>
+                <span>PKR {localMax.toLocaleString()}</span>
+            </div>
+        </div>
+    );
+}
 
 export default function CollectionPage() {
     const params = useParams();
     const slug = params.slug;
 
+    const [products, setProducts] = useState(mockProducts);
     const [sortBy, setSortBy] = useState('Featured');
     
     // Filtering States
     const [showFilters, setShowFilters] = useState(false);
     const [selectedFabrics, setSelectedFabrics] = useState([]);
     const [selectedSizes, setSelectedSizes] = useState([]);
-    const [selectedPriceRange, setSelectedPriceRange] = useState('All');
+    
+    // Price range min and max states (live filtering without Apply button)
+    const [minPrice, setMinPrice] = useState('');
+    const [maxPrice, setMaxPrice] = useState('');
+
+    // Simulate fetching data based on slug
+    useEffect(() => {
+        setProducts(mockProducts);
+    }, [slug]);
+
+    // Handle filter toggles
+    const toggleFabric = (fabric) => {
+        setSelectedFabrics((prev) =>
+            prev.includes(fabric) ? prev.filter((f) => f !== fabric) : [...prev, fabric]
+        );
+    };
+
+    const toggleSize = (size) => {
+        setSelectedSizes((prev) =>
+            prev.includes(size) ? prev.filter((s) => s !== size) : [...prev, size]
+        );
+    };
+
+    const minPriceVal = minPrice !== '' ? Number(minPrice) : absoluteMin;
+    const maxPriceVal = maxPrice !== '' ? Number(maxPrice) : absoluteMax;
+
+    const minActive = minPriceVal > absoluteMin;
+    const maxActive = maxPriceVal < absoluteMax;
+
+    // Calculate active filters count
+    const activeFiltersCount =
+        selectedFabrics.length +
+        selectedSizes.length +
+        (minActive ? 1 : 0) +
+        (maxActive ? 1 : 0);
 
     // Filter collection products by slug
     const collectionProducts = useMemo(() => {
@@ -148,25 +261,6 @@ export default function CollectionPage() {
         return mockProducts;
     }, [slug]);
 
-    // Handle filter toggles
-    const toggleFabric = (fabric) => {
-        setSelectedFabrics((prev) =>
-            prev.includes(fabric) ? prev.filter((f) => f !== fabric) : [...prev, fabric]
-        );
-    };
-
-    const toggleSize = (size) => {
-        setSelectedSizes((prev) =>
-            prev.includes(size) ? prev.filter((s) => s !== size) : [...prev, size]
-        );
-    };
-
-    // Calculate active filters count
-    const activeFiltersCount =
-        selectedFabrics.length +
-        selectedSizes.length +
-        (selectedPriceRange !== 'All' ? 1 : 0);
-
     // Apply filtering logic
     const filteredProducts = collectionProducts.filter((product) => {
         // Fabric/Variant filter
@@ -182,17 +276,18 @@ export default function CollectionPage() {
             return false;
         }
 
-        // Price range filter
-        if (selectedPriceRange !== 'All') {
-            const price = product.priceNumeric;
-            if (selectedPriceRange === 'Under 16k' && price >= 16000) return false;
-            if (selectedPriceRange === '16k-22k' && (price < 16000 || price > 22000)) return false;
-            if (selectedPriceRange === 'Over 22k' && price <= 22000) return false;
+        // Price range live filter (Min to Max)
+        const price = product.priceNumeric;
+        if (minActive && price < minPriceVal) {
+            return false;
+        }
+        if (maxActive && price > maxPriceVal) {
+            return false;
         }
 
         return true;
     });
-
+    
     // Apply sorting logic
     const sortedProducts = [...filteredProducts];
     if (sortBy === 'Price: Low to High') {
@@ -203,10 +298,81 @@ export default function CollectionPage() {
         sortedProducts.sort((a, b) => b.id - a.id);
     }
 
+    // Shared Filter Content Sidebar component
+    const FilterSidebarContent = () => (
+        <div className="flex flex-col space-y-8 bg-surface p-1 md:p-0">
+            {/* Fabric / Variant Filter */}
+            <div>
+                <h3 className="font-label-md text-label-md text-primary uppercase tracking-widest mb-4 font-semibold pb-2 border-b border-secondary/10">
+                    Fabric / Variant
+                </h3>
+                <div className="flex flex-col space-y-3">
+                    {['Lawn', 'Chiffon', 'Organza'].map((fabric) => {
+                        const isSelected = selectedFabrics.includes(fabric);
+                        return (
+                            <label key={fabric} className="flex items-center space-x-3 text-label-sm text-on-surface-variant cursor-pointer group">
+                                <input 
+                                    type="checkbox" 
+                                    checked={isSelected} 
+                                    onChange={() => toggleFabric(fabric)}
+                                    className="rounded border-secondary/30 text-primary focus:ring-primary w-4 h-4 cursor-pointer"
+                                />
+                                <span className="group-hover:text-secondary transition-colors font-medium">{fabric}</span>
+                            </label>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* Size Filter */}
+            <div>
+                <h3 className="font-label-md text-label-md text-primary uppercase tracking-widest mb-4 font-semibold pb-2 border-b border-secondary/10">
+                    Size
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                    {['S', 'M', 'L', 'XL'].map((size) => {
+                        const isSelected = selectedSizes.includes(size);
+                        return (
+                            <button
+                                key={size}
+                                onClick={() => toggleSize(size)}
+                                className={`w-10 h-10 flex items-center justify-center text-label-sm font-label-sm border rounded-sm transition-all font-semibold ${
+                                    isSelected
+                                        ? 'bg-primary text-white border-primary shadow-sm'
+                                        : 'border-secondary/20 text-on-surface-variant hover:border-secondary hover:text-secondary'
+                                }`}
+                            >
+                                {size}
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* Price Range Filter (Dual Range Slider) */}
+            <div>
+                <h3 className="font-label-md text-label-md text-primary uppercase tracking-widest mb-4 font-semibold pb-2 border-b border-secondary/10">
+                    Price Range
+                </h3>
+                
+                <PriceRangeSlider 
+                    min={absoluteMin}
+                    max={absoluteMax}
+                    initialMin={minPriceVal}
+                    initialMax={maxPriceVal}
+                    onChange={(newMin, newMax) => {
+                        setMinPrice(newMin);
+                        setMaxPrice(newMax);
+                    }}
+                />
+            </div>
+        </div>
+    );
+
     return (
         <>
             {/* Collection Header */}
-            <header className="relative w-full h-[300px] flex items-center justify-center overflow-hidden">
+            <header className="relative w-full h-[220px] md:h-[300px] flex items-center justify-center overflow-hidden">
                 <div className="absolute inset-0 z-0">
                     <img
                         alt="Collection Header Background"
@@ -216,48 +382,44 @@ export default function CollectionPage() {
                     <div className="absolute inset-0 bg-gradient-to-b from-transparent to-surface/80" />
                 </div>
                 <div className="relative z-10 text-center px-margin-mobile">
-                    <h1 className="font-display-lg text-display-lg text-primary mb-2 capitalize">
+                    <h1 className="font-display-lg text-[32px] md:text-display-lg text-primary mb-2 capitalize leading-tight">
                         {slug ? slug.replace(/-/g, ' ') : 'Collection'}
                     </h1>
-                    <p className="font-body-md text-body-md text-on-surface-variant max-w-xl mx-auto">
+                    <p className="font-body-md text-sm md:text-body-md text-on-surface-variant max-w-xl mx-auto leading-relaxed">
                         Discover our latest curation of exquisite Eastern attire, where traditional craftsmanship meets modern silhouettes.
                     </p>
                 </div>
             </header>
 
             {/* Filter & Sort Bar */}
-            <section className="sticky top-[88px] z-40 bg-surface/95 backdrop-blur-md border-b border-secondary/10">
-                <div className="max-w-container-max mx-auto px-margin-desktop py-4 flex flex-wrap items-center justify-between gap-4">
-                    <div className="flex items-center space-x-8">
+            <section className="sticky top-[73px] md:top-[88px] z-40 bg-surface/95 backdrop-blur-md border-b border-secondary/10">
+                <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-4 flex items-center justify-between gap-4">
+                    {/* Left: Mobile Filter trigger */}
+                    <div className="flex items-center">
                         <button 
                             onClick={() => setShowFilters(!showFilters)}
-                            className="flex items-center space-x-2 cursor-pointer group bg-transparent border-none outline-none"
+                            className="md:hidden flex items-center space-x-2 cursor-pointer bg-transparent border-none outline-none"
+                            aria-label="Toggle Filters"
                         >
-                            <span className={`material-symbols-outlined transition-colors ${showFilters ? 'text-secondary' : 'text-on-surface-variant group-hover:text-secondary'}`}>
+                            <span className="material-symbols-outlined text-on-surface-variant !text-[24px]">
                                 tune
                             </span>
-                            <span className={`font-label-md text-label-md uppercase tracking-widest transition-colors ${showFilters ? 'text-secondary font-bold' : 'text-on-surface-variant group-hover:text-secondary'}`}>
+                            <span className="font-label-md text-label-md uppercase tracking-widest text-on-surface-variant font-bold">
                                 Filters {activeFiltersCount > 0 && `(${activeFiltersCount})`}
                             </span>
                         </button>
-                        <div className="hidden lg:flex items-center space-x-6">
-                            <button onClick={() => { setShowFilters(true); }} className="font-label-md text-label-md text-on-surface-variant hover:text-secondary transition-colors">
-                                Fabric
-                            </button>
-                            <button onClick={() => { setShowFilters(true); }} className="font-label-md text-label-md text-on-surface-variant hover:text-secondary transition-colors">
-                                Size
-                            </button>
-                            <button onClick={() => { setShowFilters(true); }} className="font-label-md text-label-md text-on-surface-variant hover:text-secondary transition-colors">
-                                Price
-                            </button>
-                        </div>
+                        <span className="hidden md:inline font-label-md text-label-md text-on-surface-variant/80 uppercase tracking-widest">
+                            Shop The Collection
+                        </span>
                     </div>
+
+                    {/* Right: Sort options & Product Count */}
                     <div className="flex items-center space-x-4">
-                        <span className="font-label-md text-label-md text-on-surface-variant/60 uppercase">
+                        <span className="font-label-md text-[13px] md:text-label-md text-on-surface-variant/60 uppercase">
                             Sort By:
                         </span>
                         <select
-                            className="bg-transparent border-none focus:ring-0 font-label-md text-label-md text-primary cursor-pointer pr-8"
+                            className="bg-transparent border-none focus:ring-0 font-label-md text-[13px] md:text-label-md text-primary cursor-pointer pr-6 py-0 focus:outline-none"
                             value={sortBy}
                             onChange={(e) => setSortBy(e.target.value)}
                         >
@@ -267,113 +429,106 @@ export default function CollectionPage() {
                             <option>Price: High to Low</option>
                         </select>
                         <div className="h-6 w-[1px] bg-secondary/20" />
-                        <p className="font-label-sm text-label-sm text-on-surface-variant">
-                            Showing {sortedProducts.length} of {mockProducts.length} Products
+                        <p className="font-label-sm text-[12px] md:text-label-sm text-on-surface-variant whitespace-nowrap">
+                            Showing {sortedProducts.length} of {collectionProducts.length}
                         </p>
                     </div>
                 </div>
             </section>
 
-            {/* Collapsible Filters Dashboard */}
+            {/* Mobile Filter Drawer Overlay */}
             {showFilters && (
-                <section className="bg-surface-container-low border-b border-secondary/10 px-margin-desktop py-8 transition-all duration-300">
-                    <div className="max-w-container-max mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
-                        {/* Fabric / Variant Filter */}
-                        <div>
-                            <h3 className="font-label-md text-label-md text-primary uppercase tracking-widest mb-4">Fabric / Variant</h3>
-                            <div className="flex flex-wrap gap-2">
-                                {['Lawn', 'Chiffon', 'Organza'].map((fabric) => {
-                                    const isSelected = selectedFabrics.includes(fabric);
-                                    return (
-                                        <button
-                                            key={fabric}
-                                            onClick={() => toggleFabric(fabric)}
-                                            className={`px-4 py-2 text-label-sm font-label-sm border rounded-sm transition-all ${
-                                                isSelected
-                                                    ? 'bg-primary text-white border-primary'
-                                                    : 'border-secondary/20 text-on-surface-variant hover:border-secondary'
-                                            }`}
-                                        >
-                                            {fabric}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
+                <div 
+                    className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm transition-opacity duration-300 md:hidden"
+                    onClick={() => setShowFilters(false)}
+                />
+            )}
 
-                        {/* Size Filter */}
-                        <div>
-                            <h3 className="font-label-md text-label-md text-primary uppercase tracking-widest mb-4">Size</h3>
-                            <div className="flex flex-wrap gap-2">
-                                {['S', 'M', 'L', 'XL'].map((size) => {
-                                    const isSelected = selectedSizes.includes(size);
-                                    return (
-                                        <button
-                                            key={size}
-                                            onClick={() => toggleSize(size)}
-                                            className={`w-10 h-10 flex items-center justify-center text-label-sm font-label-sm border rounded-sm transition-all ${
-                                                isSelected
-                                                    ? 'bg-primary text-white border-primary'
-                                                    : 'border-secondary/20 text-on-surface-variant hover:border-secondary'
-                                            }`}
-                                        >
-                                            {size}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
-
-                        {/* Price Range Filter */}
-                        <div>
-                            <h3 className="font-label-md text-label-md text-primary uppercase tracking-widest mb-4">Price Range</h3>
-                            <div className="flex flex-wrap gap-2">
-                                {[
-                                    { label: 'All Prices', value: 'All' },
-                                    { label: 'Under PKR 16,000', value: 'Under 16k' },
-                                    { label: 'PKR 16,000 - 22,000', value: '16k-22k' },
-                                    { label: 'Over PKR 22,000', value: 'Over 22k' },
-                                ].map((range) => {
-                                    const isSelected = selectedPriceRange === range.value;
-                                    return (
-                                        <button
-                                            key={range.value}
-                                            onClick={() => setSelectedPriceRange(range.value)}
-                                            className={`px-4 py-2 text-label-sm font-label-sm border rounded-sm transition-all ${
-                                                isSelected
-                                                    ? 'bg-primary text-white border-primary'
-                                                    : 'border-secondary/20 text-on-surface-variant hover:border-secondary'
-                                            }`}
-                                        >
-                                            {range.label}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
+            {/* Mobile Filter Drawer (Slides from left) */}
+            <div className={`fixed top-0 left-0 bottom-0 z-55 w-[80%] max-w-[360px] bg-surface shadow-2xl p-6 transition-transform duration-300 ease-in-out transform md:hidden ${showFilters ? 'translate-x-0' : '-translate-x-full'}`}>
+                <div className="flex items-center justify-between border-b border-secondary/25 pb-4 mb-6">
+                    <span className="text-headline-sm font-headline-md text-primary uppercase tracking-wider font-bold">Filters</span>
+                    <button 
+                        onClick={() => setShowFilters(false)} 
+                        className="text-primary hover:text-secondary focus:outline-none flex items-center justify-center bg-transparent border-none"
+                        aria-label="Close Filters"
+                    >
+                        <span className="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+                <div className="overflow-y-auto max-h-[calc(100vh-140px)] pr-2">
+                    <FilterSidebarContent />
+                </div>
+                {/* Reset button inside Drawer */}
+                {activeFiltersCount > 0 && (
+                    <div className="absolute bottom-0 left-0 right-0 p-6 bg-surface border-t border-secondary/15">
+                        <button
+                            onClick={() => {
+                                setSelectedFabrics([]);
+                                setSelectedSizes([]);
+                                setMinPrice('');
+                                setMaxPrice('');
+                                setShowFilters(false);
+                            }}
+                            className="w-full bg-primary text-white py-3 text-label-md uppercase tracking-wider hover:bg-primary-container font-semibold"
+                        >
+                            Reset Filters ({activeFiltersCount})
+                        </button>
                     </div>
+                )}
+            </div>
 
-                    {/* Active Filters & Reset */}
+            {/* Two-Column Responsive E-Commerce Layout */}
+            <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-stack-md md:py-stack-lg flex flex-col md:flex-row gap-10">
+                
+                {/* 1. Left Sidebar: Persistent on Desktop, hidden on Mobile */}
+                <aside className="hidden md:block w-64 lg:w-72 flex-shrink-0 border-r border-secondary/10 pr-8">
+                    <FilterSidebarContent />
                     {activeFiltersCount > 0 && (
-                        <div className="max-w-container-max mx-auto mt-8 pt-6 border-t border-secondary/10 flex flex-wrap items-center justify-between gap-4">
+                        <button
+                            onClick={() => {
+                                setSelectedFabrics([]);
+                                setSelectedSizes([]);
+                                setMinPrice('');
+                                setMaxPrice('');
+                            }}
+                            className="mt-6 w-full text-center text-label-sm uppercase tracking-widest text-secondary hover:text-primary transition-colors font-bold border border-secondary/20 py-2.5 rounded-sm hover:border-secondary"
+                        >
+                            Clear All ({activeFiltersCount})
+                        </button>
+                    )}
+                </aside>
+
+                {/* 2. Main content area: Active Filters Row & Product Grid */}
+                <main className="flex-grow">
+                    
+                    {/* Active Filters Row */}
+                    {activeFiltersCount > 0 && (
+                        <div className="mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-secondary/10 pb-4">
                             <div className="flex flex-wrap items-center gap-2">
                                 <span className="text-label-sm font-label-sm text-on-surface-variant/60 mr-2">Active Filters:</span>
                                 {selectedFabrics.map((fabric) => (
-                                    <span key={fabric} className="inline-flex items-center gap-1.5 bg-white px-3 py-1 text-label-sm font-medium border border-secondary/15 rounded-sm">
+                                    <span key={fabric} className="inline-flex items-center gap-1.5 bg-surface-container px-3 py-1 text-label-sm font-medium border border-secondary/15 rounded-sm">
                                         {fabric}
-                                        <button onClick={() => toggleFabric(fabric)} className="hover:text-error transition-colors font-bold text-[11px] leading-none ml-1">✕</button>
+                                        <button onClick={() => toggleFabric(fabric)} className="hover:text-error transition-colors font-bold text-[11px] leading-none ml-1 bg-transparent border-none">✕</button>
                                     </span>
                                 ))}
                                 {selectedSizes.map((size) => (
-                                    <span key={size} className="inline-flex items-center gap-1.5 bg-white px-3 py-1 text-label-sm font-medium border border-secondary/15 rounded-sm">
+                                    <span key={size} className="inline-flex items-center gap-1.5 bg-surface-container px-3 py-1 text-label-sm font-medium border border-secondary/15 rounded-sm">
                                         Size: {size}
-                                        <button onClick={() => toggleSize(size)} className="hover:text-error transition-colors font-bold text-[11px] leading-none ml-1">✕</button>
+                                        <button onClick={() => toggleSize(size)} className="hover:text-error transition-colors font-bold text-[11px] leading-none ml-1 bg-transparent border-none">✕</button>
                                     </span>
                                 ))}
-                                {selectedPriceRange !== 'All' && (
-                                    <span className="inline-flex items-center gap-1.5 bg-white px-3 py-1 text-label-sm font-medium border border-secondary/15 rounded-sm">
-                                        {selectedPriceRange === 'Under 16k' ? 'Under 16k' : selectedPriceRange === '16k-22k' ? '16k - 22k' : 'Over 22k'}
-                                        <button onClick={() => setSelectedPriceRange('All')} className="hover:text-error transition-colors font-bold text-[11px] leading-none ml-1">✕</button>
+                                {minPrice && (
+                                    <span className="inline-flex items-center gap-1.5 bg-surface-container px-3 py-1 text-label-sm font-medium border border-secondary/15 rounded-sm">
+                                        Min: PKR {parseInt(minPrice).toLocaleString()}
+                                        <button onClick={() => setMinPrice('')} className="hover:text-error transition-colors font-bold text-[11px] leading-none ml-1 bg-transparent border-none">✕</button>
+                                    </span>
+                                )}
+                                {maxPrice && (
+                                    <span className="inline-flex items-center gap-1.5 bg-surface-container px-3 py-1 text-label-sm font-medium border border-secondary/15 rounded-sm">
+                                        Max: PKR {parseInt(maxPrice).toLocaleString()}
+                                        <button onClick={() => setMaxPrice('')} className="hover:text-error transition-colors font-bold text-[11px] leading-none ml-1 bg-transparent border-none">✕</button>
                                     </span>
                                 )}
                             </div>
@@ -381,7 +536,8 @@ export default function CollectionPage() {
                                 onClick={() => {
                                     setSelectedFabrics([]);
                                     setSelectedSizes([]);
-                                    setSelectedPriceRange('All');
+                                    setMinPrice('');
+                                    setMaxPrice('');
                                 }}
                                 className="text-label-md font-label-md text-secondary hover:underline bg-transparent border-none cursor-pointer"
                             >
@@ -389,69 +545,68 @@ export default function CollectionPage() {
                             </button>
                         </div>
                     )}
-                </section>
-            )}
 
-            {/* Product Grid */}
-            <main className="max-w-container-max mx-auto px-margin-desktop py-stack-lg">
-                {sortedProducts.length === 0 ? (
-                    <div className="text-center py-20">
-                        <span className="material-symbols-outlined text-outline text-5xl mb-4">
-                            info
-                        </span>
-                        <h3 className="font-headline-sm text-headline-sm text-primary mb-2">No Products Found</h3>
-                        <p className="font-body-md text-body-md text-on-surface-variant max-w-sm mx-auto mb-6">
-                            No products match your selected filters. Try removing some filters to see all available items.
-                        </p>
-                        <button
-                            onClick={() => {
-                                setSelectedFabrics([]);
-                                setSelectedSizes([]);
-                                setSelectedPriceRange('All');
-                            }}
-                            className="bg-primary text-white font-label-md px-8 py-3 uppercase tracking-wider hover:bg-primary-container transition-all"
-                        >
-                            Reset Filters
-                        </button>
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-gutter gap-y-stack-md animate-fade-in-up">
-                        {sortedProducts.map((product) => (
-                            <ProductCard
-                                key={product.id}
-                                title={product.title}
-                                price={product.price}
-                                image={product.primaryImage}
-                                type={product.type}
-                                sizes={product.sizes}
-                            />
-                        ))}
-                    </div>
-                )}
+                    {/* Products Grid */}
+                    {sortedProducts.length === 0 ? (
+                        <div className="text-center py-20 bg-surface-container-lowest border border-secondary/10 rounded-sm">
+                            <span className="material-symbols-outlined text-outline text-5xl mb-4">
+                                info
+                            </span>
+                            <h3 className="font-headline-sm text-headline-sm text-primary mb-2">No Products Found</h3>
+                            <p className="font-body-md text-body-md text-on-surface-variant max-w-sm mx-auto mb-6">
+                                No products match your selected filters. Try adjusting your filter parameters or resetting.
+                            </p>
+                            <button
+                                onClick={() => {
+                                    setSelectedFabrics([]);
+                                    setSelectedSizes([]);
+                                    setMinPrice('');
+                                    setMaxPrice('');
+                                }}
+                                className="bg-primary text-white font-label-md px-8 py-3 uppercase tracking-wider hover:bg-primary-container transition-all"
+                            >
+                                Reset Filters
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 animate-fade-in-up gap-y-4">
+                            {sortedProducts.map((product) => (
+                                <ProductCard
+                                    key={product.id}
+                                    title={product.title}
+                                    price={product.price}
+                                    image={product.primaryImage}
+                                    type={product.type}
+                                    sizes={product.sizes}
+                                />
+                            ))}
+                        </div>
+                    )}
 
-                {/* Pagination */}
-                {sortedProducts.length > 0 && (
-                    <nav className="flex justify-center items-center mt-stack-lg space-x-2">
-                        <button className="w-10 h-10 flex items-center justify-center border border-secondary/20 text-on-surface-variant hover:border-secondary hover:text-secondary transition-all">
-                            <span className="material-symbols-outlined">chevron_left</span>
-                        </button>
-                        <button className="w-10 h-10 flex items-center justify-center bg-secondary text-white font-label-md">1</button>
-                        <button className="w-10 h-10 flex items-center justify-center border border-secondary/20 text-on-surface-variant hover:border-secondary hover:text-secondary transition-all font-label-md">
-                            2
-                        </button>
-                        <button className="w-10 h-10 flex items-center justify-center border border-secondary/20 text-on-surface-variant hover:border-secondary hover:text-secondary transition-all font-label-md">
-                            3
-                        </button>
-                        <span className="px-2 text-on-surface-variant">...</span>
-                        <button className="w-10 h-10 flex items-center justify-center border border-secondary/20 text-on-surface-variant hover:border-secondary hover:text-secondary transition-all font-label-md">
-                            12
-                        </button>
-                        <button className="w-10 h-10 flex items-center justify-center border border-secondary/20 text-on-surface-variant hover:border-secondary hover:text-secondary transition-all">
-                            <span className="material-symbols-outlined">chevron_right</span>
-                        </button>
-                    </nav>
-                )}
-            </main>
+                    {/* Pagination */}
+                    {sortedProducts.length > 0 && (
+                        <nav className="flex justify-center items-center mt-stack-lg space-x-2">
+                            <button className="w-10 h-10 flex items-center justify-center border border-secondary/20 text-on-surface-variant hover:border-secondary hover:text-secondary transition-all">
+                                <span className="material-symbols-outlined">chevron_left</span>
+                            </button>
+                            <button className="w-10 h-10 flex items-center justify-center bg-secondary text-white font-label-md">1</button>
+                            <button className="w-10 h-10 flex items-center justify-center border border-secondary/20 text-on-surface-variant hover:border-secondary hover:text-secondary transition-all font-label-md">
+                                2
+                            </button>
+                            <button className="w-10 h-10 flex items-center justify-center border border-secondary/20 text-on-surface-variant hover:border-secondary hover:text-secondary transition-all font-label-md">
+                                3
+                            </button>
+                            <span className="px-2 text-on-surface-variant">...</span>
+                            <button className="w-10 h-10 flex items-center justify-center border border-secondary/20 text-on-surface-variant hover:border-secondary hover:text-secondary transition-all font-label-md">
+                                12
+                            </button>
+                            <button className="w-10 h-10 flex items-center justify-center border border-secondary/20 text-on-surface-variant hover:border-secondary hover:text-secondary transition-all">
+                                <span className="material-symbols-outlined">chevron_right</span>
+                            </button>
+                        </nav>
+                    )}
+                </main>
+            </div>
         </>
     );
 }

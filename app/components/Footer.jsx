@@ -26,34 +26,34 @@ export default function Footer() {
                     <ul className="space-y-4">
                         <li>
                             <Link
-                                href="#"
+                                href="/collection/new-arrival"
                                 className="text-on-surface-variant font-label-sm hover:text-secondary transition-all"
                             >
-                                Lawn Collection
+                                New Arrival
                             </Link>
                         </li>
                         <li>
                             <Link
-                                href="#"
+                                href="/collection/chiffon"
                                 className="text-on-surface-variant font-label-sm hover:text-secondary transition-all"
                             >
-                                Chiffon Series
+                                Chiffon
                             </Link>
                         </li>
                         <li>
                             <Link
-                                href="#"
+                                href="/collection/3pc"
                                 className="text-on-surface-variant font-label-sm hover:text-secondary transition-all"
                             >
-                                Embroidered 3pc
+                                3 PC
                             </Link>
                         </li>
                         <li>
                             <Link
-                                href="#"
+                                href="/collection/lawn"
                                 className="text-on-surface-variant font-label-sm hover:text-secondary transition-all"
                             >
-                                Limited Edition
+                                Lawn
                             </Link>
                         </li>
                     </ul>

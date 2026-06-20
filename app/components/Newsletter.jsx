@@ -1,7 +1,7 @@
 // components/Newsletter.jsx
 export default function Newsletter() {
     return (
-        <section className="py-stack-lg bg-primary text-white relative overflow-hidden">
+        <section className="py-20 bg-primary text-white relative overflow-hidden">
             <div className="relative z-10 max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop text-center">
                 <span className="material-symbols-outlined text-white text-4xl mb-6">
                     mail_outline
