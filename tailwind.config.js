@@ -8,6 +8,7 @@ module.exports = {
     theme: {
         extend: {
             colors: {
+                // From the second config
                 'on-surface-variant': '#404946',
                 'surface-bright': '#fcf9f8',
                 'on-primary-container': '#75a799',
@@ -55,6 +56,55 @@ module.exports = {
                 'primary-fixed': '#b9edde',
                 'primary-fixed-dim': '#9ed1c3',
                 'on-tertiary-fixed-variant': '#474744',
+                
+                // From the first config (dashboard)
+                'on-surface': '#181c1f',
+                'on-surface-variant': '#3e4944',
+                'on-error-container': '#93000a',
+                'primary-fixed': '#92f6cf',
+                'on-error': '#ffffff',
+                'surface-container-lowest': '#ffffff',
+                'surface-container-highest': '#dfe3e7',
+                'inverse-surface': '#2d3134',
+                'background': '#f6fafe',
+                'on-primary': '#ffffff',
+                'primary-container': '#008060',
+                'on-tertiary': '#ffffff',
+                'error': '#ba1a1a',
+                'inverse-primary': '#75d9b3',
+                'tertiary-fixed-dim': '#ffb4ab',
+                'surface-container': '#ebeef3',
+                'surface-container-high': '#e5e8ed',
+                'secondary-fixed-dim': '#c6c6c7',
+                'surface-dim': '#d7dadf',
+                'surface-tint': '#006c50',
+                'on-secondary-fixed': '#1a1c1d',
+                'on-background': '#181c1f',
+                'on-secondary': '#ffffff',
+                'surface-container-low': '#f1f4f8',
+                'on-tertiary-fixed-variant': '#7a2e28',
+                'surface': '#f6fafe',
+                'secondary': '#5d5e60',
+                'inverse-on-surface': '#eef1f5',
+                'on-secondary-fixed-variant': '#454748',
+                'secondary-fixed': '#e2e2e3',
+                'outline-variant': '#bdc9c2',
+                'surface-variant': '#dfe3e7',
+                'tertiary-container': '#ae564d',
+                'on-primary-container': '#d6ffeb',
+                'primary': '#00654b',
+                'on-primary-fixed': '#002116',
+                'on-tertiary-container': '#fff2f1',
+                'primary-fixed-dim': '#75d9b3',
+                'on-primary-fixed-variant': '#00513c',
+                'tertiary-fixed': '#ffdad6',
+                'secondary-container': '#dfdfe0',
+                'tertiary': '#8f3f37',
+                'surface-bright': '#f6fafe',
+                'outline': '#6e7a73',
+                'error-container': '#ffdad6',
+                'on-tertiary-fixed': '#3f0303',
+                'on-secondary-container': '#616364'
             },
             borderRadius: {
                 DEFAULT: '0.125rem',
@@ -63,6 +113,7 @@ module.exports = {
                 full: '0.75rem',
             },
             spacing: {
+                // From the second config
                 'margin-mobile': '20px',
                 unit: '8px',
                 'container-max': '1280px',
@@ -71,8 +122,20 @@ module.exports = {
                 'stack-lg': '40px',
                 gutter: '24px',
                 'stack-md': '24px',
+                
+                // From the first config (dashboard)
+                'gutter': '16px',
+                'margin-desktop': '32px',
+                'xl': '32px',
+                'md': '16px',
+                'base': '4px',
+                'sm': '8px',
+                'xs': '4px',
+                'margin-mobile': '16px',
+                'lg': '24px'
             },
             fontFamily: {
+                // From the second config
                 'display-lg-mobile': ['var(--font-eb-garamond)'],
                 'body-lg': ['var(--font-manrope)'],
                 'headline-sm': ['var(--font-eb-garamond)'],
@@ -81,8 +144,19 @@ module.exports = {
                 'headline-md': ['var(--font-eb-garamond)'],
                 'display-lg': ['var(--font-eb-garamond)'],
                 'body-md': ['var(--font-manrope)'],
+                
+                // From the first config (dashboard)
+                'body-md': ['Inter'],
+                'headline-md': ['Inter'],
+                'headline-lg-mobile': ['Inter'],
+                'display-lg': ['Inter'],
+                'body-lg': ['Inter'],
+                'body-sm': ['Inter'],
+                'label-md': ['Inter'],
+                'headline-lg': ['Inter']
             },
             fontSize: {
+                // From the second config
                 'display-lg-mobile': [
                     '40px',
                     { lineHeight: '48px', letterSpacing: '-0.01em', fontWeight: '500' },
@@ -100,6 +174,16 @@ module.exports = {
                     { lineHeight: '72px', letterSpacing: '-0.02em', fontWeight: '500' },
                 ],
                 'body-md': ['16px', { lineHeight: '24px', fontWeight: '400' }],
+                
+                // From the first config (dashboard)
+                'body-md': ['14px', { lineHeight: '20px', fontWeight: '400' }],
+                'headline-md': ['20px', { lineHeight: '28px', fontWeight: '600' }],
+                'headline-lg-mobile': ['20px', { lineHeight: '28px', fontWeight: '600' }],
+                'display-lg': ['30px', { lineHeight: '38px', letterSpacing: '-0.02em', fontWeight: '700' }],
+                'body-lg': ['16px', { lineHeight: '24px', fontWeight: '400' }],
+                'body-sm': ['13px', { lineHeight: '18px', fontWeight: '400' }],
+                'label-md': ['12px', { lineHeight: '16px', fontWeight: '600' }],
+                'headline-lg': ['24px', { lineHeight: '32px', letterSpacing: '-0.01em', fontWeight: '600' }]
             },
         },
     },

@@ -1,8 +1,6 @@
-// app/layout.js
-import Footer from './components/Footer';
-import Navbar from './components/Navbar';
 import './globals.css';
-import { EB_Garamond, Manrope } from 'next/font/google';
+import { EB_Garamond, Manrope, Jost } from 'next/font/google';
+import { CartProvider } from './store/cartContext';
 
 const ebGaramond = EB_Garamond({
     subsets: ['latin'],
@@ -18,6 +16,13 @@ const manrope = Manrope({
     display: 'swap',
 });
 
+const jost = Jost({
+    subsets: ['latin'],
+    weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
+    variable: '--font-jost',
+    display: 'swap',
+});
+
 export const metadata = {
     title: 'Nazishapparels | Heritage Meets Luxury',
     description: 'Premium Eastern wear blending centuries-old traditions with modern silhouettes.',
@@ -25,10 +30,11 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }) {
+
     return (
         <html
             lang="en"
-            className={`scroll-smooth ${ebGaramond.variable} ${manrope.variable}`}
+            className={`scroll-smooth ${ebGaramond.variable} ${manrope.variable} ${jost.variable}`}
             suppressHydrationWarning
         >
             <head>
@@ -38,9 +44,9 @@ export default function RootLayout({ children }) {
                 />
             </head>
             <body className="bg-surface text-on-surface selection:bg-secondary-container selection:text-on-secondary-container">
-                <Navbar />
-                {children}
-                <Footer />
+                <CartProvider>
+                    {children}
+                </CartProvider>
             </body>
         </html>
     );
