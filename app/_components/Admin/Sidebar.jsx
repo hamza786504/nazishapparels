@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { 
   MdHome, 
   MdShoppingCart, 
@@ -11,7 +11,8 @@ import {
   MdGroup, 
   MdRateReview, 
   MdAnalytics, 
-  MdSettings 
+  MdSettings,
+  MdNotifications,
 } from 'react-icons/md';
 
 const navItems = [
@@ -22,6 +23,7 @@ const navItems = [
   { href: '/admin/customers', label: 'Customers', icon: MdGroup },
   { href: '/admin/reviews', label: 'Reviews', icon: MdRateReview },
   { href: '/admin/analytics', label: 'Analytics', icon: MdAnalytics },
+  { href: '/admin/notifications', label: 'Notifications', icon: MdNotifications },
   { href: '/admin/settings', label: 'Settings', icon: MdSettings, isSettings: true },
 ];
 

@@ -5,6 +5,7 @@ import Product from '@/models/Product';
 import Customer from '@/models/Customer';
 import Review from '@/models/Review';
 import Order from '@/models/Order';
+import Menu from '@/models/Menu';
 import productsJson from '@/app/data/products.json';
 
 export async function POST() {
@@ -17,6 +18,7 @@ export async function POST() {
     await Customer.deleteMany({});
     await Review.deleteMany({});
     await Order.deleteMany({});
+    await Menu.deleteMany({});
 
     // 2. Create Collections matching the frontend fabrics
     const collectionsData = [
@@ -132,10 +134,69 @@ export async function POST() {
     }
     await Order.insertMany(ordersData);
 
+    // 7. Seed demo Menus
+    const mainMenuItems = [
+      {
+        id: 'menu-home',
+        title: 'Home',
+        url: '/',
+        resourceType: 'page',
+        resourceId: 'home',
+        children: [],
+      },
+      {
+        id: 'menu-shop',
+        title: 'Shop',
+        url: '/collection/all',
+        resourceType: 'page',
+        resourceId: 'all',
+        children: [
+          { id: 'menu-lawn',    title: 'Lawn',    url: '/collection/lawn',    resourceType: 'collection', resourceId: '', children: [] },
+          { id: 'menu-chiffon', title: 'Chiffon', url: '/collection/chiffon', resourceType: 'collection', resourceId: '', children: [] },
+          { id: 'menu-organza', title: 'Organza', url: '/collection/organza', resourceType: 'collection', resourceId: '', children: [] },
+        ],
+      },
+      {
+        id: 'menu-new-arrivals',
+        title: 'New Arrivals',
+        url: '/collection/new-arrivals',
+        resourceType: 'collection',
+        resourceId: '',
+        children: [],
+      },
+      {
+        id: 'menu-about',
+        title: 'About',
+        url: '/about',
+        resourceType: 'page',
+        resourceId: 'about',
+        children: [],
+      },
+      {
+        id: 'menu-contact',
+        title: 'Contact',
+        url: '/contact',
+        resourceType: 'page',
+        resourceId: 'contact',
+        children: [],
+      },
+    ];
+
+    const footerMenuItems = [
+      { id: 'f-privacy', title: 'Privacy Policy', url: '/pages/privacy', resourceType: 'page', resourceId: 'privacy', children: [] },
+      { id: 'f-terms',   title: 'Terms of Service', url: '/pages/terms', resourceType: 'page', resourceId: 'terms', children: [] },
+      { id: 'f-contact', title: 'Contact Us',    url: '/contact',       resourceType: 'page', resourceId: 'contact', children: [] },
+    ];
+
+    await Menu.insertMany([
+      { name: 'Main Menu',    handle: 'main-menu',    position: 'header', items: mainMenuItems },
+      { name: 'Footer Links', handle: 'footer-links', position: 'footer', items: footerMenuItems },
+    ]);
+
     return NextResponse.json(
       {
         success: true,
-        message: `Database seeded successfully with ${collections.length} collections, ${products.length} products from products.json, 5 customers, 4 reviews, and 25 orders.`,
+        message: `Database seeded successfully with ${collections.length} collections, ${products.length} products from products.json, 5 customers, 4 reviews, 25 orders, and 2 demo menus.`,
       },
       { status: 200 }
     );

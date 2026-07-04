@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Order from '@/models/Order';
 import Customer from '@/models/Customer';
+import Notification from '@/models/Notification';
 
 export async function GET(request) {
   try {
@@ -85,6 +86,28 @@ export async function POST(request) {
         },
         { upsert: true, new: true }
       );
+    }
+
+    // Create admin notification for the new order
+    try {
+      const customerName = body.customer?.name || 'A customer';
+      const orderTotal = body.total ? `Rs. ${Number(body.total).toLocaleString()}` : '';
+      await Notification.create({
+        type: 'new_order',
+        title: `New order ${order.orderId}`,
+        message: `${customerName} placed an order${orderTotal ? ` for ${orderTotal}` : ''}.`,
+        link: `/admin/orders/order-details?id=${order._id}`,
+        metadata: {
+          orderId: order.orderId,
+          customerName: body.customer?.name,
+          customerEmail: body.customer?.email,
+          total: body.total,
+          items: body.items,
+        },
+      });
+    } catch (notifErr) {
+      // Non-critical — log but don't fail the order creation
+      console.error('Failed to create order notification:', notifErr);
     }
 
     return NextResponse.json({ success: true, order }, { status: 201 });
