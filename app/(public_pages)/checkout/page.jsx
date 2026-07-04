@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useCart } from '../../store/cartContext';
-import Link from 'next/link';
 
 const countries = [
     'Country/Region',
