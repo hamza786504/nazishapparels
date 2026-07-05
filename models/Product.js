@@ -87,14 +87,13 @@ const ProductSchema = new mongoose.Schema(
 );
 
 // Auto-generate slug from title if not provided
-ProductSchema.pre('save', function (next) {
+ProductSchema.pre('save', function () {
   if (!this.slug && this.title) {
     this.slug = this.title
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)+/g, '');
   }
-  next();
 });
 
 export default mongoose.models.Product || mongoose.model('Product', ProductSchema);

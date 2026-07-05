@@ -6,7 +6,7 @@ import Image from 'next/image';
 import Button from '../../../_components/Admin/Button';
 import Sidebar from '../../../_components/Admin/Sidebar';
 import Header from '../../../_components/Admin/Header';
-import { Edit2, Trash2, Search, Filter, Plus, ArrowUpDown, ChevronLeft, ChevronRight, Archive, Check } from 'lucide-react';
+import { Eye, Edit2, Trash2, Search, Filter, Plus, ArrowUpDown, ChevronLeft, ChevronRight, Archive, Check } from 'lucide-react';
 
 const ProductsPage = () => {
   const [products, setProducts] = useState([]);
@@ -309,13 +309,22 @@ const ProductsPage = () => {
                       <td className="p-4 text-body-md text-on-surface">{product.vendor || 'N/A'}</td>
                       <td className="p-4 text-right">
                         <div className="flex justify-end gap-2">
-                          <Link 
-                            href={`/admin/products/edit/${product._id}`} 
+                          <Link
+                            href={`/product/${product.slug}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-2 text-on-surface-variant hover:text-primary transition-colors"
+                            title="View on store"
+                          >
+                            <Eye size={16} />
+                          </Link>
+                          <Link
+                            href={`/admin/products/edit/${product._id}`}
                             className="p-2 text-on-surface-variant hover:text-primary transition-colors"
                           >
                             <Edit2 size={16} />
                           </Link>
-                          <button 
+                          <button
                             onClick={() => handleDelete(product._id)}
                             className="p-2 text-on-surface-variant hover:text-error transition-colors"
                           >

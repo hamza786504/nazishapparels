@@ -3,6 +3,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   Store,
   Mail,
@@ -296,10 +297,12 @@ const GeneralSettingsPage = () => {
 
                 {/* Map Preview */}
                 <div className="mb-6 rounded-lg overflow-hidden border border-[#C9CCCF] h-40 bg-surface-container-low relative group">
-                  <img
-                    className="w-full h-full object-cover"
+                  <Image
+                    className="object-cover"
                     src="https://lh3.googleusercontent.com/aida-public/AB6AXuBiIZG5oiwS9D2FfIHyqOf9g7jHrI98RCuLExOsotuGuG33IU34bip09n0vKja5sLCEn-UM6a_JAqoNGeVQBzLVlwD_ETNgs37kr4Oemg-OjjXXwP8pqVOHWQW7WRXXp7JVjgGykuwSesEX7eT6wJDsjBM_A1CdRRuPnk8uu7q7KHygaxiaYcmeo5Q7rZQVH1XC_4ncMxQ4QHS0-FQsgFizr7VFIGwROHLqmTHUUIYl9HyOb5HkQlYGKux-IxWJUtuH-44QADhjfLWQ"
-                    alt="Store location map"
+                    alt="Map showing the store's physical location"
+                    fill
+                    sizes="(max-width: 768px) 100vw, 320px"
                   />
                   <div className="absolute inset-0 bg-primary/10 group-hover:bg-transparent transition-colors pointer-events-none"></div>
                 </div>

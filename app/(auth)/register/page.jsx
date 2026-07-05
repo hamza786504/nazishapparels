@@ -104,11 +104,14 @@ export default function RegisterPage() {
                     {/* Left Side: Editorial Image */}
                     <div className="hidden lg:block lg:col-span-6 relative overflow-hidden h-[600px]">
                         <div className="absolute inset-0 z-10 bg-primary/10" />
-                        <img
+                        <Image
                             ref={imageRef}
-                            className="w-full h-full object-cover"
-                            alt="A high-fashion editorial portrait of a model wearing a sophisticated, deep emerald silk Eastern garment with intricate gold embroidery"
+                            className="object-cover"
+                            alt="Model wearing a deep emerald silk Eastern garment with gold embroidery"
                             src="https://lh3.googleusercontent.com/aida-public/AB6AXuDG39NaoKBaI7IHWqMle0pe08FdX5qhhV75mPlXW0G9EtqP92P1JpxZNF10zCpUcBspGpo3s14iYExV7SExxivYulVtJEmcou9AQM1RZJH0Zp17JG9NE6zH0Q9MGSGA3ydfzOxUDsvyqzhwxa3DYPH3iBOtt2iDWumDmR-Zdhm7MWOP-2hTvOP5idD-PK8HPjZgRy6b5elIl5darnVayg98C4lLdSB56fQTvtd_WjK5PBUtgJFuojUDrE45wUZfZSqgReuObl8oaRc2"
+                            fill
+                            sizes="(max-width: 1024px) 0px, 50vw"
+                            priority
                         />
                         <div className="absolute bottom-margin-desktop left-margin-desktop z-20 text-white max-w-[400px]">
                             <h2 className="font-display-lg text-headline-md text-white mb-stack-sm leading-tight">

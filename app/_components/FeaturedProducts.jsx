@@ -9,26 +9,26 @@ const PLACEHOLDER_IMAGE = 'https://images.unsplash.com/photo-1505740420928-5e560
 export default function FeaturedProducts() {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [grocerySlug, setGrocerySlug] = useState('');
+    const [lawnSlug, setLawnSlug] = useState('');
 
     useEffect(() => {
-        const fetchGroceryProducts = async () => {
+        const fetchLawnProducts = async () => {
             try {
-                // First, get all collections to find the grocery collection ID
+                // First, get all collections to find the Lawn collection ID
                 const collectionsRes = await fetch('/api/collections');
                 const collectionsData = await collectionsRes.json();
-                
+
                 if (collectionsData.success) {
-                    const groceryCollection = collectionsData.collections.find(
-                        (c) => c.name.toLowerCase().includes('grocery')
+                    const lawnCollection = collectionsData.collections.find(
+                        (c) => c.slug === 'lawn'
                     );
-                    
-                    if (groceryCollection) {
-                        setGrocerySlug(groceryCollection.slug);
-                        
+
+                    if (lawnCollection) {
+                        setLawnSlug(lawnCollection.slug);
+
                         // Fetch products for this collection
                         const productsRes = await fetch(
-                            `/api/products?collectionId=${groceryCollection._id}`
+                            `/api/products?collectionId=${lawnCollection._id}`
                         );
                         const productsData = await productsRes.json();
                         
@@ -52,7 +52,7 @@ export default function FeaturedProducts() {
             }
         };
 
-        fetchGroceryProducts();
+        fetchLawnProducts();
     }, []);
 
     if (loading) {
@@ -79,15 +79,15 @@ export default function FeaturedProducts() {
         <section className="py-stack-lg px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
             <div className="flex justify-between items-end mb-16">
                 <div>
-                    <h2 className="text-headline-lg font-headline-lg font-bold">Grosery</h2>
+                    <h2 className="text-headline-lg font-headline-lg font-bold">Lawn</h2>
                     <p className="text-label-md font-label-md text-on-surface-variant tracking-widest uppercase mt-2">
                         Season&apos;s Most Desired
                     </p>
                 </div>
-                {grocerySlug && (
+                {lawnSlug && (
                     <Link
                         className="hidden md:block text-label-md font-label-md text-secondary hover:underline underline-offset-8"
-                        href={`/collection/${grocerySlug}`}
+                        href={`/collection/${lawnSlug}`}
                     >
                         VIEW ALL PRODUCTS
                     </Link>
@@ -99,25 +99,28 @@ export default function FeaturedProducts() {
                     products.map((product) => (
                         <ProductCard
                             key={product._id}
+                            id={product._id}
                             title={product.title}
                             price={product.price}
+                            priceNumeric={product.price}
                             image={product.displayImage}
                             slug={product.slug}
                             type={product.productType}
                             sizes={product.sizes}
+                            colors={product.colors}
                         />
                     ))
                 ) : (
                     <p className="col-span-full text-center text-on-surface-variant">
-                        No grocery products found
+                        No Lawn products found
                     </p>
                 )}
             </div>
 
-            {products.length > 0 && grocerySlug && (
+            {products.length > 0 && lawnSlug && (
                 <div className="mt-16 flex justify-center">
                     <Link
-                        href={`/collection/${grocerySlug}`}
+                        href={`/collection/${lawnSlug}`}
                         className="border border-primary text-primary px-6 py-4 font-label-md uppercase tracking-[0.2em] hover:bg-primary hover:text-white transition-all duration-300 text-sm group "
                     >
                         SHOW MORE

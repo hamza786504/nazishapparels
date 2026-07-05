@@ -31,6 +31,7 @@ export async function GET() {
       fulfillmentBreakdown,
       productStatusBreakdown,
       lowStockProducts,
+      lowStockCount,
       totalInventoryAgg,
       revenueByStatus,
       recentCustomers,
@@ -42,6 +43,8 @@ export async function GET() {
       monthlyRevenueAgg,
       // Products grouped by collection (replaces N+1 queries)
       productsByCollection,
+      // Top products by inventory value
+      topProductsByValue,
     ] = await Promise.all([
       // Core counts
       Product.countDocuments({}),
@@ -86,12 +89,15 @@ export async function GET() {
         { $group: { _id: '$status', count: { $sum: 1 } } }
       ]),
 
-      // Low stock products
+      // Low stock products (preview list, capped)
       Product.find({ inventory: { $lte: 5 } })
         .select('title inventory slug')
         .sort({ inventory: 1 })
         .limit(5)
         .lean(),
+
+      // Exact low stock count (uncapped, for metric display)
+      Product.countDocuments({ inventory: { $lte: 5 } }),
 
       // Total inventory + avg price
       Product.aggregate([
@@ -165,6 +171,17 @@ export async function GET() {
       // ─── Products by Collection: SINGLE aggregation replacing N+1 queries ───
       Product.aggregate([
         { $group: { _id: '$collectionId', count: { $sum: 1 } } }
+      ]),
+
+      // ─── Top products by inventory value (price * inventory) ───
+      // Note: Orders only store an item *count*, not per-product line items,
+      // so real per-product units-sold/revenue can't be computed from order data.
+      // Inventory value is the closest real, honest ranking we can derive.
+      Product.aggregate([
+        { $addFields: { inventoryValue: { $multiply: ['$price', '$inventory'] } } },
+        { $sort: { inventoryValue: -1 } },
+        { $limit: 5 },
+        { $project: { title: 1, slug: 1, images: 1, SKU: 1, productType: 1, price: 1, inventory: 1, status: 1, inventoryValue: 1 } }
       ]),
     ]);
 
@@ -267,6 +284,8 @@ export async function GET() {
         count: item.count
       })),
       lowStockProducts,
+      lowStockCount,
+      topProductsByValue,
       recentCustomers,
       recentOrders,
       categoryData,

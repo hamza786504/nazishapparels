@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useCart } from '../../store/cartContext';
 // Custom Hook for scroll header behavior
 const useScrollHeader = () => {
@@ -65,12 +66,13 @@ const CartItemCard = ({ item, onRemove, onQuantityChange, onSizeChange }) => {
       {/* Desktop: Single Row Layout */}
       <div className="hidden md:flex items-center gap-6 p-4">
         {/* Product Image */}
-        <div className="w-24 h-24 flex-shrink-0 overflow-hidden">
-          <img
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+        <div className="relative w-24 h-24 flex-shrink-0 overflow-hidden">
+          <Image
+            className="object-cover transition-transform duration-700 group-hover:scale-105"
             src={item.image}
-            alt={item.imageAlt}
-            loading="lazy"
+            alt={item.imageAlt || item.title || item.name || ''}
+            fill
+            sizes="96px"
           />
         </div>
         
@@ -131,12 +133,13 @@ const CartItemCard = ({ item, onRemove, onQuantityChange, onSizeChange }) => {
       <div className="md:hidden p-4 space-y-3">
         <div className="flex gap-4">
           {/* Product Image */}
-          <div className="w-20 h-24 flex-shrink-0 overflow-hidden">
-            <img
-              className="w-full h-full object-cover"
+          <div className="relative w-20 h-24 flex-shrink-0 overflow-hidden">
+            <Image
+              className="object-cover"
               src={item.image}
-              alt={item.imageAlt || item.title || item.name}
-              loading="lazy"
+              alt={item.imageAlt || item.title || item.name || ''}
+              fill
+              sizes="80px"
             />
           </div>
           

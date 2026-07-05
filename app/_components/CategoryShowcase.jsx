@@ -60,12 +60,16 @@ export default function CategoryShowcase() {
                     {filteredProducts.map((product) => (
                         <ProductCard
                             key={product.id}
+                            id={product.id}
                             title={product.title}
                             price={product.price}
+                            priceNumeric={product.priceNumeric}
                             image={product.image || product.primaryImage}
                             slug={product.slug}
                             type={product.type}
                             sizes={product.sizes}
+                            colors={product.colors}
+                            isAccessory={product.isAccessory}
                         />
                     ))}
                 </div>

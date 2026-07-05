@@ -127,7 +127,7 @@ const EditCollectionPage = () => {
       <Sidebar />
       <Header />
 
-      <main className="ml-[240px] mt-16 p-lg bg-surface-container-lowest min-h-screen text-on-surface">
+      <main className="p-lg bg-surface-container-lowest min-h-screen text-on-surface">
         <div className="max-w-3xl mx-auto">
           {/* Header */}
           <div className="mb-6">

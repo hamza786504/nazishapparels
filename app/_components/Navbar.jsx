@@ -2,9 +2,10 @@
 'use client';
 import Image from 'next/image';
 import CartDrawer from './CartDrawer';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useCart } from '../store/cartContext';
+import { useNavMenu } from '../store/navMenuContext';
 import {
   Menu,
   X,
@@ -14,52 +15,15 @@ import {
   ChevronUp,
 } from 'lucide-react';
 
-// ── Static fallback nav (shown if DB fetch fails or no header menu assigned) ──
-const FALLBACK_ITEMS = [
-  { id: 'f-home',    title: 'Home',         url: '/',                        children: [] },
-  { id: 'f-shop',    title: 'Shop',         url: '/collection/all',          children: [] },
-  { id: 'f-new',     title: 'New Arrivals', url: '/collection/new-arrivals', children: [] },
-  { id: 'f-about',   title: 'About',        url: '/about',                   children: [] },
-  { id: 'f-contact', title: 'Contact',      url: '/contact',                 children: [] },
-];
-
 export default function Navbar() {
   const { cartItems, updateQuantity, removeFromCart } = useCart();
   const [isCartOpen, setIsCartOpen]       = useState(false);
   const [menuOpen, setMenuOpen]           = useState(false);
   const [activeSubmenu, setActiveSubmenu] = useState(null);
 
-  // ── Dynamic header menu from DB (by position, not hardcoded handle) ─────────
-  const [navItems, setNavItems]     = useState(FALLBACK_ITEMS);
-  const [menuLoaded, setMenuLoaded] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function fetchHeaderMenu() {
-      try {
-        // Fetch whichever menu the admin has set to position='header'
-        const res = await fetch('/api/menus?position=header', {
-          next: { revalidate: 60 }, // revalidate every 60s in production
-        });
-        if (!res.ok) throw new Error('No header menu');
-        const data = await res.json();
-
-        // data.menu is the single header-position menu (full items included)
-        const items = data.menu?.items;
-        if (!cancelled && items && items.length > 0) {
-          setNavItems(items);
-        }
-      } catch {
-        // Keep fallback silently
-      } finally {
-        if (!cancelled) setMenuLoaded(true);
-      }
-    }
-
-    fetchHeaderMenu();
-    return () => { cancelled = true; };
-  }, []);
+  // ── Dynamic header menu, fetched server-side and provided via context ──────
+  // so it's present in the very first render (no client-side fetch/flash).
+  const navItems = useNavMenu();
 
   const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 

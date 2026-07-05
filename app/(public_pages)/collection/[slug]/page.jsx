@@ -2,12 +2,28 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'next/navigation';
+import Image from 'next/image';
 import ProductCard from '../../../_components/ProductCard';
-import mockProducts from '../../../data/products.json';
-const absoluteMin = 10000;
-const absoluteMax = 30000;
 
-function PriceRangeSlider({ min, max, initialMin, initialMax, onChange }) {
+// Maps a raw product document from the API into the shape this page renders/filters on.
+function mapProduct(p) {
+    return {
+        id: p._id,
+        _id: p._id,
+        title: p.title,
+        slug: p.slug,
+        price: `PKR ${Number(p.price).toLocaleString()}`,
+        priceNumeric: p.price,
+        type: p.productType || 'Product',
+        fabric: p.productType || 'Product',
+        sizes: p.sizes || [],
+        colors: p.colors || [],
+        createdAt: p.createdAt,
+        primaryImage: p.images?.[0] || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&h=700&fit=crop',
+    };
+}
+
+function PriceRangeSlider({ min, max, step = 500, initialMin, initialMax, onChange }) {
     const [localMin, setLocalMin] = useState(initialMin);
     const [localMax, setLocalMax] = useState(initialMax);
 
@@ -44,16 +60,16 @@ function PriceRangeSlider({ min, max, initialMin, initialMax, onChange }) {
                     type="range"
                     min={min}
                     max={max}
-                    step="500"
+                    step={step}
                     value={localMin}
                     onChange={(e) => {
-                        const val = Math.min(Number(e.target.value), localMax - 500);
+                        const val = Math.min(Number(e.target.value), localMax - step);
                         setLocalMin(val);
                     }}
                     onMouseUp={handleRelease}
                     onTouchEnd={handleRelease}
                     className="absolute w-full h-1 pointer-events-none appearance-none bg-transparent [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-primary [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:pointer-events-auto"
-                    style={{ zIndex: localMin > max - 1000 ? 5 : 3 }}
+                    style={{ zIndex: localMin > max - step * 2 ? 5 : 3 }}
                 />
 
                 {/* Max Range Slider */}
@@ -61,10 +77,10 @@ function PriceRangeSlider({ min, max, initialMin, initialMax, onChange }) {
                     type="range"
                     min={min}
                     max={max}
-                    step="500"
+                    step={step}
                     value={localMax}
                     onChange={(e) => {
-                        const val = Math.max(Number(e.target.value), localMin + 500);
+                        const val = Math.max(Number(e.target.value), localMin + step);
                         setLocalMax(val);
                     }}
                     onMouseUp={handleRelease}
@@ -109,50 +125,48 @@ export default function CollectionPage() {
         setCurrentPage(1);
     }, [selectedFabrics, selectedSizes, minPrice, maxPrice, sortBy]);
 
-    // Fetch collection data based on slug (dynamic from database or fallback to mock)
+    // Fetch collection data based on slug, always live from the database.
+    // 'new-arrivals' is a virtual collection: the latest active products across
+    // the whole catalog, rather than products tied to one Collection document.
     useEffect(() => {
         const fetchCollectionData = async () => {
             setLoading(true);
             try {
-                const collectionsRes = await fetch('/api/collections');
-                const collectionsData = await collectionsRes.json();
-                
-                let foundCollection = null;
-                if (collectionsData.success) {
-                    foundCollection = collectionsData.collections.find(
-                        (c) => c.slug === slug || c.name.toLowerCase() === slug.toLowerCase()
-                    );
+                const normalizedSlug = slug ? slug.toLowerCase() : '';
+                let mapped = [];
+
+                if (normalizedSlug === 'new-arrivals') {
+                    const productsRes = await fetch('/api/products?status=active');
+                    const productsData = await productsRes.json();
+                    mapped = productsData.success ? productsData.products.map(mapProduct) : [];
+                } else {
+                    const collectionsRes = await fetch('/api/collections');
+                    const collectionsData = await collectionsRes.json();
+
+                    const foundCollection = collectionsData.success
+                        ? collectionsData.collections.find(
+                            (c) => c.slug === normalizedSlug || c.name.toLowerCase() === normalizedSlug
+                        )
+                        : null;
+
+                    if (foundCollection) {
+                        const productsRes = await fetch(`/api/products?collectionId=${foundCollection._id}&status=active`);
+                        const productsData = await productsRes.json();
+                        mapped = productsData.success ? productsData.products.map(mapProduct) : [];
+                    }
                 }
 
-                if (foundCollection) {
-                    // Fetch all products for the collection (or implement server-side pagination)
-                    const productsRes = await fetch(`/api/products?collectionId=${foundCollection._id}`);
-                    const productsData = await productsRes.json();
-                    
-                    if (productsData.success) {
-                        const mapped = productsData.products.map((p) => ({
-                            id: p._id,
-                            _id: p._id,
-                            title: p.title,
-                            slug: p.slug,
-                            price: `PKR ${Number(p.price).toLocaleString()}`,
-                            priceNumeric: p.price,
-                            type: p.productType || 'Product',
-                            fabric: p.productType || 'Cotton',
-                            sizes: p.sizes || [],
-                            primaryImage: p.images?.[0] || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&h=700&fit=crop',
-                        }));
-                        setProducts(mapped);
-                    } else {
-                        setProducts([]);
-                    }
-                } else {
-                    setProducts(mockProducts);
-                }
+                setProducts(mapped);
             } catch (error) {
                 console.error('Error fetching collection data:', error);
-                setProducts(mockProducts);
+                setProducts([]);
             } finally {
+                // Filter options depend on the newly loaded product set, so clear any
+                // selections from a previous collection that may no longer apply.
+                setSelectedFabrics([]);
+                setSelectedSizes([]);
+                setMinPrice('');
+                setMaxPrice('');
                 setLoading(false);
             }
         };
@@ -175,11 +189,38 @@ export default function CollectionPage() {
         );
     };
 
-    const minPriceVal = minPrice !== '' ? Number(minPrice) : absoluteMin;
-    const maxPriceVal = maxPrice !== '' ? Number(maxPrice) : absoluteMax;
+    // Products for this collection view, straight from the database (no client-side re-filtering by slug)
+    const collectionProducts = products;
 
-    const minActive = minPriceVal > absoluteMin;
-    const maxActive = maxPriceVal < absoluteMax;
+    // ── Filter option lists, derived from the actual products loaded for this view ──
+    const availableFabrics = useMemo(() => {
+        const set = new Set(collectionProducts.map((p) => p.fabric).filter(Boolean));
+        return Array.from(set).sort();
+    }, [collectionProducts]);
+
+    const availableSizes = useMemo(() => {
+        const set = new Set();
+        collectionProducts.forEach((p) => (p.sizes || []).forEach((s) => set.add(s)));
+        return Array.from(set).sort();
+    }, [collectionProducts]);
+
+    const priceBounds = useMemo(() => {
+        const prices = collectionProducts
+            .map((p) => p.priceNumeric)
+            .filter((p) => typeof p === 'number' && !isNaN(p));
+        if (prices.length === 0) return { min: 0, max: 1000 };
+        const min = Math.min(...prices);
+        const max = Math.max(...prices);
+        return { min, max: max > min ? max : min + 1000 };
+    }, [collectionProducts]);
+
+    const priceStep = Math.max(1, Math.round((priceBounds.max - priceBounds.min) / 40));
+
+    const minPriceVal = minPrice !== '' ? Number(minPrice) : priceBounds.min;
+    const maxPriceVal = maxPrice !== '' ? Number(maxPrice) : priceBounds.max;
+
+    const minActive = minPriceVal > priceBounds.min;
+    const maxActive = maxPriceVal < priceBounds.max;
 
     // Calculate active filters count
     const activeFiltersCount =
@@ -187,24 +228,6 @@ export default function CollectionPage() {
         selectedSizes.length +
         (minActive ? 1 : 0) +
         (maxActive ? 1 : 0);
-
-    // Filter collection products by slug
-    const collectionProducts = useMemo(() => {
-        const normalizedSlug = slug ? slug.toLowerCase() : '';
-        const isMock = products.length > 0 && typeof products[0].id === 'number';
-        if (isMock) {
-            if (normalizedSlug === 'lawn') {
-                return products.filter((p) => p.fabric === 'Lawn');
-            }
-            if (normalizedSlug === 'chiffon') {
-                return products.filter((p) => p.fabric === 'Chiffon');
-            }
-            if (normalizedSlug === 'organza') {
-                return products.filter((p) => p.fabric === 'Organza');
-            }
-        }
-        return products;
-    }, [products, slug]);
 
     // Apply filtering logic
     const filteredProducts = collectionProducts.filter((product) => {
@@ -233,14 +256,15 @@ export default function CollectionPage() {
         return true;
     });
 
-    // Apply sorting logic
+    // Apply sorting logic. 'Featured' (the default) and 'Newest' both show the
+    // most recently added products first, so a collection always leads with its latest arrivals.
     const sortedProducts = [...filteredProducts];
     if (sortBy === 'Price: Low to High') {
         sortedProducts.sort((a, b) => a.priceNumeric - b.priceNumeric);
     } else if (sortBy === 'Price: High to Low') {
         sortedProducts.sort((a, b) => b.priceNumeric - a.priceNumeric);
-    } else if (sortBy === 'Newest') {
-        sortedProducts.sort((a, b) => b.id - a.id);
+    } else {
+        sortedProducts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     }
 
     // Calculate pagination
@@ -319,69 +343,76 @@ export default function CollectionPage() {
     const FilterSidebarContent = () => (
         <div className="flex flex-col space-y-8 bg-surface p-1 md:p-0">
             {/* Fabric / Variant Filter */}
-            <div>
-                <h3 className="font-label-md text-label-md text-primary uppercase tracking-widest mb-4 font-semibold pb-2 border-b border-secondary/10">
-                    Fabric / Variant
-                </h3>
-                <div className="flex flex-col space-y-3">
-                    {['Lawn', 'Chiffon', 'Organza'].map((fabric) => {
-                        const isSelected = selectedFabrics.includes(fabric);
-                        return (
-                            <label key={fabric} className="flex items-center space-x-3 text-label-sm text-on-surface-variant cursor-pointer group">
-                                <input
-                                    type="checkbox"
-                                    checked={isSelected}
-                                    onChange={() => toggleFabric(fabric)}
-                                    className="rounded border-secondary/30 text-primary focus:ring-primary w-4 h-4 cursor-pointer"
-                                />
-                                <span className="group-hover:text-secondary transition-colors font-medium">{fabric}</span>
-                            </label>
-                        );
-                    })}
+            {availableFabrics.length > 0 && (
+                <div>
+                    <h3 className="font-label-md text-label-md text-primary uppercase tracking-widest mb-4 font-semibold pb-2 border-b border-secondary/10">
+                        Fabric / Variant
+                    </h3>
+                    <div className="flex flex-col space-y-3">
+                        {availableFabrics.map((fabric) => {
+                            const isSelected = selectedFabrics.includes(fabric);
+                            return (
+                                <label key={fabric} className="flex items-center space-x-3 text-label-sm text-on-surface-variant cursor-pointer group">
+                                    <input
+                                        type="checkbox"
+                                        checked={isSelected}
+                                        onChange={() => toggleFabric(fabric)}
+                                        className="rounded border-secondary/30 text-primary focus:ring-primary w-4 h-4 cursor-pointer"
+                                    />
+                                    <span className="group-hover:text-secondary transition-colors font-medium">{fabric}</span>
+                                </label>
+                            );
+                        })}
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* Size Filter */}
-            <div>
-                <h3 className="font-label-md text-label-md text-primary uppercase tracking-widest mb-4 font-semibold pb-2 border-b border-secondary/10">
-                    Size
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                    {['S', 'M', 'L', 'XL'].map((size) => {
-                        const isSelected = selectedSizes.includes(size);
-                        return (
-                            <button
-                                key={size}
-                                onClick={() => toggleSize(size)}
-                                className={`w-10 h-10 flex items-center justify-center text-label-sm font-label-sm border rounded-sm transition-all font-semibold ${isSelected
-                                        ? 'bg-primary text-white border-primary shadow-sm'
-                                        : 'border-secondary/20 text-on-surface-variant hover:border-secondary hover:text-secondary'
-                                    }`}
-                            >
-                                {size}
-                            </button>
-                        );
-                    })}
+            {availableSizes.length > 0 && (
+                <div>
+                    <h3 className="font-label-md text-label-md text-primary uppercase tracking-widest mb-4 font-semibold pb-2 border-b border-secondary/10">
+                        Size
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                        {availableSizes.map((size) => {
+                            const isSelected = selectedSizes.includes(size);
+                            return (
+                                <button
+                                    key={size}
+                                    onClick={() => toggleSize(size)}
+                                    className={`w-10 h-10 flex items-center justify-center text-label-sm font-label-sm border rounded-sm transition-all font-semibold ${isSelected
+                                            ? 'bg-primary text-white border-primary shadow-sm'
+                                            : 'border-secondary/20 text-on-surface-variant hover:border-secondary hover:text-secondary'
+                                        }`}
+                                >
+                                    {size}
+                                </button>
+                            );
+                        })}
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* Price Range Filter (Dual Range Slider) */}
-            <div>
-                <h3 className="font-label-md text-label-md text-primary uppercase tracking-widest mb-4 font-semibold pb-2 border-b border-secondary/10">
-                    Price Range
-                </h3>
+            {collectionProducts.length > 0 && (
+                <div>
+                    <h3 className="font-label-md text-label-md text-primary uppercase tracking-widest mb-4 font-semibold pb-2 border-b border-secondary/10">
+                        Price Range
+                    </h3>
 
-                <PriceRangeSlider
-                    min={absoluteMin}
-                    max={absoluteMax}
-                    initialMin={minPriceVal}
-                    initialMax={maxPriceVal}
-                    onChange={(newMin, newMax) => {
-                        setMinPrice(newMin);
-                        setMaxPrice(newMax);
-                    }}
-                />
-            </div>
+                    <PriceRangeSlider
+                        min={priceBounds.min}
+                        max={priceBounds.max}
+                        step={priceStep}
+                        initialMin={minPriceVal}
+                        initialMax={maxPriceVal}
+                        onChange={(newMin, newMax) => {
+                            setMinPrice(newMin);
+                            setMaxPrice(newMax);
+                        }}
+                    />
+                </div>
+            )}
         </div>
     );
 
@@ -403,10 +434,13 @@ export default function CollectionPage() {
             {/* Collection Header */}
             <header className="relative w-full h-[220px] md:h-[300px] flex items-center justify-center overflow-hidden">
                 <div className="absolute inset-0 z-0">
-                    <img
-                        alt="Collection Header Background"
-                        className="w-full h-full object-cover opacity-30 grayscale-[20%]"
+                    <Image
+                        alt=""
+                        className="object-cover opacity-30 grayscale-[20%]"
                         src="https://lh3.googleusercontent.com/aida-public/AB6AXuDg0YtbfPu0BLg_QDj8oN1HUo3GwLTnHmhOl9DwaiRpHXZW_HcrozwpjdSNavSQXCvCJH1h2Q6CBjhi1dwTgiwgFE8RUQ0YqJvaSaw3OcU1MXPxw1G5pYWcG2KKl15fAncZvR19aeTgU9d2OTyUm5MhmTBq9pmBt1ZgIOf7siIAsiyaKLUgdAHqcqICxlAgazZKDmipXP-LpAtXEKHF9sV-FC0-UMhFfDjsfd4raaVaHwYt7_KatUVijnauUXLhtGGiUGrG_jqhxxrg"
+                        fill
+                        sizes="100vw"
+                        priority
                     />
                     <div className="absolute inset-0 bg-gradient-to-b from-transparent to-surface/80" />
                 </div>
@@ -604,12 +638,15 @@ export default function CollectionPage() {
                             {paginatedProducts.map((product) => (
                                 <ProductCard
                                     key={product.id}
+                                    id={product.id}
                                     slug={product.slug}
                                     title={product.title}
                                     price={product.price}
+                                    priceNumeric={product.priceNumeric}
                                     image={product.primaryImage}
                                     type={product.type}
                                     sizes={product.sizes}
+                                    colors={product.colors}
                                 />
                             ))}
                         </div>

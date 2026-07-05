@@ -1,6 +1,8 @@
 import './globals.css';
 import { EB_Garamond, Manrope, Jost } from 'next/font/google';
 import { CartProvider } from './store/cartContext';
+import { NavMenuProvider } from './store/navMenuContext';
+import { getHeaderMenuItems } from '@/lib/getHeaderMenu';
 
 const ebGaramond = EB_Garamond({
     subsets: ['latin'],
@@ -23,13 +25,18 @@ const jost = Jost({
     display: 'swap',
 });
 
+// Revalidate periodically so header menu edits made in the admin panel
+// show up without requiring a full rebuild/redeploy.
+export const revalidate = 60;
+
 export const metadata = {
     title: 'Nazishapparels | Heritage Meets Luxury',
     description: 'Premium Eastern wear blending centuries-old traditions with modern silhouettes.',
     keywords: 'lawn, chiffon, 3pc, eastern wear, luxury fashion, Pakistan',
 };
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
+    const headerNavItems = await getHeaderMenuItems();
 
     return (
         <html
@@ -45,7 +52,9 @@ export default function RootLayout({ children }) {
             </head>
             <body className="bg-surface text-on-surface selection:bg-secondary-container selection:text-on-secondary-container">
                 <CartProvider>
-                    {children}
+                    <NavMenuProvider items={headerNavItems}>
+                        {children}
+                    </NavMenuProvider>
                 </CartProvider>
             </body>
         </html>

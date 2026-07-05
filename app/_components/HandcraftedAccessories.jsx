@@ -27,12 +27,16 @@ export default function HandcraftedAccessories() {
                 {accessories.map((item) => (
                     <ProductCard
                         key={item.id}
+                        id={item.id}
                         title={item.title}
                         price={item.price}
+                        priceNumeric={item.priceNumeric}
                         image={item.image || item.primaryImage}
                         slug={item.slug}
                         type={item.type}
                         sizes={item.sizes}
+                        colors={item.colors}
+                        isAccessory={item.isAccessory}
                     />
                 ))}
             </div>

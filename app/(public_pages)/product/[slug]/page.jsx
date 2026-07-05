@@ -1,5 +1,6 @@
 import dbConnect from '../../../../lib/db';
 import Product from '../../../../models/Product';
+import Collection from '../../../../models/Collection'; // registers the 'Collection' model so populate('collectionId') resolves
 import ProductPageClient from './ProductPageClient';
 import { notFound } from 'next/navigation';
 
@@ -31,7 +32,7 @@ export async function generateStaticParams() {
 async function getProduct(slug) {
   try {
     await dbConnect();
-    const product = await Product.findOne({ slug }).lean();
+    const product = await Product.findOne({ slug }).populate('collectionId', 'name slug').lean();
     if (!product) return null;
     
     // Safely serialize MongoDB ObjectIDs and Date objects to plain JSON for client props

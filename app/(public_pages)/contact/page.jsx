@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 const subjects = [
     'Order Inquiry',
@@ -116,10 +117,13 @@ export default function ContactPage() {
                 {/* Hero Section */}
                 <section className="relative max-h-[614px] h-full flex items-center justify-center overflow-hidden">
                     <div className="absolute inset-0 z-0">
-                        <img
-                            className="w-full h-full object-cover"
+                        <Image
+                            className="object-cover"
                             alt="Luxury boutique interior"
                             src="https://lh3.googleusercontent.com/aida-public/AB6AXuAfIKML1OXLUbGAoT3U5zg0Z2JDj4quhg7kkAXcTd9n4F1X_zFhKgcMn1dZhW6didVodIIOHeCTpww7l3SYgaOiuaTiq2sfxjolVidc2IalqujahETGX6nFrP1-xssgtfmSS2DbBXdJ1kJR59hRyqu024QRoUMPXxv4zeSCNBX_VbeO6BHfQgafFSwcr-oRZO12ThyrkTx8pqvB3Ri66y_YzzrB6cM30ujmTOTz9jL144ppr7Cq8aau3WFZrtYcafjYfq8ZkLldA3bK"
+                            fill
+                            sizes="100vw"
+                            priority
                         />
                         <div className="absolute inset-0 bg-primary/20" />
                         <div className="absolute inset-0 hero-gradient" />
@@ -297,10 +301,12 @@ export default function ContactPage() {
                             {/* Visual Representation of Location */}
                             <div className="relative h-64 md:h-80 w-full overflow-hidden border border-secondary/10 group">
                                 <div className="absolute inset-0 bg-surface-variant">
-                                    <img
-                                        className="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:scale-105 transition-soft"
-                                        alt="Karachi, Pakistan"
+                                    <Image
+                                        className="object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:scale-105 transition-soft"
+                                        alt="Map of Karachi, Pakistan, home of our global headquarters"
                                         src="https://lh3.googleusercontent.com/aida-public/AB6AXuCxibklL4eAD0Lp2LItXM1VaGOLOekOPOO2vTg69Dimk9UlW-fjgRlvShlBKNJT8DPy76rbh8YLVdVNLz8YI8ljoYmgnDwE2Ro-OkM4Vvnu67jp3Dgk-jwDyiAwjUXsLGCyApJuAR2yde6fQ4l4DRkN5fZZEJndD80vMrjELp_gn5_MaVjfmgVLGL42hb9yka7Pq7aGEs2aELfeGZhzOEZ0WBpj3AGlPqqs1QRG82GoO33CYdE7IS2h0F7RRghFfdz-boQcu63iDsp7"
+                                        fill
+                                        sizes="(max-width: 1024px) 100vw, 50vw"
                                     />
                                 </div>
                                 <div className="absolute inset-0 bg-gradient-to-t from-primary/60 to-transparent" />
@@ -334,11 +340,13 @@ export default function ContactPage() {
                                     className="group bg-white p-6 md:p-8 border border-secondary/5 hover:border-secondary/30 transition-soft scroll-reveal"
                                     style={{ transitionDelay: `${index * 100}ms` }}
                                 >
-                                    <div className="h-48 mb-8 overflow-hidden">
-                                        <img
-                                            className="w-full h-full object-cover group-hover:scale-110 transition-soft"
-                                            alt={boutique.city}
+                                    <div className="relative h-48 mb-8 overflow-hidden">
+                                        <Image
+                                            className="object-cover group-hover:scale-110 transition-soft"
+                                            alt={`${boutique.city} boutique storefront`}
                                             src={boutique.image}
+                                            fill
+                                            sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                                         />
                                     </div>
                                     <h4 className="font-headline-sm text-headline-sm text-primary mb-4">

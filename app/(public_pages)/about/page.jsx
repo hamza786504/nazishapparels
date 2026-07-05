@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Navbar from '../../_components/Navbar';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function AboutPage() {
     const [revealedElements, setRevealedElements] = useState(new Set());
@@ -137,10 +138,13 @@ export default function AboutPage() {
             <header className="relative min-h-screen flex items-center overflow-hidden">
                 {/* Background Image */}
                 <div className="absolute inset-0 z-0">
-                    <img
-                        alt="Premium editorial fashion photography"
-                        className="w-full h-full object-cover"
+                    <Image
+                        alt=""
+                        className="object-cover"
                         src="https://lh3.googleusercontent.com/aida-public/AB6AXuCx_eyR25uQlMCx1RPHcRrhUE61kr6upBUHv9c3xtAigBoZoWXqni8t5OHTfabIQDlQ_Wa-fCVY_Gj-qcpcPJh6pfqEPiD_WE1sa5iEAvRM40SiHHWSUY6AcrvqqwOlGnIBygcwx-BPs2TFIFNXNuKzAUpug15jsGMr6Pblk4WJRaod4tCHR1wbIp43DJAtYSRnD-o1y6yZV7sjPKlUkEUaK41a5o9MpkSXvmSxqfmv6Id3rV0usPn1Freq3h4PpoM4qela5-qp0GBn"
+                        fill
+                        sizes="100vw"
+                        priority
                     />
                     {/* Gradient Overlay for readability */}
                     <div className="absolute inset-0 bg-gradient-to-r from-surface/80 via-surface/40 to-transparent" />
@@ -183,18 +187,22 @@ export default function AboutPage() {
                             </div>
                         </div>
                         <div className="md:col-span-8 grid grid-cols-2 gap-gutter">
-                            <div className="aspect-square bg-surface-container-low overflow-hidden mt-12">
-                                <img
+                            <div className="relative aspect-square bg-surface-container-low overflow-hidden mt-12">
+                                <Image
                                     alt="Luxury Eastern suit detail"
-                                    className="w-full h-full object-cover"
+                                    className="object-cover"
                                     src="https://lh3.googleusercontent.com/aida/AP1WRLvgDjwCVEdNUtgZy0gaw26nnP9z6-XUSdHHGRd4LKJzYMq-7iJNEMPa5rVTN-lVx1c0H6nn2Ms1TQQuAo35oMzQ77NINcSqNndldmHDz_ejlwrT9FBGC98RbxqKh2bDCGU8h1sqHHz6wuKvJCJiVoP5-RJ2IzwhdgJXNkNijxJ2zn5qiIdN7D2prnZYRE6h422Db_Fr-0Nc03wS0VU8X569HGEqUSIn3T8Bp3Vcb59DyZ_EsLu9vdr7OYfT"
+                                    fill
+                                    sizes="(max-width: 768px) 50vw, 33vw"
                                 />
                             </div>
-                            <div className="aspect-[3/4] bg-surface-container overflow-hidden">
-                                <img
+                            <div className="relative aspect-[3/4] bg-surface-container overflow-hidden">
+                                <Image
                                     alt="Close-up of artisan craftsmanship"
-                                    className="w-full h-full object-cover"
+                                    className="object-cover"
                                     src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQElh5LImfqG-IjqxuarhZRFTWxpvmFSxOWs0112PlpUo6Aw6TDpqs1_ZlN33P1idsW3OcKpvkqX_vUsfTZ89RLQ0weJJlGIxhoaHizfxtVhMtaug3qZO1sC3DEYOpkaCiheXX0RdS661EZ57csWyxQGuL_ys_jPrtFO_rJrX0OJBsQq4hca8XpAEh0XfXJsk0WXLSVHzGhc4O3_HTXs6dxlScEEVZvY4U6OJGE45s0yHBx4uDNFDiC37--3xzWVxZaMkeKKZwE97W"
+                                    fill
+                                    sizes="(max-width: 768px) 50vw, 33vw"
                                 />
                             </div>
                         </div>
@@ -256,10 +264,12 @@ export default function AboutPage() {
                                 className={`group cursor-default ${index === 1 ? 'pt-stack-sm' : ''}`}
                             >
                                 <div className="aspect-[3/4] bg-surface-variant overflow-hidden mb-4 relative">
-                                    <img
+                                    <Image
                                         alt={`Portrait of ${artisan.name}`}
-                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                        className="object-cover transition-transform duration-700 group-hover:scale-105"
                                         src={artisan.image}
+                                        fill
+                                        sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
                                     />
                                 </div>
                                 <h4 className="font-label-md text-label-md text-primary">

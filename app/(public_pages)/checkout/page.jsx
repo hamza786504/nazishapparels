@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useCart } from '../../store/cartContext';
 
 const countries = [
@@ -480,7 +481,7 @@ export default function CheckoutPage() {
                                 {cartItems.map((item) => (
                                     <div key={item.id} className="flex gap-6 group">
                                         <div className="relative w-20 h-24 bg-surface-container flex-shrink-0 overflow-hidden">
-                                            <img className="w-full h-full object-cover" alt={item.title} src={item.image} />
+                                            <Image className="object-cover" alt={item.title || ''} src={item.image} fill sizes="80px" />
                                             <span className="absolute -top-2 -right-2 w-6 h-6 bg-secondary text-on-secondary text-[10px] flex items-center justify-center rounded-full font-bold">
                                                 {item.quantity}
                                             </span>

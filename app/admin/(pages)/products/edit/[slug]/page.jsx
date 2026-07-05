@@ -5,7 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
 import Sidebar from '../../../../../_components/Admin/Sidebar';
 import Header from '../../../../../_components/Admin/Header';
-import { Upload, X, Save, ArrowLeft, Loader2, Image as ImageIcon, Link as LinkIcon, Trash } from 'lucide-react';
+import { Upload, X, Save, ArrowLeft, Loader2, Image as ImageIcon, Link as LinkIcon, Trash, Eye } from 'lucide-react';
 import Link from 'next/link';
 import Button from '../../../../../_components/Admin/Button';
 
@@ -21,6 +21,7 @@ const EditProductPage = () => {
   const [saving, setSaving] = useState(false);
 
   // Form State
+  const [productSlug, setProductSlug] = useState('');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [images, setImages] = useState([]);
@@ -57,6 +58,7 @@ const EditProductPage = () => {
           const prodData = await prodRes.json();
           if (prodData.success) {
             const prod = prodData.product;
+            setProductSlug(prod.slug || '');
             setTitle(prod.title || '');
             setDescription(prod.description || '');
             setImages(prod.images || []);
@@ -226,12 +228,23 @@ const EditProductPage = () => {
           </div>
           <div className="flex justify-between items-center">
             <h2 className="text-headline-lg font-headline-lg font-bold">Edit: {title}</h2>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2">
               <span className={`px-3 py-1 text-label-md rounded-full font-bold uppercase ${
                 status === 'active' ? 'bg-primary-container/20 text-primary' : 'bg-surface-variant text-on-surface-variant'
               }`}>
                 {status}
               </span>
+              {productSlug && (
+                <Link
+                  href={`/product/${productSlug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 text-on-surface-variant hover:text-primary transition-colors border border-outline-variant rounded-lg"
+                  title="View on store"
+                >
+                  <Eye size={18} />
+                </Link>
+              )}
             </div>
           </div>
         </div>

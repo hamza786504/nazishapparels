@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useCart } from '../../../store/cartContext';
 import ProductCard from '../../../_components/ProductCard';
+import SizeChartModal from '../../../_components/SizeChartModal';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -11,12 +12,17 @@ export default function ProductPageClient({ initialProduct }) {
     const [product] = useState(initialProduct);
     const [relatedProducts, setRelatedProducts] = useState([]);
 
-    // Fetch related products on client mount
+    // Fetch related products on client mount — prefer other products from the
+    // same collection; fall back to matching product type if it has no collection.
     useEffect(() => {
         const fetchRelatedProducts = async () => {
             if (!product) return;
             try {
-                const res = await fetch(`/api/products?type=${product.productType}`);
+                const collectionId = product.collectionId?._id || product.collectionId;
+                const query = collectionId
+                    ? `collectionId=${collectionId}`
+                    : `type=${product.productType}`;
+                const res = await fetch(`/api/products?${query}&status=active`);
                 const data = await res.json();
                 if (data.success) {
                     const filtered = data.products
@@ -38,6 +44,7 @@ export default function ProductPageClient({ initialProduct }) {
     const [selectedSize, setSelectedSize] = useState(product.sizes ? product.sizes[0] : 'S');
     const [quantity, setQuantity] = useState(1);
     const [accordionOpen, setAccordionOpen] = useState(null);
+    const [sizeChartOpen, setSizeChartOpen] = useState(false);
     const [isAddingToBag, setIsAddingToBag] = useState(false);
     const [bagAdded, setBagAdded] = useState(false);
 
@@ -244,7 +251,13 @@ export default function ProductPageClient({ initialProduct }) {
                         <div className="flex flex-col gap-3">
                             <div className="flex justify-between items-center">
                                 <span className="text-label-md text-primary uppercase">Select Size</span>
-                                <button className="text-label-sm text-secondary underline underline-offset-4 uppercase">Size Guide</button>
+                                <button
+                                    type="button"
+                                    className="text-label-sm text-secondary underline underline-offset-4 uppercase bg-transparent border-none cursor-pointer"
+                                    onClick={() => setSizeChartOpen(true)}
+                                >
+                                    Size Guide
+                                </button>
                             </div>
                             <div className="grid grid-cols-4 gap-3">
                                 {(product.sizes || ['One Size']).map((size) => (
@@ -339,32 +352,6 @@ export default function ProductPageClient({ initialProduct }) {
                     </div>
                 </div>
             </div>
-
-            {/* Related Products */}
-            <section className="mt-stack-lg border-t border-secondary/30 pt-stack-md">
-                <div className="flex justify-between items-end mb-10">
-                    <div>
-                        <h2 className="font-headline-md text-headline-md text-primary">Complete the Look</h2>
-                        <p className="text-body-md text-on-surface-variant">Elevate your ensemble with these essentials.</p>
-                    </div>
-                    <Link className="text-label-md text-secondary border-b border-secondary pb-1 hidden md:block" href={`/collection/${product.fabric ? product.fabric.toLowerCase() : 'lawn'}`}>
-                        View Collection
-                    </Link>
-                </div>
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 gap-y-6">
-                    {relatedProducts.map((item) => (
-                        <ProductCard
-                            key={item.id}
-                            title={item.title}
-                            price={item.price}
-                            image={item.image || item.primaryImage}
-                            slug={item.slug}
-                            type={item.type}
-                            sizes={item.sizes}
-                        />
-                    ))}
-                </div>
-            </section>
 
             {/* Reviews Section */}
             <section className="mt-stack-lg border-t border-secondary/30 pt-stack-md">
@@ -461,8 +448,8 @@ export default function ProductPageClient({ initialProduct }) {
                                     <label className="text-label-sm text-primary uppercase">Upload Photo (Optional)</label>
                                     {reviewImagePreview ? (
                                         <div className="flex items-center gap-4">
-                                            <div className="w-24 h-24 rounded overflow-hidden bg-surface-container flex-shrink-0">
-                                                <img src={reviewImagePreview} alt="Preview" className="w-full h-full object-cover" />
+                                            <div className="relative w-24 h-24 rounded overflow-hidden bg-surface-container flex-shrink-0">
+                                                <Image src={reviewImagePreview} alt="Preview of the photo you're uploading" className="object-cover" fill sizes="96px" unoptimized />
                                             </div>
                                             <button
                                                 type="button"
@@ -550,8 +537,8 @@ export default function ProductPageClient({ initialProduct }) {
                                     <p className="text-body-md text-on-surface-variant leading-relaxed">{review.reviewText}</p>
                                     {review.image && (
                                         <div className="flex gap-3">
-                                            <div className="w-20 h-20 rounded overflow-hidden bg-surface-container">
-                                                <img src={review.image} alt="Customer photo" className="w-full h-full object-cover" />
+                                            <div className="relative w-20 h-20 rounded overflow-hidden bg-surface-container">
+                                                <Image src={review.image} alt={`Photo submitted by ${review.customerName || 'a customer'}`} className="object-cover" fill sizes="80px" />
                                             </div>
                                         </div>
                                     )}
@@ -561,6 +548,39 @@ export default function ProductPageClient({ initialProduct }) {
                     </div>
                 </div>
             </section>
+
+            {/* Related Products */}
+            {relatedProducts.length > 0 && (
+                <section className="mt-stack-lg border-t border-secondary/30 pt-stack-md">
+                    <div className="flex justify-between items-end mb-10">
+                        <div>
+                            <h2 className="font-headline-md text-headline-md text-primary">Complete the Look</h2>
+                            <p className="text-body-md text-on-surface-variant">Elevate your ensemble with these essentials.</p>
+                        </div>
+                        <Link className="text-label-md text-secondary border-b border-secondary pb-1 hidden md:block" href={`/collection/${product.collectionId?.slug || 'all'}`}>
+                            View Collection
+                        </Link>
+                    </div>
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 gap-y-6">
+                        {relatedProducts.map((item) => (
+                            <ProductCard
+                                key={item._id}
+                                id={item._id}
+                                title={item.title}
+                                price={`PKR ${Number(item.price).toLocaleString()}`}
+                                priceNumeric={item.price}
+                                image={item.images?.[0] || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&h=700&fit=crop'}
+                                slug={item.slug}
+                                type={item.productType}
+                                sizes={item.sizes}
+                                colors={item.colors}
+                            />
+                        ))}
+                    </div>
+                </section>
+            )}
+
+            <SizeChartModal isOpen={sizeChartOpen} onClose={() => setSizeChartOpen(false)} />
         </main>
     );
 }

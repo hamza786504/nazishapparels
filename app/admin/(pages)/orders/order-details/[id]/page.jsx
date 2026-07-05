@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import React from 'react';
 import Button from '../../../../../_components/Admin/Button';
 import { 
@@ -74,10 +75,12 @@ const OrderDetailPage = () => {
                       <tr className="hover:bg-surface-container-low transition-colors">
                         <td className="p-4">
                           <div className="flex items-center gap-4">
-                            <img
-                              className="w-12 h-12 rounded object-cover border border-outline-variant"
-                              alt="A professional studio product shot of a sleek, minimalist red athletic sneaker displayed against a clean, neutral gray background. The lighting is bright and even, highlighting the fine mesh texture and high-quality synthetic overlays of the shoe. The composition is modern and commercial, fitting a premium SaaS ecommerce aesthetic with high contrast and sharp focus."
+                            <Image
+                              className="rounded object-cover border border-outline-variant"
+                              alt="Aero-Step Performance Sneakers product photo"
                               src="https://lh3.googleusercontent.com/aida-public/AB6AXuCbpa_CJKyAYvnYymYaw_650kURVN7bICDOKUeiHQtC5Dm7HsfUxT-nbTjIsckPerBomEEt1dR2oxYb-RwEZP61y8xJX3srY0uWihBKMx5fPgRMlJ7INefF6PqUGaqNAnErPghIQSjfKpq_hBk73Qp1obcX5e16SrlJCd6IU75YnVIx0awuxuQ15waxLrm6C3n89Xf14my6yOtiFmsAiizIL0PFRjQoDK4lTxwaapTlekiS4GjOOiC8fPdzMR3fgSv3RKZniRGhVX05"
+                              width={48}
+                              height={48}
                             />
                             <div>
                               <p className="font-bold">Aero-Step Performance Sneakers</p>
@@ -93,10 +96,12 @@ const OrderDetailPage = () => {
                       <tr className="hover:bg-surface-container-low transition-colors">
                         <td className="p-4">
                           <div className="flex items-center gap-4">
-                            <img
-                              className="w-12 h-12 rounded object-cover border border-outline-variant"
-                              alt="A luxury designer wristwatch with a minimalist white face and a light brown leather strap, shot in a high-key lighting environment. The watch is placed on a smooth, reflective white surface that creates a soft, professional shadow. The overall mood is sophisticated and clean, emphasizing minimalist corporate design values and high-end product presentation."
+                            <Image
+                              className="rounded object-cover border border-outline-variant"
+                              alt="Nomad Classic Wristwatch product photo"
                               src="https://lh3.googleusercontent.com/aida-public/AB6AXuDh9Nb6oXsKxzyyI2Dprc7RJO1IPngcAOMOafaCEVCla46yI64U73DuwIR72C3ZpycXocKZUVd831G7Zyo3yXewj7AmsaBxhkrcVi4OVSA4YCj3lUh0lAzrfUEsVFOPHh3nLrQbT6sDfLp0W-96lrdiyMb5DkTsHfyUEv_ejdoiQAnA8WkcBUt7EdU7JqdJGkNe-9nqTM9asAiyESYjIitaYqcaR59ycVrGXiGXR-P0YmFF-BshWY1WKdhn8Zaun35S5v9VvFTYuByV"
+                              width={48}
+                              height={48}
                             />
                             <div>
                               <p className="font-bold">Nomad Classic Wristwatch</p>

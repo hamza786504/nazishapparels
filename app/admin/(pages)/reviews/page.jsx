@@ -256,11 +256,13 @@ const ReviewsPage = () => {
                       </td>
                       <td className="p-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded bg-surface-container border border-outline-variant overflow-hidden shrink-0">
-                            <img
-                              className="w-full h-full object-cover"
+                          <div className="relative w-10 h-10 rounded bg-surface-container border border-outline-variant overflow-hidden shrink-0">
+                            <Image
+                              className="object-cover"
                               alt={review.productId?.title || 'Product'}
                               src={review.productId?.images?.[0] || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100'}
+                              fill
+                              sizes="40px"
                             />
                           </div>
                           <div>
