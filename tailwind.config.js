@@ -112,8 +112,7 @@ module.exports = {
                 // Admin-only sizes that have no storefront equivalent — use Inter directly.
                 // The admin panel wraps content in .admin-layout { font-family: var(--font-jost) !important }
                 // so these rarely render as Inter in the admin anyway.
-                'headline-lg':        ['Inter', 'sans-serif'],
-                'headline-lg-mobile': ['Inter', 'sans-serif'],
+               
             },
             fontSize: {
                 // From the second config

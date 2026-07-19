@@ -3,14 +3,12 @@
 
 
 @layer base {
-    :root {
-        --font-eb-garamond: 'EB Garamond', serif;
-        --font-manrope: 'Manrope', sans-serif;
-        --font-jost: 'Jost', sans-serif;
-    }
-
     html {
         scroll-behavior: smooth;
+        font-family: var(--font-manrope);
+    }
+
+    .storefront-theme {
         font-family: var(--font-manrope);
     }
 
