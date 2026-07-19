@@ -1,6 +1,11 @@
-'use client';
+// app/(public_pages)/page.jsx  ← Server Component (no 'use client')
+//
+// ISR strategy:
+//   • Pre-rendered at build time, cached on CDN edge for 5 minutes
+//   • Admin product mutations call revalidateTag('products') → instant cache purge
+//   • CategoryShowcase receives initialProducts as a prop → no skeleton flash on first paint
+//   • Other showcase tabs fetch lazily client-side only when the user clicks them
 
-import { useEffect } from 'react';
 import HeroCarousel from '../_components/HeroCarousel';
 import NewArrivals from '../_components/NewArrivals';
 import CategoryShowcase from '../_components/CategoryShowcase';
@@ -10,59 +15,42 @@ import FeaturedProducts from '../_components/FeaturedProducts';
 import HandcraftedAccessories from '../_components/HandcraftedAccessories';
 import Newsletter from '../_components/Newsletter';
 import Testimonials from '../_components/Testimonials';
+import ScrollAnimations from '../_components/ScrollAnimations';
+import { getShowcaseProducts } from '@/lib/getShowcaseProducts';
+import { publicClient } from '@/lib/sanityClientPublic';
 
-export default function Home() {
-    useEffect(() => {
-        // Intersection Observer for scroll animations
-        const observerOptions = {
-            threshold: 0.1,
-        };
+export const revalidate = 300;
 
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach((entry) => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('opacity-100', 'translate-y-0');
-                    entry.target.classList.remove('opacity-0', 'translate-y-10');
-                }
-            });
-        }, observerOptions);
+export const metadata = {
+    title: 'Zaragems | Luxury Jewellery & Accessories',
+    description: 'Discover handcrafted rings, handchains, earrings and accessories from Zaragems.',
+};
 
-        document.querySelectorAll('section').forEach((section) => {
-            section.classList.add('transition-all', 'duration-1000', 'opacity-0', 'translate-y-10');
-            observer.observe(section);
-        });
-
-        // Smooth header hide/show on scroll
-        let lastScroll = 0;
-        const handleScroll = () => {
-            const currentScroll = window.pageYOffset;
-            const header = document.querySelector('header');
-            if (header) {
-                if (currentScroll > lastScroll && currentScroll > 100) {
-                    header.style.transform = 'translateY(-100%)';
-                } else {
-                    header.style.transform = 'translateY(0)';
-                }
-            }
-            lastScroll = currentScroll;
-        };
-
-        window.addEventListener('scroll', handleScroll);
-
-        return () => {
-            window.removeEventListener('scroll', handleScroll);
-            observer.disconnect();
-        };
-    }, []);
+export default async function Home() {
+    const SHOWCASE_SLUGS = ['rings-collection', 'handcuff-bracelets', 'pendants-malaset'];
+    const collections = await publicClient.fetch(
+        `*[_type == "collection" && slug in $slugs] | order(name asc){slug, name, _id}`,
+        { slugs: SHOWCASE_SLUGS }
+    );
+    const firstCollection = collections[0];
+    const initialShowcaseProducts = firstCollection
+        ? await getShowcaseProducts(firstCollection.slug)
+        : [];
 
     return (
         <main>
-            <HeroCarousel />
+            {/* Zero-render client island — attaches scroll + IntersectionObserver */}
+            <ScrollAnimations />
+
+            {/* <HeroCarousel /> */}
+            <img src="/banner.png" alt="banner" style={{width: "100vw"}} />
             <NewArrivals />
-            <CategoryShowcase />
+            {/* collections + initialProducts pre-seed the default tab — no client fetch waterfall */}
+            <CategoryShowcase collections={collections} initialProducts={initialShowcaseProducts} />
             <HandcraftedCategories />
-            <FeaturedProducts />
-            <HandcraftedAccessories />
+            <FeaturedProducts collectionSlug="handcuff-baracelts" title="HandCuff/Baracelts" />
+            <FeaturedProducts collectionSlug="studs-earings" title="Studs/Earings" />
+            {/* <HandcraftedAccessories /> */}
             <Testimonials />
             <BrandStory />
             <Newsletter />

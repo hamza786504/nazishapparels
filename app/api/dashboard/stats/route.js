@@ -1,301 +1,211 @@
 import { NextResponse } from 'next/server';
-import dbConnect from '../../../../lib/db.js';
-import Order from '../../../../models/Order';
-import Product from '../../../../models/Product';
-import Customer from '../../../../models/Customer';
-import Review from '../../../../models/Review';
-import Collection from '../../../../models/Collection';
+import client from '@/lib/sanityClient';
+
+function groupCount(arr, key) {
+  return arr.reduce((acc, item) => {
+    const k = item[key] || 'Unknown';
+    acc[k] = (acc[k] || 0) + 1;
+    return acc;
+  }, {});
+}
 
 export async function GET() {
   try {
-    await dbConnect();
-
     const now = new Date();
     const thirtyDaysAgo = new Date(now);
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     const prevThirtyDaysAgo = new Date(thirtyDaysAgo);
     prevThirtyDaysAgo.setDate(prevThirtyDaysAgo.getDate() - 30);
 
-    // ─── PHASE 1: Run all independent queries in PARALLEL ───
-    const [
-      productsCount,
-      customersCount,
-      reviewsCount,
-      ordersCount,
-      salesAggregation,
-      currentPeriodSales,
-      prevPeriodSales,
-      newCustomersCurrent,
-      newCustomersPrev,
-      orderStatusBreakdown,
-      fulfillmentBreakdown,
-      productStatusBreakdown,
-      lowStockProducts,
-      lowStockCount,
-      totalInventoryAgg,
-      revenueByStatus,
-      recentCustomers,
-      recentOrders,
-      collections,
-      // Single aggregation for sales trend (replaces 15 separate queries)
-      salesTrendAgg,
-      // Single aggregation for monthly revenue (replaces 6 separate queries)
-      monthlyRevenueAgg,
-      // Products grouped by collection (replaces N+1 queries)
-      productsByCollection,
-      // Top products by inventory value
-      topProductsByValue,
-    ] = await Promise.all([
-      // Core counts
-      Product.countDocuments({}),
-      Customer.countDocuments({}),
-      Review.countDocuments({}),
-      Order.countDocuments({}),
+    // ─── Fetch raw data in PARALLEL (GROQ has no aggregation pipeline, so
+    // grouping/summing happens in JS below, same as the old Mongo pipelines) ───
+    const [allOrders, allProducts, allCustomers, reviewsCount, recentCustomers, recentOrders, collections] =
+      await Promise.all([
+        client.fetch(`*[_type == "order"]{ _id, total, paymentStatus, fulfillmentStatus, date, "createdAt": _createdAt }`),
+        client.fetch(
+          `*[_type == "product"]{ _id, title, slug, images, SKU, productType, price, inventory, status, collectionId }`
+        ),
+        client.fetch(`*[_type == "customer"]{ "createdAt": _createdAt }`),
+        client.fetch(`count(*[_type == "review"])`),
+        client.fetch(
+          `*[_type == "customer"] | order(_createdAt desc) [0...5]{ firstName, lastName, email, "createdAt": _createdAt, ordersCount, totalSpent }`
+        ),
+        client.fetch(`*[_type == "order"] | order(date desc) [0...6]{ ..., "createdAt": _createdAt, "updatedAt": _updatedAt }`),
+        client.fetch(`*[_type == "collection"]{ _id, name }`),
+      ]);
 
-      // Total sales (all time)
-      Order.aggregate([
-        { $group: { _id: null, totalSales: { $sum: '$total' } } }
-      ]),
+    const productsCount = allProducts.length;
+    const customersCount = allCustomers.length;
+    const ordersCount = allOrders.length;
 
-      // Current period sales (last 30 days)
-      Order.aggregate([
-        { $match: { createdAt: { $gte: thirtyDaysAgo } } },
-        { $group: { _id: null, total: { $sum: '$total' }, count: { $sum: 1 } } }
-      ]),
+    // ─── Orders-derived metrics ───
+    const totalSales = allOrders.reduce((sum, o) => sum + (o.total || 0), 0);
 
-      // Previous period sales (30-60 days ago)
-      Order.aggregate([
-        { $match: { createdAt: { $gte: prevThirtyDaysAgo, $lt: thirtyDaysAgo } } },
-        { $group: { _id: null, total: { $sum: '$total' }, count: { $sum: 1 } } }
-      ]),
+    const currentPeriodOrders = allOrders.filter((o) => new Date(o.date) >= thirtyDaysAgo);
+    const prevPeriodOrders = allOrders.filter(
+      (o) => new Date(o.date) >= prevThirtyDaysAgo && new Date(o.date) < thirtyDaysAgo
+    );
+    const currentSales = currentPeriodOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+    const currentOrders = currentPeriodOrders.length;
+    const prevSales = prevPeriodOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+    const prevOrders = prevPeriodOrders.length;
 
-      // New customers this period
-      Customer.countDocuments({ createdAt: { $gte: thirtyDaysAgo } }),
-      // New customers previous period
-      Customer.countDocuments({ createdAt: { $gte: prevThirtyDaysAgo, $lt: thirtyDaysAgo } }),
+    const newCustomersCurrent = allCustomers.filter((c) => new Date(c.createdAt) >= thirtyDaysAgo).length;
+    const newCustomersPrev = allCustomers.filter(
+      (c) => new Date(c.createdAt) >= prevThirtyDaysAgo && new Date(c.createdAt) < thirtyDaysAgo
+    ).length;
 
-      // Order status breakdown
-      Order.aggregate([
-        { $group: { _id: '$paymentStatus', count: { $sum: 1 } } }
-      ]),
+    const orderStatusBreakdown = groupCount(allOrders, 'paymentStatus');
+    const fulfillmentBreakdown = groupCount(allOrders, 'fulfillmentStatus');
+    const productStatusBreakdown = groupCount(allProducts, 'status');
 
-      // Fulfillment breakdown
-      Order.aggregate([
-        { $group: { _id: '$fulfillmentStatus', count: { $sum: 1 } } }
-      ]),
+    const revenueByStatusMap = allOrders.reduce((acc, o) => {
+      const status = o.paymentStatus || 'Unknown';
+      if (!acc[status]) acc[status] = { status, revenue: 0, count: 0 };
+      acc[status].revenue += o.total || 0;
+      acc[status].count += 1;
+      return acc;
+    }, {});
+    const revenueByStatus = Object.values(revenueByStatusMap);
 
-      // Product status breakdown
-      Product.aggregate([
-        { $group: { _id: '$status', count: { $sum: 1 } } }
-      ]),
+    // Only products with *tracked* inventory (non-null number) can be low/out-of-stock.
+    // Untracked products (inventory === null) are always purchasable — exclude them.
+    const LOW_STOCK_THRESHOLD = 5;
+    const lowStockAll = allProducts
+      .filter((p) => p.inventory !== null && p.inventory !== undefined && p.inventory <= LOW_STOCK_THRESHOLD)
+      .sort((a, b) => a.inventory - b.inventory);
+    const lowStockProducts = lowStockAll
+      .slice(0, 5)
+      .map((p) => ({ _id: p._id, title: p.title, inventory: p.inventory, slug: p.slug }));
+    const lowStockCount = lowStockAll.length;
 
-      // Low stock products (preview list, capped)
-      Product.find({ inventory: { $lte: 5 } })
-        .select('title inventory slug')
-        .sort({ inventory: 1 })
-        .limit(5)
-        .lean(),
+    // Only count tracked inventory in total (untracked = null → skip)
+    const totalInventory = allProducts.reduce((sum, p) => sum + (typeof p.inventory === 'number' ? p.inventory : 0), 0);
+    const pricedProducts = allProducts.filter((p) => typeof p.price === 'number');
+    const avgPrice = pricedProducts.length
+      ? pricedProducts.reduce((sum, p) => sum + p.price, 0) / pricedProducts.length
+      : 0;
 
-      // Exact low stock count (uncapped, for metric display)
-      Product.countDocuments({ inventory: { $lte: 5 } }),
+    const productsByCollectionMap = allProducts.reduce((acc, p) => {
+      const key = p.collectionId || 'unassigned';
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {});
 
-      // Total inventory + avg price
-      Product.aggregate([
-        { $group: { _id: null, total: { $sum: '$inventory' }, avgPrice: { $avg: '$price' } } }
-      ]),
+    // inventoryValue: only meaningful for tracked products
+    const topProductsByValue = [...allProducts]
+      .filter((p) => typeof p.inventory === 'number')
+      .map((p) => ({ ...p, inventoryValue: (p.price || 0) * p.inventory }))
+      .sort((a, b) => b.inventoryValue - a.inventoryValue)
+      .slice(0, 5);
 
-      // Revenue by payment status
-      Order.aggregate([
-        { $group: { _id: '$paymentStatus', revenue: { $sum: '$total' }, count: { $sum: 1 } } }
-      ]),
+    // ─── Derived percentage changes ───
+    const salesChange =
+      prevSales > 0 ? (((currentSales - prevSales) / prevSales) * 100).toFixed(1) : currentSales > 0 ? 100 : 0;
+    const ordersChange =
+      prevOrders > 0 ? (((currentOrders - prevOrders) / prevOrders) * 100).toFixed(1) : currentOrders > 0 ? 100 : 0;
+    const customersChange =
+      newCustomersPrev > 0
+        ? (((newCustomersCurrent - newCustomersPrev) / newCustomersPrev) * 100).toFixed(1)
+        : newCustomersCurrent > 0
+        ? 100
+        : 0;
 
-      // Recent customers
-      Customer.find({})
-        .sort({ createdAt: -1 })
-        .limit(5)
-        .select('firstName lastName email createdAt ordersCount totalSpent')
-        .lean(),
+    const avgOrderValue = ordersCount > 0 ? totalSales / ordersCount : 0;
+    const currentAvgOrderValue = currentOrders > 0 ? currentSales / currentOrders : 0;
+    const prevAvgOrderValue = prevOrders > 0 ? prevSales / prevOrders : 0;
+    const avgOrderChange =
+      prevAvgOrderValue > 0
+        ? (((currentAvgOrderValue - prevAvgOrderValue) / prevAvgOrderValue) * 100).toFixed(1)
+        : currentAvgOrderValue > 0
+        ? 100
+        : 0;
 
-      // Recent orders
-      Order.find({})
-        .sort({ createdAt: -1 })
-        .limit(6)
-        .lean(),
-
-      // Collections
-      Collection.find({}).lean(),
-
-      // ─── Sales Trend: SINGLE aggregation replacing 15 separate queries ───
-      Order.aggregate([
-        {
-          $match: {
-            createdAt: {
-              $gte: new Date(new Date().setDate(new Date().getDate() - 14))
-            }
-          }
-        },
-        {
-          $group: {
-            _id: {
-              $dateToString: { format: '%Y-%m-%d', date: '$createdAt' }
-            },
-            sales: { $sum: '$total' },
-            orders: { $sum: 1 }
-          }
-        },
-        { $sort: { _id: 1 } }
-      ]),
-
-      // ─── Monthly Revenue: SINGLE aggregation replacing 6 separate queries ───
-      Order.aggregate([
-        {
-          $match: {
-            createdAt: {
-              $gte: new Date(now.getFullYear(), now.getMonth() - 5, 1)
-            }
-          }
-        },
-        {
-          $group: {
-            _id: {
-              year: { $year: '$createdAt' },
-              month: { $month: '$createdAt' }
-            },
-            revenue: { $sum: '$total' },
-            orders: { $sum: 1 }
-          }
-        },
-        { $sort: { '_id.year': 1, '_id.month': 1 } }
-      ]),
-
-      // ─── Products by Collection: SINGLE aggregation replacing N+1 queries ───
-      Product.aggregate([
-        { $group: { _id: '$collectionId', count: { $sum: 1 } } }
-      ]),
-
-      // ─── Top products by inventory value (price * inventory) ───
-      // Note: Orders only store an item *count*, not per-product line items,
-      // so real per-product units-sold/revenue can't be computed from order data.
-      // Inventory value is the closest real, honest ranking we can derive.
-      Product.aggregate([
-        { $addFields: { inventoryValue: { $multiply: ['$price', '$inventory'] } } },
-        { $sort: { inventoryValue: -1 } },
-        { $limit: 5 },
-        { $project: { title: 1, slug: 1, images: 1, SKU: 1, productType: 1, price: 1, inventory: 1, status: 1, inventoryValue: 1 } }
-      ]),
-    ]);
-
-    // ─── PHASE 2: Compute derived values (no DB calls) ───
-
-    const totalSales = salesAggregation[0]?.totalSales || 0;
-    const currentSales = currentPeriodSales[0]?.total || 0;
-    const currentOrders = currentPeriodSales[0]?.count || 0;
-    const prevSales = prevPeriodSales[0]?.total || 0;
-    const prevOrders = prevPeriodSales[0]?.count || 0;
-
-    const salesChange = prevSales > 0 ? (((currentSales - prevSales) / prevSales) * 100).toFixed(1) : (currentSales > 0 ? 100 : 0);
-    const ordersChange = prevOrders > 0 ? (((currentOrders - prevOrders) / prevOrders) * 100).toFixed(1) : (currentOrders > 0 ? 100 : 0);
-    const customersChange = newCustomersPrev > 0 ? (((newCustomersCurrent - newCustomersPrev) / newCustomersPrev) * 100).toFixed(1) : (newCustomersCurrent > 0 ? 100 : 0);
-
-    const avgOrderValue = ordersCount > 0 ? (totalSales / ordersCount) : 0;
-    const currentAvgOrderValue = currentOrders > 0 ? (currentSales / currentOrders) : 0;
-    const prevAvgOrderValue = prevOrders > 0 ? (prevSales / prevOrders) : 0;
-    const avgOrderChange = prevAvgOrderValue > 0 ? (((currentAvgOrderValue - prevAvgOrderValue) / prevAvgOrderValue) * 100).toFixed(1) : (currentAvgOrderValue > 0 ? 100 : 0);
-
-    // Build category data from the single aggregation + collections
+    // Build category data from products-by-collection + collections lookup
     const colors = ['#006c50', '#5d5e60', '#8f3f37', '#bdc9c2', '#e1e3e5'];
     const collectionMap = {};
-    for (const coll of collections) {
-      collectionMap[coll._id.toString()] = coll;
-    }
+    for (const coll of collections) collectionMap[coll._id] = coll;
+
     const categoryData = [];
-    for (const item of productsByCollection) {
-      if (item._id === null) {
-        categoryData.push({ name: 'Unassigned', value: item.count, color: '#bdbdbd' });
+    for (const [collId, count] of Object.entries(productsByCollectionMap)) {
+      if (collId === 'unassigned') {
+        categoryData.push({ name: 'Unassigned', value: count, color: '#bdbdbd' });
       } else {
-        const coll = collectionMap[item._id.toString()];
+        const coll = collectionMap[collId];
         if (coll) {
-          categoryData.push({ name: coll.name, value: item.count, color: colors[categoryData.length % colors.length] });
+          categoryData.push({ name: coll.name, value: count, color: colors[categoryData.length % colors.length] });
         }
       }
     }
 
-    // Build sales trend from single aggregation (fill gaps for days with no orders)
+    // Sales trend (last 15 days, fill gaps for days with no orders)
     const salesTrend = [];
     for (let i = 14; i >= 0; i--) {
       const date = new Date();
       date.setDate(date.getDate() - i);
       const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      const isoDate = date.toISOString().slice(0, 10); // YYYY-MM-DD
-      const dayData = salesTrendAgg.find(d => d._id === isoDate);
+      const isoDate = date.toISOString().slice(0, 10);
+      const dayOrders = allOrders.filter((o) => o.date?.slice(0, 10) === isoDate);
       salesTrend.push({
         date: dateStr,
-        sales: dayData?.sales || 0,
-        orders: dayData?.orders || 0
+        sales: dayOrders.reduce((sum, o) => sum + (o.total || 0), 0),
+        orders: dayOrders.length,
       });
     }
 
-    // Build monthly revenue from single aggregation
+    // Monthly revenue (last 6 months)
     const monthlyRevenue = [];
     for (let i = 5; i >= 0; i--) {
       const monthStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const monthLabel = monthStart.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
       const year = monthStart.getFullYear();
-      const month = monthStart.getMonth() + 1;
-      const monthData = monthlyRevenueAgg.find(d => d._id.year === year && d._id.month === month);
+      const month = monthStart.getMonth();
+      const monthOrders = allOrders.filter((o) => {
+        const d = new Date(o.date);
+        return d.getFullYear() === year && d.getMonth() === month;
+      });
       monthlyRevenue.push({
         month: monthLabel,
-        revenue: monthData?.revenue || 0,
-        orders: monthData?.orders || 0
+        revenue: monthOrders.reduce((sum, o) => sum + (o.total || 0), 0),
+        orders: monthOrders.length,
       });
     }
 
-    return NextResponse.json({
-      success: true,
-      metrics: {
-        totalSales,
-        ordersCount,
-        productsCount,
-        customersCount,
-        reviewsCount,
-        avgOrderValue,
-        currentPeriodSales,
-        newCustomersCurrent,
-        salesChange: parseFloat(salesChange),
-        ordersChange: parseFloat(ordersChange),
-        customersChange: parseFloat(customersChange),
-        avgOrderChange: parseFloat(avgOrderChange),
+    return NextResponse.json(
+      {
+        success: true,
+        metrics: {
+          totalSales,
+          ordersCount,
+          productsCount,
+          customersCount,
+          reviewsCount,
+          avgOrderValue,
+          currentPeriodSales: currentSales,
+          newCustomersCurrent,
+          salesChange: parseFloat(salesChange),
+          ordersChange: parseFloat(ordersChange),
+          customersChange: parseFloat(customersChange),
+          avgOrderChange: parseFloat(avgOrderChange),
+        },
+        orderStatusBreakdown,
+        fulfillmentBreakdown,
+        productStatusBreakdown,
+        revenueByStatus,
+        lowStockProducts,
+        lowStockCount,
+        topProductsByValue,
+        recentCustomers,
+        recentOrders,
+        categoryData,
+        salesTrendData: salesTrend,
+        monthlyRevenue,
+        totalInventory,
+        avgPrice,
+        lastUpdated: now.toISOString(),
       },
-      orderStatusBreakdown: orderStatusBreakdown.reduce((acc, item) => {
-        acc[item._id || 'Unknown'] = item.count;
-        return acc;
-      }, {}),
-      fulfillmentBreakdown: fulfillmentBreakdown.reduce((acc, item) => {
-        acc[item._id || 'Unknown'] = item.count;
-        return acc;
-      }, {}),
-      productStatusBreakdown: productStatusBreakdown.reduce((acc, item) => {
-        acc[item._id || 'Unknown'] = item.count;
-        return acc;
-      }, {}),
-      revenueByStatus: revenueByStatus.map(item => ({
-        status: item._id || 'Unknown',
-        revenue: item.revenue,
-        count: item.count
-      })),
-      lowStockProducts,
-      lowStockCount,
-      topProductsByValue,
-      recentCustomers,
-      recentOrders,
-      categoryData,
-      salesTrendData: salesTrend,
-      monthlyRevenue,
-      totalInventory: totalInventoryAgg[0]?.total || 0,
-      avgPrice: totalInventoryAgg[0]?.avgPrice || 0,
-      lastUpdated: now.toISOString()
-    }, { status: 200 });
-
+      { status: 200 }
+    );
   } catch (error) {
     console.error('Error generating dashboard stats:', error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });

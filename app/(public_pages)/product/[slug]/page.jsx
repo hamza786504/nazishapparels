@@ -1,6 +1,5 @@
-import dbConnect from '../../../../lib/db';
-import Product from '../../../../models/Product';
-import Collection from '../../../../models/Collection'; // registers the 'Collection' model so populate('collectionId') resolves
+import client from '@/lib/sanityClient';
+import { PRODUCT_PROJECTION } from '@/lib/sanityQueries';
 import ProductPageClient from './ProductPageClient';
 import { notFound } from 'next/navigation';
 
@@ -13,30 +12,21 @@ export const dynamicParams = true;
 // Pre-render the top 20 active products at build time to speed up deployment builds
 export async function generateStaticParams() {
   try {
-    await dbConnect();
-    const products = await Product.find({ status: 'active' })
-      .limit(20)
-      .select('slug')
-      .lean();
-    
-    return products.map((product) => ({
-      slug: product.slug,
-    }));
+    const slugs = await client.fetch(
+      `*[_type == "product" && status == "active"][0...20].slug`
+    );
+    return slugs.filter(Boolean).map((slug) => ({ slug }));
   } catch (error) {
     console.error('Failed to generate static params for products:', error);
     return [];
   }
 }
 
-// Fetch single product details directly from MongoDB on the server
+// Fetch single product details directly from Sanity on the server
 async function getProduct(slug) {
   try {
-    await dbConnect();
-    const product = await Product.findOne({ slug }).populate('collectionId', 'name slug').lean();
-    if (!product) return null;
-    
-    // Safely serialize MongoDB ObjectIDs and Date objects to plain JSON for client props
-    return JSON.parse(JSON.stringify(product));
+    const product = await client.fetch(`*[_type == "product" && slug == $slug][0]${PRODUCT_PROJECTION}`, { slug });
+    return product || null;
   } catch (error) {
     console.error(`Error loading product slug "${slug}":`, error);
     return null;

@@ -1,5 +1,5 @@
 {
-  "name": "nazishapparels",
+  "name": "zaragems",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -13,14 +13,13 @@
     "@dnd-kit/modifiers": "^9.0.0",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
+    "@sanity/client": "^6.29.0",
     "@tailwindcss/container-queries": "^0.1.1",
     "@tailwindcss/forms": "^0.5.11",
     "bcryptjs": "^3.0.3",
-    "cloudinary": "^2.10.0",
     "cookie": "^2.0.1",
     "jsonwebtoken": "^9.0.3",
     "lucide-react": "^1.21.0",
-    "mongoose": "^9.7.3",
     "next": "16.2.9",
     "react": "19.2.4",
     "react-dom": "19.2.4",

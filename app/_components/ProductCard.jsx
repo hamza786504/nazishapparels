@@ -21,15 +21,9 @@ export default function ProductCard({
     const { addToCart } = useCart();
     const [justAdded, setJustAdded] = useState(false);
 
-    // Custom loader for Cloudinary images
-    const cloudinaryLoader = ({ src, width, quality }) => {
-        // If it's already a full URL
-        if (src.startsWith('http')) {
-            return src;
-        }
-        // If it's a Cloudinary public ID
-        return `https://res.cloudinary.com/dm430jren/image/upload/w_${width},q_${quality || 75}/${src}`;
-    };
+    // Product images are always full URLs (Sanity CDN), so just pass them through
+    // next/image's loader unchanged.
+    const passthroughLoader = ({ src }) => src;
 
     const handleQuickAdd = () => {
         const numericPrice = typeof priceNumeric === 'number'
@@ -61,7 +55,7 @@ export default function ProductCard({
             >
                 <Link href={`/product/${slug}`} className="absolute inset-0 block">
                     <Image
-                        loader={cloudinaryLoader}
+                        loader={passthroughLoader}
                         alt={title}
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                         src={image}
@@ -78,19 +72,19 @@ export default function ProductCard({
                     {justAdded ? 'ADDED ✓' : 'QUICK ADD'}
                 </button>
             </div>
-            <div className="mt-4 flex flex-col gap-1">
+            <div className="mt-2 md:mt-4 flex flex-col gap-1">
                 {type && (
-                    <p className="text-label-sm font-label-sm text-on-surface-variant/70 uppercase tracking-widest">
+                    <p className="text-[10px] sm:text-label-sm font-label-sm text-on-surface-variant/70 uppercase tracking-widest">
                         {type}
                     </p>
                 )}
                 <Link
                     href={`/product/${slug}`}
-                    className="text-body-lg font-body-lg text-primary font-medium group-hover:text-secondary transition-colors line-clamp-2"
+                    className="text-sm sm:text-body-lg font-body-lg text-primary font-medium group-hover:text-secondary transition-colors line-clamp-2"
                 >
                     {title}
                 </Link>
-                <p className="text-headline-sm font-headline-sm text-secondary font-semibold mt-1">
+                <p className="text-[13px] sm:text-base text-secondary font-semibold md:mt-1">
                     {price}
                 </p>
                 {sizes && sizes.length > 0 && (

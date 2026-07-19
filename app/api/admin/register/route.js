@@ -1,11 +1,9 @@
 import { NextResponse } from 'next/server';
-import dbConnect from '../../../../lib/db.js';
-import Admin from '../../../../models/Admin.js';
+import client from '@/lib/sanityClient';
+import { hashPassword } from '@/lib/adminAuth';
 
 export async function POST(request) {
   try {
-    await dbConnect();
-
     const { username, email, password, fullName } = await request.json();
 
     // Validation
@@ -23,10 +21,14 @@ export async function POST(request) {
       );
     }
 
+    const usernameLower = username.toLowerCase();
+    const emailLower = email.toLowerCase();
+
     // Check if admin already exists
-    const existingAdmin = await Admin.findOne({
-      $or: [{ email }, { username }],
-    });
+    const existingAdmin = await client.fetch(
+      `*[_type == "admin" && (email == $email || username == $username)][0]{_id}`,
+      { email: emailLower, username: usernameLower }
+    );
 
     if (existingAdmin) {
       return NextResponse.json(
@@ -35,16 +37,21 @@ export async function POST(request) {
       );
     }
 
+    const hashedPassword = await hashPassword(password);
+
     // Create new admin
-    const newAdmin = new Admin({
-      username,
-      email,
-      password, // Will be hashed by pre-save hook
+    const newAdmin = await client.create({
+      _type: 'admin',
+      username: usernameLower,
+      email: emailLower,
+      password: hashedPassword,
       fullName,
       role: 'admin',
+      status: 'active',
+      loginAttempts: 0,
+      lockUntil: null,
+      lastLogin: null,
     });
-
-    await newAdmin.save();
 
     // Return admin without password
     const adminResponse = {
@@ -54,7 +61,7 @@ export async function POST(request) {
       fullName: newAdmin.fullName,
       role: newAdmin.role,
       status: newAdmin.status,
-      createdAt: newAdmin.createdAt,
+      createdAt: newAdmin._createdAt,
     };
 
     return NextResponse.json(

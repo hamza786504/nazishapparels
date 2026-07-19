@@ -1,12 +1,10 @@
 import { NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import Notification from '@/models/Notification';
+import client from '@/lib/sanityClient';
 
 // GET /api/notifications/unread-count — lightweight count for header badge
 export async function GET() {
   try {
-    await dbConnect();
-    const count = await Notification.countDocuments({ isRead: false });
+    const count = await client.fetch(`count(*[_type == "notification" && isRead == false])`);
     return NextResponse.json({ success: true, count }, { status: 200 });
   } catch (error) {
     console.error('Error fetching unread count:', error);

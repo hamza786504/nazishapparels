@@ -46,8 +46,8 @@ const CollectionsPage = () => {
     }
   };
 
-  const filteredCollections = collections.filter(c => 
-    c.name.toLowerCase().includes(search.toLowerCase()) || 
+  const filteredCollections = collections.filter(c =>
+    c.name.toLowerCase().includes(search.toLowerCase()) ||
     (c.description || '').toLowerCase().includes(search.toLowerCase())
   );
 
@@ -56,7 +56,7 @@ const CollectionsPage = () => {
       <Sidebar />
       <Header />
 
-      <main className="p-lg bg-surface-container-lowest min-h-screen text-on-surface">
+      <main className="p-0 md:p-lg bg-surface-container-lowest min-h-screen text-on-surface">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-xl gap-4">
           <div>
@@ -94,13 +94,13 @@ const CollectionsPage = () => {
             No collections found.
           </div>
         ) : (
-          <div className="bg-white rounded-xl border border-outline-variant shadow-sm overflow-hidden">
-            <table className="w-full text-left">
+          <div className="overflow-x-auto bg-white rounded-xl border border-outline-variant shadow-sm overflow-hidden">
+            <table className="w-full text-left overflow-x-auto">
               <thead>
                 <tr className="bg-surface-container-low border-b border-outline-variant">
                   <th className="p-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Collection</th>
                   <th className="p-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Slug</th>
-                  <th className="p-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Description</th>
+                  <th className="p-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Total Products</th>
                   <th className="p-4 text-right font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
@@ -125,7 +125,16 @@ const CollectionsPage = () => {
                       <span className="text-xs font-mono bg-surface-container-high px-2.5 py-1 rounded text-on-surface-variant">{col.slug}</span>
                     </td>
                     <td className="p-4">
-                      <p className="text-body-sm text-on-surface-variant line-clamp-2">{col.description || '—'}</p>
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
+                        col.productCount > 0
+                          ? 'bg-primary-container/20 text-primary'
+                          : 'bg-surface-container-high text-on-surface-variant'
+                      }`}>
+                        {col.productCount ?? 0}
+                        <span className="font-normal opacity-70">
+                          {col.productCount === 1 ? 'product' : 'products'}
+                        </span>
+                      </span>
                     </td>
                     <td className="p-4 text-right">
                       <div className="flex items-center justify-end gap-1">

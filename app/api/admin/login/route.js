@@ -1,16 +1,13 @@
 import { NextResponse } from 'next/server';
-import dbConnect from '../../../../lib/db.js';
-import Admin from '../../../../models/Admin.js';
 import jwt from 'jsonwebtoken';
 import { stringifySetCookie } from 'cookie';
+import { findByCredentials } from '@/lib/adminAuth';
 
 // JWT secret key - should be in environment variables
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production';
 
 export async function POST(request) {
   try {
-    await dbConnect();
-
     const { emailOrUsername, password } = await request.json();
 
     // Validation
@@ -22,8 +19,8 @@ export async function POST(request) {
     }
 
     try {
-      // Find admin using credentials method
-      const admin = await Admin.findByCredentials(emailOrUsername, password);
+      // Find admin using credentials helper
+      const admin = await findByCredentials(emailOrUsername, password);
 
       if (!admin) {
         return NextResponse.json(
@@ -90,7 +87,7 @@ export async function POST(request) {
           { status: 423 }
         );
       }
-      
+
       if (error.message.includes('Invalid credentials')) {
         return NextResponse.json(
           { success: false, error: error.message },

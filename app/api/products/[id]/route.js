@@ -1,17 +1,18 @@
 import { NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import Product from '@/models/Product';
+import { revalidateTag } from 'next/cache';
+import client from '@/lib/sanityClient';
+import { slugify } from '@/lib/slugify';
+import { PRODUCT_PROJECTION } from '@/lib/sanityQueries';
 
 export async function GET(request, { params }) {
   try {
-    await dbConnect();
     const { id } = await params;
-    const product = await Product.findById(id).populate('collectionId', 'name slug');
-    
+    const product = await client.fetch(`*[_type == "product" && _id == $id][0]${PRODUCT_PROJECTION}`, { id });
+
     if (!product) {
       return NextResponse.json({ success: false, message: 'Product not found' }, { status: 404 });
     }
-    
+
     return NextResponse.json({ success: true, product }, { status: 200 });
   } catch (error) {
     console.error('Error fetching product:', error);
@@ -21,31 +22,42 @@ export async function GET(request, { params }) {
 
 export async function PUT(request, { params }) {
   try {
-    await dbConnect();
     const { id } = await params;
     const body = await request.json();
-    
+
+    const existing = await client.fetch(`*[_type == "product" && _id == $id][0]{_id}`, { id });
+    if (!existing) {
+      return NextResponse.json({ success: false, message: 'Product not found' }, { status: 404 });
+    }
+
     if (body.collectionId === '') {
       body.collectionId = null;
     }
 
-    // Generate slug from title if title is being updated and slug is not provided
-    if (!body.slug && body.title) {
-      body.slug = body.title
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)+/g, '');
+    if (body.slug) {
+      body.slug = slugify(body.slug);
+    } else if (body.title) {
+      body.slug = slugify(body.title);
     }
 
-    const product = await Product.findByIdAndUpdate(id, body, {
-      new: true,
-      runValidators: true,
-    });
-    
-    if (!product) {
-      return NextResponse.json({ success: false, message: 'Product not found' }, { status: 404 });
+    if (body.slug) {
+      const slugClash = await client.fetch(
+        `*[_type == "product" && slug == $slug && _id != $id][0]{_id}`,
+        { slug: body.slug, id }
+      );
+      if (slugClash) {
+        return NextResponse.json(
+          { success: false, error: `A product with slug "${body.slug}" already exists` },
+          { status: 400 }
+        );
+      }
     }
-    
+
+    await client.patch(id).set(body).commit();
+    // Purge ISR cache so edits appear immediately on the storefront.
+    revalidateTag('products');
+    const product = await client.fetch(`*[_type == "product" && _id == $id][0]${PRODUCT_PROJECTION}`, { id });
+
     return NextResponse.json({ success: true, product }, { status: 200 });
   } catch (error) {
     console.error('Error updating product:', error);
@@ -55,15 +67,15 @@ export async function PUT(request, { params }) {
 
 export async function DELETE(request, { params }) {
   try {
-    await dbConnect();
     const { id } = await params;
-    
-    const product = await Product.findByIdAndDelete(id);
-    
-    if (!product) {
+
+    const existing = await client.fetch(`*[_type == "product" && _id == $id][0]{_id}`, { id });
+    if (!existing) {
       return NextResponse.json({ success: false, message: 'Product not found' }, { status: 404 });
     }
-    
+
+    await client.delete(id);
+
     return NextResponse.json({ success: true, message: 'Product deleted successfully' }, { status: 200 });
   } catch (error) {
     console.error('Error deleting product:', error);

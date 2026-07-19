@@ -1,18 +1,23 @@
 import { NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import Collection from '@/models/Collection';
-import Product from '@/models/Product';
+import client from '@/lib/sanityClient';
+import { slugify } from '@/lib/slugify';
 
 export async function GET(request, { params }) {
   try {
-    await dbConnect();
     const { id } = await params;
-    const collection = await Collection.findById(id);
-    
+    const collection = await client.fetch(
+      `*[_type == "collection" && _id == $id][0]{
+        ...,
+        "createdAt": _createdAt,
+        "updatedAt": _updatedAt
+      }`,
+      { id }
+    );
+
     if (!collection) {
       return NextResponse.json({ success: false, message: 'Collection not found' }, { status: 404 });
     }
-    
+
     return NextResponse.json({ success: true, collection }, { status: 200 });
   } catch (error) {
     console.error('Error fetching collection:', error);
@@ -22,19 +27,43 @@ export async function GET(request, { params }) {
 
 export async function PUT(request, { params }) {
   try {
-    await dbConnect();
     const { id } = await params;
     const body = await request.json();
 
-    const collection = await Collection.findByIdAndUpdate(id, body, {
-      new: true,
-      runValidators: true,
-    });
-    
-    if (!collection) {
+    const existing = await client.fetch(`*[_type == "collection" && _id == $id][0]{_id}`, { id });
+    if (!existing) {
       return NextResponse.json({ success: false, message: 'Collection not found' }, { status: 404 });
     }
-    
+
+    if (!body.slug && body.name) {
+      body.slug = slugify(body.name);
+    } else if (body.slug) {
+      body.slug = slugify(body.slug);
+    }
+
+    if (body.name || body.slug) {
+      const clash = await client.fetch(
+        `*[_type == "collection" && _id != $id && (name == $name || slug == $slug)][0]{_id}`,
+        { id, name: body.name || null, slug: body.slug || null }
+      );
+      if (clash) {
+        return NextResponse.json(
+          { success: false, error: 'A collection with this name or slug already exists' },
+          { status: 400 }
+        );
+      }
+    }
+
+    await client.patch(id).set(body).commit();
+    const collection = await client.fetch(
+      `*[_type == "collection" && _id == $id][0]{
+        ...,
+        "createdAt": _createdAt,
+        "updatedAt": _updatedAt
+      }`,
+      { id }
+    );
+
     return NextResponse.json({ success: true, collection }, { status: 200 });
   } catch (error) {
     console.error('Error updating collection:', error);
@@ -44,18 +73,23 @@ export async function PUT(request, { params }) {
 
 export async function DELETE(request, { params }) {
   try {
-    await dbConnect();
     const { id } = await params;
-    
-    const collection = await Collection.findByIdAndDelete(id);
-    
-    if (!collection) {
+
+    const existing = await client.fetch(`*[_type == "collection" && _id == $id][0]{_id}`, { id });
+    if (!existing) {
       return NextResponse.json({ success: false, message: 'Collection not found' }, { status: 404 });
     }
-    
+
+    await client.delete(id);
+
     // Dissociate products from this collection
-    await Product.updateMany({ collectionId: id }, { collectionId: null });
-    
+    const productIds = await client.fetch(`*[_type == "product" && collectionId == $id]._id`, { id });
+    if (productIds.length) {
+      const tx = client.transaction();
+      productIds.forEach((pid) => tx.patch(pid, { set: { collectionId: null } }));
+      await tx.commit();
+    }
+
     return NextResponse.json({ success: true, message: 'Collection deleted successfully' }, { status: 200 });
   } catch (error) {
     console.error('Error deleting collection:', error);

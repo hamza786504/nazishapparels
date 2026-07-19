@@ -3,7 +3,22 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { FaWhatsapp } from 'react-icons/fa';
 import { useCart } from '../../store/cartContext';
+import { useAuth } from '../../store/authContext';
+
+const DEFAULT_SHIPPING_CONFIG = {
+    cod: true,
+    bankDeposit: false,
+    whatsappNumber: '',
+    bankDetails: { accountTitle: '', accountNumber: '', bankName: '', iban: '' },
+    bankDepositReceiptMode: 'both_at_least_one',
+    standardCharge: 250,
+    freeShippingThreshold: 10000,
+    shippingMethods: [
+        { id: 'standard', name: 'Standard Shipping', description: '3–5 Business Days', charge: 250, isDefault: true },
+    ],
+};
 
 const countries = [
     'Country/Region',
@@ -15,6 +30,9 @@ const countries = [
 
 export default function CheckoutPage() {
     const { cartItems, clearCart } = useCart();
+    const { customer, isAuthenticated } = useAuth();
+    const [shippingConfig, setShippingConfig] = useState(DEFAULT_SHIPPING_CONFIG);
+    const [accountType, setAccountType] = useState('new'); // 'new' or 'existing'
     const [formData, setFormData] = useState({
         email: '',
         newsletter: false,
@@ -29,13 +47,134 @@ export default function CheckoutPage() {
         discountCode: '',
         shippingMethod: 'standard',
         paymentMethod: 'cod',
+        password: '',
+        confirmPassword: '',
     });
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [orderSuccess, setOrderSuccess] = useState(null); // holds placed order details
+    const [receiptFile, setReceiptFile] = useState(null);
+    const [receiptUrl, setReceiptUrl] = useState('');
+    const [receiptUploading, setReceiptUploading] = useState(false);
+    const [whatsappShared, setWhatsappShared] = useState(false);
+
+    // Derived receipt-submission flags. A single source of truth
+    // (`shippingConfig.bankDepositReceiptMode`) drives everything:
+    //   upload_only             → receipt image upload required
+    //   whatsapp_only           → WhatsApp share required
+    //   both_at_least_one       → upload OR WhatsApp (either satisfies)
+    const receiptUploadEnabled =
+        shippingConfig.bankDepositReceiptMode === 'upload_only' ||
+        shippingConfig.bankDepositReceiptMode === 'both_at_least_one';
+    const whatsappReceiptEnabled =
+        shippingConfig.bankDepositReceiptMode === 'whatsapp_only' ||
+        shippingConfig.bankDepositReceiptMode === 'both_at_least_one';
+
+    // Reset receipt state whenever the (async-loaded) config changes.
+    useEffect(() => {
+        setReceiptUploading(false);
+        setWhatsappShared(false);
+        setReceiptUrl('');
+    }, [shippingConfig]);
+
+    // ── Saved addresses for logged-in customers ───────────────────────────────
+    const [savedAddresses, setSavedAddresses] = useState([]);
+    const [selectedAddressKey, setSelectedAddressKey] = useState(null);
+    const [addressesLoaded, setAddressesLoaded] = useState(false);
+
+    const isLoggedIn = isAuthenticated && !!customer;
+
+    // Map a saved address country value to one of the checkout country options.
+    const toCheckoutCountry = (c) => {
+        if (c === 'United States') return 'USA';
+        return c || 'Country/Region';
+    };
+
+    // When the customer is logged in, load any saved addresses from their
+    // address book and pre-fill the form so checkout is one-click.
+    useEffect(() => {
+        if (!isLoggedIn) return;
+        let active = true;
+        fetch('/api/account/addresses')
+            .then((r) => r.json())
+            .then((data) => {
+                if (!active || !data.success) return;
+                const addrs = Array.isArray(data.addresses) ? data.addresses : [];
+                setSavedAddresses(addrs);
+                // Auto-select the default (or first) address and fill the form.
+                const preferred = addrs.find((a) => a.isDefault) || addrs[0];
+                setSelectedAddressKey(preferred?._key || null);
+                setFormData((prev) => ({
+                    ...prev,
+                    email: customer.email || prev.email,
+                    firstName: preferred?.firstName || prev.firstName,
+                    lastName: preferred?.lastName || prev.lastName,
+                    address: preferred?.street || prev.address,
+                    apartment: preferred?.apartment || prev.apartment,
+                    city: preferred?.city || prev.city,
+                    country: toCheckoutCountry(preferred?.country),
+                    postalCode: preferred?.postalCode || prev.postalCode,
+                    phone: preferred?.phone || prev.phone,
+                }));
+            })
+            .catch(() => {})
+            .finally(() => {
+                if (active) setAddressesLoaded(true);
+            });
+        return () => {
+            active = false;
+        };
+    }, [isLoggedIn, customer]);
+
+    // Fill the shipping form from a saved address when the user picks one.
+    const selectSavedAddress = (addr) => {
+        setSelectedAddressKey(addr._key);
+        setFormData((prev) => ({
+            ...prev,
+            firstName: addr.firstName || prev.firstName,
+            lastName: addr.lastName || prev.lastName,
+            address: addr.street || prev.address,
+            apartment: addr.apartment || prev.apartment,
+            city: addr.city || prev.city,
+            country: toCheckoutCountry(addr.country),
+            postalCode: addr.postalCode || prev.postalCode,
+            phone: addr.phone || prev.phone,
+        }));
+        setErrors((prev) => ({
+            ...prev,
+            firstName: '',
+            lastName: '',
+            address: '',
+            city: '',
+            country: '',
+            phone: '',
+        }));
+    };
 
     const headerRef = useRef(null);
     const lastScrollRef = useRef(0);
+
+    // ── Load shipping config from admin settings ─────────────────────────
+    useEffect(() => {
+        fetch('/api/settings/general')
+            .then(r => r.json())
+            .then(data => {
+                if (data.success && data.settings?.shipping) {
+                    const cfg = { ...DEFAULT_SHIPPING_CONFIG, ...data.settings.shipping };
+                    if (!cfg.shippingMethods || cfg.shippingMethods.length === 0) {
+                        cfg.shippingMethods = DEFAULT_SHIPPING_CONFIG.shippingMethods;
+                    }
+                    setShippingConfig(cfg);
+                    const defaultMethod = cfg.shippingMethods.find(m => m.isDefault) || cfg.shippingMethods[0];
+                    setFormData(prev => ({
+                        ...prev,
+                        shippingMethod: defaultMethod?.id || 'standard',
+                        paymentMethod: cfg.cod ? 'cod' : cfg.bankDeposit ? 'bank' : 'cod',
+                    }));
+                }
+            })
+            .catch(err => console.error('Failed to load shipping config:', err));
+    }, []);
 
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -43,7 +182,6 @@ export default function CheckoutPage() {
             ...prev,
             [name]: type === 'checkbox' ? checked : value,
         }));
-        // Clear error on change
         if (errors[name]) {
             setErrors((prev) => ({ ...prev, [name]: '' }));
         }
@@ -54,8 +192,61 @@ export default function CheckoutPage() {
     };
 
     const subtotal = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
-    const shippingCost = formData.shippingMethod === 'express' ? 500 : 250;
+    const methods = shippingConfig.shippingMethods || DEFAULT_SHIPPING_CONFIG.shippingMethods;
+    const selectedMethod = methods.find(m => m.id === formData.shippingMethod) || methods[0];
+    // Free shipping when threshold is set and subtotal meets/exceeds it
+    const isFreeShipping = shippingConfig.freeShippingThreshold > 0 && subtotal >= shippingConfig.freeShippingThreshold;
+    const baseShippingCost = selectedMethod?.charge || shippingConfig.standardCharge;
+    const shippingCost = isFreeShipping ? 0 : baseShippingCost;
     const total = subtotal + shippingCost;
+
+    // ── WhatsApp payment: build a wa.me deep link with the order summary ──
+    // The store's WhatsApp number is configured by the admin in Shipping Settings.
+    const whatsappNumber = (shippingConfig.whatsappNumber || '').replace(/[\s()\-]/g, '');
+    const buildWhatsappMessage = () => {
+        const lines = ['*New Order — Payment via WhatsApp*'];
+        if (formData.firstName || formData.lastName) {
+            lines.push(`Name: ${`${formData.firstName} ${formData.lastName}`.trim()}`);
+        }
+        if (formData.phone) lines.push(`Phone: ${formData.phone}`);
+        if (formData.email) lines.push(`Email: ${formData.email}`);
+        lines.push('');
+        lines.push('*Order Items:*');
+        cartItems.forEach((item) => {
+            const colorPart = item.color && item.color !== 'Default' ? ` / ${item.color}` : '';
+            lines.push(
+                `- ${item.title} (Size: ${item.size}${colorPart}) x${item.quantity} = Rs. ${(item.price * item.quantity).toLocaleString()}`
+            );
+        });
+        lines.push('');
+        lines.push(`*Order Total:* Rs. ${total.toLocaleString()}`);
+        lines.push(`Shipping Method: ${selectedMethod?.name || 'Standard Shipping'}`);
+        return lines.join('\n');
+    };
+    const whatsappLink = whatsappNumber
+        ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(buildWhatsappMessage())}`
+        : null;
+
+    const handleReceiptUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        setReceiptFile(file);
+        setReceiptUploading(true);
+        setErrors((prev) => ({ ...prev, receipt: '' }));
+        try {
+            const fd = new FormData();
+            fd.append('file', file);
+            const res = await fetch('/api/upload', { method: 'POST', body: fd });
+            const data = await res.json();
+            if (!res.ok || !data.success) throw new Error(data.message || 'Upload failed');
+            setReceiptUrl(data.url);
+        } catch (err) {
+            setErrors((prev) => ({ ...prev, receipt: err.message }));
+            setReceiptFile(null);
+        } finally {
+            setReceiptUploading(false);
+        }
+    };
 
     useEffect(() => {
         const handleScroll = () => {
@@ -89,6 +280,32 @@ export default function CheckoutPage() {
         else if (!/^[+\d\s\-()]{7,}$/.test(formData.phone))
             newErrors.phone = 'Please enter a valid phone number.';
         if (cartItems.length === 0) newErrors.cart = 'Your cart is empty.';
+
+        // Validate password fields only for new (guest) accounts
+        if (!isLoggedIn && accountType === 'new') {
+            if (!formData.password) newErrors.password = 'Password is required.';
+            else if (formData.password.length < 6)
+                newErrors.password = 'Password must be at least 6 characters.';
+            if (!formData.confirmPassword) newErrors.confirmPassword = 'Please confirm your password.';
+            else if (formData.password !== formData.confirmPassword)
+                newErrors.confirmPassword = 'Passwords do not match.';
+        }
+        // Bank Deposit receipt proof — required only when Bank Deposit is the
+        // selected method. How it's proven is set by the admin's
+        // `bankDepositReceiptMode`: upload_only, whatsapp_only, or
+        // both_at_least_one (either one satisfies).
+        if (formData.paymentMethod === 'bank') {
+            const mode = shippingConfig.bankDepositReceiptMode;
+            if (mode === 'whatsapp_only') {
+                if (!whatsappShared)
+                    newErrors.receipt = 'Please share your payment receipt on WhatsApp before placing your order.';
+            } else if (mode === 'upload_only') {
+                if (!receiptUrl)
+                    newErrors.receipt = 'Please upload a payment receipt screenshot.';
+            } else if (!receiptUrl && !whatsappShared) {
+                newErrors.receipt = 'Please upload a receipt or share it on WhatsApp to confirm your payment.';
+            }
+        }
         return newErrors;
     };
 
@@ -120,6 +337,8 @@ export default function CheckoutPage() {
                 country: formData.country,
                 postalCode: formData.postalCode,
                 shippingMethod: formData.shippingMethod,
+                shippingMethodName: selectedMethod?.name || 'Standard Shipping',
+                shipping: shippingCost,
                 paymentMethod: formData.paymentMethod,
                 total,
                 items: cartItems.reduce((acc, item) => acc + item.quantity, 0),
@@ -133,6 +352,9 @@ export default function CheckoutPage() {
                     quantity: item.quantity,
                     price: item.price,
                 })),
+                // Include password only for new (guest) account creation
+                ...(!isLoggedIn && accountType === 'new' && { password: formData.password }),
+                ...(receiptUrl && { receiptUrl }),
             };
 
             const res = await fetch('/api/orders', {
@@ -156,7 +378,7 @@ export default function CheckoutPage() {
                 address: [formData.address, formData.apartment, formData.city, formData.country]
                     .filter(Boolean)
                     .join(', '),
-                shippingMethod: formData.shippingMethod,
+                shippingMethod: selectedMethod?.name || 'Standard Shipping',
             });
         } catch (err) {
             setErrors({ submit: err.message });
@@ -254,10 +476,43 @@ export default function CheckoutPage() {
                             <section>
                                 <div className="flex justify-between items-end mb-6">
                                     <h2 className="text-headline-sm font-headline-sm text-primary">Contact Information</h2>
-                                    <p className="text-label-sm font-label-sm text-on-surface-variant">
-                                        Already have an account?{' '}
-                                        <Link href="#" className="text-secondary underline underline-offset-4">Log in</Link>
-                                    </p>
+                                    {isLoggedIn ? (
+                                        <span className="flex items-center gap-2 text-label-sm font-label-sm text-secondary">
+                                            <span className="material-symbols-outlined text-[18px]">check_circle</span>
+                                            Logged in as {customer.email}
+                                        </span>
+                                    ) : (
+                                        <div className="flex items-center gap-4">
+                                            <div className="flex items-center gap-2">
+                                                <input
+                                                    className="w-4 h-4 text-secondary focus:ring-secondary/20"
+                                                    id="accountTypeNew"
+                                                    name="accountType"
+                                                    type="radio"
+                                                    value="new"
+                                                    checked={accountType === 'new'}
+                                                    onChange={(e) => setAccountType(e.target.value)}
+                                                />
+                                                <label className="text-label-sm font-label-sm text-on-surface-variant" htmlFor="accountTypeNew">
+                                                    New Account
+                                                </label>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <input
+                                                    className="w-4 h-4 text-secondary focus:ring-secondary/20"
+                                                    id="accountTypeExisting"
+                                                    name="accountType"
+                                                    type="radio"
+                                                    value="existing"
+                                                    checked={accountType === 'existing'}
+                                                    onChange={(e) => setAccountType(e.target.value)}
+                                                />
+                                                <label className="text-label-sm font-label-sm text-on-surface-variant" htmlFor="accountTypeExisting">
+                                                    Already have an account
+                                                </label>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="space-y-4">
                                     <div className="relative group">
@@ -269,9 +524,41 @@ export default function CheckoutPage() {
                                             placeholder="Email address"
                                             value={formData.email}
                                             onChange={handleInputChange}
+                                            readOnly={isLoggedIn}
                                         />
                                         {errors.email && <p className="text-error text-[11px] mt-1 px-1">{errors.email}</p>}
                                     </div>
+
+                                    {/* Password fields for new account */}
+                                    {!isLoggedIn && accountType === 'new' && (
+                                        <>
+                                            <div className="relative group">
+                                                <input
+                                                    className={`w-full bg-surface-container-low border-none border-b-2 focus:ring-0 py-4 px-4 transition-all duration-300 placeholder:text-outline-variant text-body-md focus:scale-[1.01] ${errors.password ? 'border-b-2 border-error' : 'border-outline-variant focus:border-secondary'}`}
+                                                    id="password"
+                                                    name="password"
+                                                    type="password"
+                                                    placeholder="Password (min 6 characters)"
+                                                    value={formData.password}
+                                                    onChange={handleInputChange}
+                                                />
+                                                {errors.password && <p className="text-error text-[11px] mt-1 px-1">{errors.password}</p>}
+                                            </div>
+                                            <div className="relative group">
+                                                <input
+                                                    className={`w-full bg-surface-container-low border-none border-b-2 focus:ring-0 py-4 px-4 transition-all duration-300 placeholder:text-outline-variant text-body-md focus:scale-[1.01] ${errors.confirmPassword ? 'border-b-2 border-error' : 'border-outline-variant focus:border-secondary'}`}
+                                                    id="confirmPassword"
+                                                    name="confirmPassword"
+                                                    type="password"
+                                                    placeholder="Confirm Password"
+                                                    value={formData.confirmPassword}
+                                                    onChange={handleInputChange}
+                                                />
+                                                {errors.confirmPassword && <p className="text-error text-[11px] mt-1 px-1">{errors.confirmPassword}</p>}
+                                            </div>
+                                        </>
+                                    )}
+
                                     <div className="flex items-center gap-3 py-2">
                                         <input
                                             className="w-4 h-4 rounded-none border-secondary text-secondary focus:ring-secondary/20"
@@ -291,6 +578,77 @@ export default function CheckoutPage() {
                             {/* Shipping Address */}
                             <section className="pt-4 space-y-6">
                                 <h2 className="text-headline-sm font-headline-sm text-primary">Shipping Address</h2>
+
+                                {/* Saved addresses from the customer's address book */}
+                                {isLoggedIn && (
+                                    <div className="space-y-3">
+                                        {!addressesLoaded ? (
+                                            <p className="text-label-sm text-on-surface-variant flex items-center gap-2">
+                                                <span className="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
+                                                Loading saved addresses…
+                                            </p>
+                                        ) : savedAddresses.length > 0 ? (
+                                            <>
+                                                <p className="text-label-sm text-on-surface-variant">
+                                                    Choose a saved address or fill in the form below.
+                                                </p>
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                    {savedAddresses.map((addr) => {
+                                                        const selected = addr._key === selectedAddressKey;
+                                                        return (
+                                                            <label
+                                                                key={addr._key}
+                                                                className={`flex items-start gap-3 text-left p-4 border cursor-pointer transition-all duration-200 ${
+                                                                    selected
+                                                                        ? 'border-secondary bg-secondary/5'
+                                                                        : 'border-secondary/20 hover:border-secondary/60'
+                                                                }`}
+                                                            >
+                                                                <input
+                                                                    type="radio"
+                                                                    name="savedAddress"
+                                                                    value={addr._key}
+                                                                    checked={selected}
+                                                                    onChange={() => selectSavedAddress(addr)}
+                                                                    className="mt-1 w-4 h-4 text-secondary focus:ring-secondary/20 border-secondary"
+                                                                />
+                                                                <span className="flex-1">
+                                                                    <span className="flex items-center justify-between mb-1">
+                                                                        <span className="font-label-sm font-label-sm text-primary uppercase tracking-wider">
+                                                                            {`${addr.firstName || ''} ${addr.lastName || ''}`.trim() || 'Address'}
+                                                                        </span>
+                                                                        {addr.isDefault && (
+                                                                            <span className="text-[10px] uppercase tracking-wider text-secondary">
+                                                                                Default
+                                                                            </span>
+                                                                        )}
+                                                                    </span>
+                                                                    <span className="block text-label-sm text-on-surface-variant leading-snug">
+                                                                        {[addr.street, addr.apartment, addr.city, addr.country]
+                                                                            .filter(Boolean)
+                                                                            .join(', ')}
+                                                                    </span>
+                                                                    {addr.phone && (
+                                                                        <span className="block text-label-sm text-on-surface-variant mt-1">{addr.phone}</span>
+                                                                    )}
+                                                                </span>
+                                                            </label>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <p className="text-label-sm text-on-surface-variant">
+                                                No saved addresses yet — add one from your{' '}
+                                                <Link href="/address" className="text-secondary underline">
+                                                    Address Book
+                                                </Link>{' '}
+                                                or fill in the form below.
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
+
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <input
@@ -390,60 +748,218 @@ export default function CheckoutPage() {
                                 </div>
                             </section>
 
-                            {/* Shipping Method */}
+                            {/* Shipping Method — selectable options */}
                             <section className="pt-4 space-y-6">
                                 <h2 className="text-headline-sm font-headline-sm text-primary">Shipping Method</h2>
-                                <div className="border border-secondary/10 bg-surface-container-low divide-y divide-secondary/10">
-                                    <label className="flex items-center justify-between p-5 cursor-pointer hover:bg-surface-container-high transition-colors">
-                                        <div className="flex items-center gap-4">
+                                <div className="border border-secondary/10 bg-surface-container-low overflow-hidden divide-y divide-secondary/10">
+                                    {methods.map((method) => (
+                                        <label
+                                            key={method.id}
+                                            className={`flex items-center gap-4 p-5 cursor-pointer hover:bg-surface-container-high transition-colors ${formData.shippingMethod === method.id ? 'bg-secondary/5' : ''}`}
+                                        >
                                             <input
                                                 className="w-4 h-4 text-secondary focus:ring-secondary/20 border-secondary"
                                                 name="shippingMethod"
                                                 type="radio"
-                                                value="standard"
-                                                checked={formData.shippingMethod === 'standard'}
+                                                value={method.id}
+                                                checked={formData.shippingMethod === method.id}
                                                 onChange={handleInputChange}
                                             />
-                                            <span className="text-body-md text-primary">Standard Shipping (3-5 Business Days)</span>
-                                        </div>
-                                        <span className="text-label-md font-label-md text-primary">Rs. 250</span>
-                                    </label>
-                                    <label className="flex items-center justify-between p-5 cursor-pointer hover:bg-surface-container-high transition-colors">
-                                        <div className="flex items-center gap-4">
-                                            <input
-                                                className="w-4 h-4 text-secondary focus:ring-secondary/20 border-secondary"
-                                                name="shippingMethod"
-                                                type="radio"
-                                                value="express"
-                                                checked={formData.shippingMethod === 'express'}
-                                                onChange={handleInputChange}
-                                            />
-                                            <span className="text-body-md text-primary">Express Shipping (1-2 Business Days)</span>
-                                        </div>
-                                        <span className="text-label-md font-label-md text-primary">Rs. 500</span>
-                                    </label>
+                                            <div className="flex-1">
+                                                <span className="text-body-md font-label-md text-primary block">{method.name}</span>
+                                                {method.description && (
+                                                    <span className="text-body-sm text-on-surface-variant">{method.description}</span>
+                                                )}
+                                            </div>
+                                            <span className="text-label-md font-label-md text-primary">
+                                                {isFreeShipping ? (
+                                                    <>
+                                                        <span className="line-through text-on-surface-variant mr-1">{formatPrice(method.charge)}</span>
+                                                        <span className="text-primary font-bold">FREE</span>
+                                                    </>
+                                                ) : (
+                                                    formatPrice(method.charge)
+                                                )}
+                                            </span>
+                                        </label>
+                                    ))}
                                 </div>
+                                {isFreeShipping && (
+                                    <p className="text-body-sm text-primary flex items-center gap-1.5">
+                                        <span className="material-symbols-outlined text-base">local_shipping</span>
+                                        Free shipping applied — your order exceeds Rs. {shippingConfig.freeShippingThreshold.toLocaleString()}!
+                                    </p>
+                                )}
                             </section>
 
                             {/* Payment Information */}
                             <section className="pt-4 space-y-6">
                                 <div className="flex flex-col">
-                                    <h2 className="text-headline-sm font-headline-sm text-primary">Payment Information</h2>
+                                    <h2 className="text-headline-sm font-headline-sm text-primary">Payment Method</h2>
                                     <p className="text-label-sm font-label-sm text-on-surface-variant">All transactions are secure and encrypted.</p>
                                 </div>
-                                <div className="border border-secondary/10 bg-surface-container-low overflow-hidden">
-                                    <label className="flex items-center gap-4 p-5 cursor-pointer hover:bg-surface-container-high transition-colors">
-                                        <input
-                                            className="w-4 h-4 text-secondary focus:ring-secondary/20 border-secondary"
-                                            name="paymentMethod"
-                                            type="radio"
-                                            value="cod"
-                                            checked={formData.paymentMethod === 'cod'}
-                                            onChange={handleInputChange}
-                                        />
-                                        <span className="text-body-md font-label-md text-primary">Cash on Delivery (COD)</span>
-                                    </label>
+                                <div className="border border-secondary/10 bg-surface-container-low overflow-hidden divide-y divide-secondary/10">
+                                    {/* Cash on Delivery */}
+                                    {shippingConfig.cod && (
+                                        <label className="flex items-center gap-4 p-5 cursor-pointer hover:bg-surface-container-high transition-colors">
+                                            <input
+                                                className="w-4 h-4 text-secondary focus:ring-secondary/20 border-secondary"
+                                                name="paymentMethod"
+                                                type="radio"
+                                                value="cod"
+                                                checked={formData.paymentMethod === 'cod'}
+                                                onChange={handleInputChange}
+                                            />
+                                            <div>
+                                                <span className="text-body-md font-label-md text-primary block">Cash on Delivery (COD)</span>
+                                                <span className="text-body-sm text-on-surface-variant">Pay in cash when your order arrives</span>
+                                            </div>
+                                        </label>
+                                    )}
+
+                                    {/* Bank Deposit */}
+                                    {shippingConfig.bankDeposit && (
+                                        <label className="flex items-center gap-4 p-5 cursor-pointer hover:bg-surface-container-high transition-colors">
+                                            <input
+                                                className="w-4 h-4 text-secondary focus:ring-secondary/20 border-secondary"
+                                                name="paymentMethod"
+                                                type="radio"
+                                                value="bank"
+                                                checked={formData.paymentMethod === 'bank'}
+                                                onChange={handleInputChange}
+                                            />
+                                            <div>
+                                                <span className="text-body-md font-label-md text-primary block">Bank Deposit</span>
+                                                <span className="text-body-sm text-on-surface-variant">Transfer to our bank account before delivery</span>
+                                            </div>
+                                        </label>
+                                    )}
+
+                                    {/* WhatsApp is NOT a separate payment method — it's a
+                                        receipt-submission option shown inside the Bank Deposit
+                                        info box below, gated by shippingConfig.bankDepositReceiptMode. */}
                                 </div>
+
+                                {/* Bank Deposit info box — shown when Bank Deposit is selected.
+                                    WhatsApp is NOT a separate payment method; it is a receipt-
+                                    submission option gated by shippingConfig.bankDepositReceiptMode. */}
+                                {formData.paymentMethod === 'bank' && shippingConfig.bankDeposit && (
+                                    <div className="border border-secondary/20 bg-surface-container-low p-5 space-y-3">
+                                        <p className="text-label-md font-bold text-primary flex items-center gap-2">
+                                            <span className="material-symbols-outlined text-base">account_balance</span>
+                                            Bank Transfer Details
+                                        </p>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-body-md">
+                                            {shippingConfig.bankDetails.accountTitle && (
+                                                <div>
+                                                    <span className="text-on-surface-variant text-xs uppercase tracking-wide block mb-0.5">Account Title</span>
+                                                    <span className="font-medium text-on-surface">{shippingConfig.bankDetails.accountTitle}</span>
+                                                </div>
+                                            )}
+                                            {shippingConfig.bankDetails.bankName && (
+                                                <div>
+                                                    <span className="text-on-surface-variant text-xs uppercase tracking-wide block mb-0.5">Bank</span>
+                                                    <span className="font-medium text-on-surface">{shippingConfig.bankDetails.bankName}</span>
+                                                </div>
+                                            )}
+                                            {shippingConfig.bankDetails.accountNumber && (
+                                                <div>
+                                                    <span className="text-on-surface-variant text-xs uppercase tracking-wide block mb-0.5">Account Number</span>
+                                                    <span className="font-medium text-on-surface font-mono">{shippingConfig.bankDetails.accountNumber}</span>
+                                                </div>
+                                            )}
+                                            {shippingConfig.bankDetails.iban && (
+                                                <div>
+                                                    <span className="text-on-surface-variant text-xs uppercase tracking-wide block mb-0.5">IBAN</span>
+                                                    <span className="font-medium text-on-surface font-mono text-sm">{shippingConfig.bankDetails.iban}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <p className="text-body-sm text-on-surface-variant border-t border-secondary/10 pt-3">
+                                            ⚠️ Please transfer the exact order total and send a payment screenshot to confirm. Your order will be processed after payment is verified.
+                                        </p>
+
+                                        {/* Upload receipt option — shown for upload_only / both_at_least_one */}
+                                        {receiptUploadEnabled && (
+                                            <div className="border-t border-secondary/10 pt-4">
+                                                <p className="text-label-md font-bold text-primary mb-3">Upload Payment Receipt</p>
+                                                <label className="flex items-center justify-center w-full h-32 border-2 border-dashed border-secondary/30 rounded cursor-pointer hover:border-secondary transition-colors bg-surface-container-lowest">
+                                                    {receiptUrl ? (
+                                                        <div className="flex flex-col items-center gap-2">
+                                                            <span className="material-symbols-outlined text-3xl text-secondary">check_circle</span>
+                                                            <span className="text-label-sm text-secondary">Receipt uploaded</span>
+                                                            <span className="text-label-sm text-on-surface-variant">Tap to replace</span>
+                                                        </div>
+                                                    ) : receiptUploading ? (
+                                                        <div className="flex flex-col items-center gap-2">
+                                                            <span className="material-symbols-outlined animate-spin text-3xl text-secondary">progress_activity</span>
+                                                            <span className="text-label-sm text-on-surface-variant">Uploading…</span>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex flex-col items-center gap-2">
+                                                            <span className="material-symbols-outlined text-3xl text-on-surface-variant">cloud_upload</span>
+                                                            <span className="text-label-sm text-on-surface-variant">Click to upload receipt screenshot</span>
+                                                            <span className="text-label-sm text-on-surface-variant/60">PNG, JPG up to 5MB</span>
+                                                        </div>
+                                                    )}
+                                                    <input type="file" accept="image/png,image/jpeg,image/jpg" className="hidden" onChange={handleReceiptUpload} disabled={receiptUploading} />
+                                                </label>
+                                            </div>
+                                        )}
+
+                                        {/* WhatsApp share option — shown for whatsapp_only / both_at_least_one */}
+                                        {whatsappReceiptEnabled && (
+                                            <div className="border-t border-secondary/10 pt-4 space-y-4">
+                                                <p className="text-label-md font-bold text-primary flex items-center gap-2">
+                                                    <FaWhatsapp className="text-[#25D366] text-lg" />
+                                                    Share Receipt on WhatsApp
+                                                </p>
+                                                <p className="text-body-sm text-on-surface-variant">
+                                                    Share a screenshot of your payment (bank transfer / easypaisa / jazzcash) with us on WhatsApp. We&apos;ll verify it and process your order.
+                                                </p>
+
+                                                {whatsappLink ? (
+                                                    <a
+                                                        href={whatsappLink}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        onClick={() => setWhatsappShared(true)}
+                                                        className="flex items-center justify-center gap-2 w-full bg-[#25D366] hover:bg-[#1ebe5b] text-white py-4 font-label-md text-label-md uppercase tracking-widest transition-all active:scale-[0.98]"
+                                                    >
+                                                        <FaWhatsapp className="text-lg" />
+                                                        Share Receipt on WhatsApp
+                                                    </a>
+                                                ) : (
+                                                    <div className="flex items-center justify-center gap-2 w-full bg-surface-container-highest text-on-surface-variant py-4 font-label-md text-label-md cursor-not-allowed">
+                                                        <FaWhatsapp className="text-lg" />
+                                                        WhatsApp number not set
+                                                    </div>
+                                                )}
+
+                                                {whatsappLink && whatsappShared && (
+                                                    <p className="text-body-sm text-secondary flex items-center gap-1.5">
+                                                        <span className="material-symbols-outlined text-base">check_circle</span>
+                                                        WhatsApp opened — send your screenshot, then come back and place your order.
+                                                    </p>
+                                                )}
+                                                {!whatsappLink && (
+                                                    <p className="text-body-sm text-error">
+                                                        The store hasn&apos;t configured a WhatsApp number yet. Please contact support or choose another payment method.
+                                                    </p>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {/* Hint shown when either proof satisfies */}
+                                        {shippingConfig.bankDepositReceiptMode === 'both_at_least_one' && (
+                                            <p className="text-body-sm text-on-surface-variant border-t border-secondary/10 pt-3">
+                                                You can either upload a receipt above or share it on WhatsApp — only one is required to place your order.
+                                            </p>
+                                        )}
+
+                                        {errors.receipt && <p className="text-error text-[11px] mt-2">{errors.receipt}</p>}
+                                    </div>
+                                )}
                             </section>
 
                             {/* Navigation */}
@@ -525,7 +1041,14 @@ export default function CheckoutPage() {
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-body-md text-on-surface-variant">Shipping</span>
-                                    <span className="text-body-md font-medium text-primary">{formatPrice(shippingCost)}</span>
+                                    {isFreeShipping ? (
+                                        <span className="text-body-md font-medium text-primary">
+                                            <span className="line-through text-on-surface-variant/50 mr-1">{formatPrice(baseShippingCost)}</span>
+                                            FREE
+                                        </span>
+                                    ) : (
+                                        <span className="text-body-md font-medium text-primary">{formatPrice(shippingCost)}</span>
+                                    )}
                                 </div>
                                 <div className="flex justify-between border-t border-secondary/10 pt-4 mt-4">
                                     <span className="text-headline-sm font-headline-sm text-primary">Total</span>

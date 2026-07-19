@@ -1,28 +1,27 @@
 import { NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import Menu from '@/models/Menu';
-
-function toHandle(name) {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)+/g, '');
-}
+import client from '@/lib/sanityClient';
+import { withTimestamps } from '@/lib/sanityHelpers';
+import { slugify } from '@/lib/slugify';
 
 // GET /api/menus — list all menus (summary, no full item tree)
 // ?position=header  → returns only the menu assigned to that position (single)
 export async function GET(request) {
   try {
-    await dbConnect();
     const { searchParams } = new URL(request.url);
     const positionFilter = searchParams.get('position');
 
-    const query = positionFilter ? { position: positionFilter } : {};
+    const filterStr = positionFilter
+      ? '_type == "menu" && position == $position'
+      : '_type == "menu"';
 
-    const menus = await Menu.find(query)
-      .select('name handle position items createdAt updatedAt')
-      .sort({ createdAt: -1 })
-      .lean();
+    const menus = await client.fetch(
+      `*[${filterStr}] | order(_createdAt desc){
+        name, handle, position, items,
+        "createdAt": _createdAt,
+        "updatedAt": _updatedAt
+      }`,
+      positionFilter ? { position: positionFilter } : {}
+    );
 
     // Add item count without sending full tree
     const summary = menus.map((m) => ({
@@ -46,7 +45,6 @@ export async function GET(request) {
 // POST /api/menus — create new menu
 export async function POST(request) {
   try {
-    await dbConnect();
     const body = await request.json();
     const { name, position = 'none' } = body;
 
@@ -54,10 +52,10 @@ export async function POST(request) {
       return NextResponse.json({ success: false, message: 'Menu name is required' }, { status: 400 });
     }
 
-    const handle = toHandle(name.trim());
+    const handle = slugify(name.trim());
 
     // Ensure handle is unique
-    const existing = await Menu.findOne({ handle });
+    const existing = await client.fetch(`*[_type == "menu" && handle == $handle][0]{_id}`, { handle });
     if (existing) {
       return NextResponse.json(
         { success: false, message: `A menu with handle "${handle}" already exists` },
@@ -67,11 +65,16 @@ export async function POST(request) {
 
     // If position is header/footer/sidebar, unset that position on other menus first
     if (position !== 'none') {
-      await Menu.updateMany({ position }, { $set: { position: 'none' } });
+      const clashingIds = await client.fetch(`*[_type == "menu" && position == $position]._id`, { position });
+      if (clashingIds.length) {
+        const tx = client.transaction();
+        clashingIds.forEach((id) => tx.patch(id, { set: { position: 'none' } }));
+        await tx.commit();
+      }
     }
 
-    const menu = await Menu.create({ name: name.trim(), handle, position, items: [] });
-    return NextResponse.json({ success: true, menu }, { status: 201 });
+    const menu = await client.create({ _type: 'menu', name: name.trim(), handle, position, items: [] });
+    return NextResponse.json({ success: true, menu: withTimestamps(menu) }, { status: 201 });
   } catch (error) {
     console.error('Error creating menu:', error);
     return NextResponse.json({ success: false, error: error.message }, { status: 400 });

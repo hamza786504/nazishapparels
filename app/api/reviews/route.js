@@ -1,22 +1,36 @@
 import { NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import Review from '@/models/Review';
-import Product from '@/models/Product';
+import client from '@/lib/sanityClient';
+import { withTimestamps } from '@/lib/sanityHelpers';
+
+const REVIEW_PROJECTION = `{
+  ...,
+  "createdAt": _createdAt,
+  "updatedAt": _updatedAt,
+  "productId": *[_type == "product" && _id == ^.productId][0]{ _id, title, images }
+}`;
 
 export async function GET(request) {
   try {
-    await dbConnect();
     const { searchParams } = new URL(request.url);
     const productId = searchParams.get('productId');
     const status = searchParams.get('status');
 
-    const filter = {};
-    if (productId) filter.productId = productId;
-    if (status && status !== 'All') filter.status = status.toLowerCase();
+    const conditions = ['_type == "review"'];
+    const params = {};
 
-    const reviews = await Review.find(filter)
-      .populate('productId', 'title images')
-      .sort({ createdAt: -1 });
+    if (productId) {
+      conditions.push('productId == $productId');
+      params.productId = productId;
+    }
+    if (status && status !== 'All') {
+      conditions.push('status == $status');
+      params.status = status.toLowerCase();
+    }
+
+    const reviews = await client.fetch(
+      `*[${conditions.join(' && ')}] | order(_createdAt desc)${REVIEW_PROJECTION}`,
+      params
+    );
 
     return NextResponse.json({ success: true, reviews }, { status: 200 });
   } catch (error) {
@@ -27,26 +41,26 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    await dbConnect();
     const body = await request.json();
 
     // Bulk operations
     if (body.action === 'bulk-approve' && body.ids) {
-      const result = await Review.updateMany(
-        { _id: { $in: body.ids } },
-        { $set: { status: 'approved' } }
-      );
-      return NextResponse.json({ success: true, modifiedCount: result.modifiedCount }, { status: 200 });
+      const tx = client.transaction();
+      body.ids.forEach((id) => tx.patch(id, { set: { status: 'approved' } }));
+      await tx.commit();
+      return NextResponse.json({ success: true, modifiedCount: body.ids.length }, { status: 200 });
     }
 
     if (body.action === 'bulk-delete' && body.ids) {
-      const result = await Review.deleteMany({ _id: { $in: body.ids } });
-      return NextResponse.json({ success: true, deletedCount: result.deletedCount }, { status: 200 });
+      const tx = client.transaction();
+      body.ids.forEach((id) => tx.delete(id));
+      await tx.commit();
+      return NextResponse.json({ success: true, deletedCount: body.ids.length }, { status: 200 });
     }
 
     // Single review creation
-    const review = await Review.create(body);
-    return NextResponse.json({ success: true, review }, { status: 201 });
+    const review = await client.create({ _type: 'review', status: 'pending', ...body });
+    return NextResponse.json({ success: true, review: withTimestamps(review) }, { status: 201 });
   } catch (error) {
     console.error('Error processing review request:', error);
     return NextResponse.json({ success: false, error: error.message }, { status: 400 });

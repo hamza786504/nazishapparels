@@ -1,8 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '../../store/authContext';
 export default function LoginPage() {
+    const router = useRouter();
+    const { login, isAuthenticated, loading } = useAuth();
+
+    // Already signed in — send the customer to their account area.
+    useEffect(() => {
+        if (!loading && isAuthenticated) {
+            router.replace('/dashboard');
+        }
+    }, [loading, isAuthenticated, router]);
+
     const [formData, setFormData] = useState({
         email: '',
         password: '',
@@ -10,7 +22,10 @@ export default function LoginPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitText, setSubmitText] = useState('Sign In');
     const [isSuccess, setIsSuccess] = useState(false);
+    const [error, setError] = useState('');
     const [focusedField, setFocusedField] = useState(null);
+
+    if (loading || isAuthenticated) return null;
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -30,26 +45,23 @@ export default function LoginPage() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         if (isSubmitting) return;
 
         setIsSubmitting(true);
         setSubmitText('Authenticating...');
+        setError('');
 
-        // Simulate authentication
         try {
-            await new Promise((resolve) => setTimeout(resolve, 1500));
-            
+            await login(formData.email, formData.password);
+
             setIsSuccess(true);
             setSubmitText('Welcome');
-            
-            // Redirect or handle successful login here
-            // router.push('/dashboard');
-            
-        } catch (error) {
+            router.push('/dashboard');
+        } catch (err) {
             setIsSubmitting(false);
             setSubmitText('Sign In');
-            // Handle error
+            setError(err.message || 'Invalid email or password');
         }
     };
 
@@ -162,6 +174,13 @@ export default function LoginPage() {
                                 </div>
                             </div>
 
+                            {/* Error Message */}
+                            {error && (
+                                <p className="font-body-sm text-sm text-red-600 bg-red-50 border border-red-200 px-3 py-2">
+                                    {error}
+                                </p>
+                            )}
+
                             {/* Actions */}
                             <div className="pt-unit">
                                 <button
@@ -206,7 +225,7 @@ export default function LoginPage() {
             {/* Footer */}
             <footer className="w-full py-unit border-t border-secondary/10 px-margin-mobile text-center">
                 <p className="font-label-sm text-label-sm text-on-surface-variant">
-                    © 2026 Nazish Apparels. All Rights Reserved.
+                    © 2026 Zaragems. All Rights Reserved.
                 </p>
             </footer>
         </div>

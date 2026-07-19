@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import Product from '@/models/Product';
-import Collection from '@/models/Collection';
+import client from '@/lib/sanityClient';
 
 // Static pages list — extend as needed
 const STATIC_PAGES = [
@@ -27,19 +25,18 @@ export async function GET(request) {
       return NextResponse.json({ success: true, results: [] }, { status: 200 });
     }
 
-    await dbConnect();
-    const regex = { $regex: q, $options: 'i' };
+    const wildcard = `*${q}*`;
 
-    // Run all three in parallel
+    // Run both in parallel
     const [products, collections] = await Promise.all([
-      Product.find({ title: regex, status: 'active' })
-        .select('title slug')
-        .limit(5)
-        .lean(),
-      Collection.find({ $or: [{ name: regex }, { slug: regex }] })
-        .select('name slug')
-        .limit(5)
-        .lean(),
+      client.fetch(
+        `*[_type == "product" && title match $wildcard && status == "active"][0...5]{ _id, title, slug }`,
+        { wildcard }
+      ),
+      client.fetch(
+        `*[_type == "collection" && (name match $wildcard || slug match $wildcard)][0...5]{ _id, name, slug }`,
+        { wildcard }
+      ),
     ]);
 
     // Match static pages

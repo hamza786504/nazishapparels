@@ -2,10 +2,13 @@
 'use client';
 import Image from 'next/image';
 import CartDrawer from './CartDrawer';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useCart } from '../store/cartContext';
+import { useAuth } from '../store/authContext';
 import { useNavMenu } from '../store/navMenuContext';
+import { useSiteSettings } from '../store/siteSettingsContext';
 import {
   Menu,
   X,
@@ -13,23 +16,126 @@ import {
   ShoppingBag,
   ChevronDown,
   ChevronUp,
+  ChevronRight,
 } from 'lucide-react';
+
+// ── Recursive desktop sub-menu item ──────────────────────────────────────────
+function DesktopSubMenuItem({ item, depth }) {
+  const hasChildren = item.children && item.children.length > 0;
+  const indent = 16 + depth * 20;
+  return (
+    <div>
+      <Link
+        href={item.url}
+        className="block px-4 py-2 font-label-md text-on-surface-variant hover:bg-secondary/10 hover:text-secondary transition-colors"
+        style={{ paddingLeft: `${indent}px` }}
+      >
+        {item.title}
+      </Link>
+      {hasChildren && (
+        <div className="border-l-2 border-secondary/20 ml-6">
+          {item.children.map((child) => (
+            <DesktopSubMenuItem key={child.id} item={child} depth={depth + 1} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Recursive mobile nav item ─────────────────────────────────────────────────
+function MobileNavItem({ item, depth, onClose }) {
+  const [open, setOpen] = useState(false);
+  const hasChildren = item.children && item.children.length > 0;
+  const indent = depth * 16;
+  return (
+    <div>
+      <div className="flex items-center justify-between py-2.5 border-b border-secondary/10"
+        style={{ paddingLeft: `${indent}px` }}>
+        <Link
+          href={item.url}
+          onClick={onClose}
+          className="font-label-md hover:text-secondary transition-colors uppercase tracking-wider"
+          style={{ fontSize: depth > 0 ? '13px' : undefined, color: depth > 0 ? 'var(--color-on-surface-variant)' : undefined }}
+        >
+          {item.title}
+        </Link>
+        {hasChildren && (
+          <button
+            onClick={() => setOpen(!open)}
+            className="text-secondary/70 hover:text-secondary bg-transparent border-none flex items-center justify-center cursor-pointer p-1"
+          >
+            {open ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </button>
+        )}
+      </div>
+      {hasChildren && (
+        <div className={`overflow-hidden transition-all duration-300 ${open ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
+          <div className="flex flex-col space-y-1">
+            {item.children.map((child) => (
+              <MobileNavItem key={child.id} item={child} depth={depth + 1} onClose={onClose} />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function Navbar() {
   const { cartItems, updateQuantity, removeFromCart } = useCart();
+  const { isAuthenticated, customer, logout } = useAuth();
+  const router = useRouter();
   const [isCartOpen, setIsCartOpen]       = useState(false);
   const [menuOpen, setMenuOpen]           = useState(false);
-  const [activeSubmenu, setActiveSubmenu] = useState(null);
+  const [userMenuOpen, setUserMenuOpen]   = useState(false);
+  const [clientNavItems, setClientNavItems] = useState(null);
+
+  // Client-side fetch: override fallback if the server gave us the static fallback
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/menus?position=header');
+        const data = await res.json();
+        if (data.success && data.menu?.items?.length) {
+          setClientNavItems(data.menu.items);
+        }
+      } catch { /* server data is fine */ }
+    })();
+  }, []);
+  const userMenuRef = useRef(null);
+
+  const handleLogout = async () => {
+    setUserMenuOpen(false);
+    try {
+      await logout();
+    } catch {
+      // ignore — clear local state regardless
+    }
+    router.push('/login');
+  };
+
+  // Close the user dropdown when clicking outside of it.
+  useEffect(() => {
+    if (!userMenuOpen) return;
+    const onClick = (e) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
+        setUserMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onClick);
+    return () => document.removeEventListener('mousedown', onClick);
+  }, [userMenuOpen]);
 
   // ── Dynamic header menu, fetched server-side and provided via context ──────
   // so it's present in the very first render (no client-side fetch/flash).
-  const navItems = useNavMenu();
+  const serverItems = useNavMenu();
+  const navItems = clientNavItems || serverItems;
+  const settings = useSiteSettings();
+  const logoSrc = settings?.logoUrl || '/logo.png';
+  const storeName = settings?.storeName || 'Zaragems';
 
   const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
-
-  const toggleSubmenu = (id) => {
-    setActiveSubmenu(activeSubmenu === id ? null : id);
-  };
 
   return (
     <>
@@ -42,24 +148,24 @@ export default function Navbar() {
       />
 
       <header className="bg-white docked w-full top-0 sticky z-50 border-b border-secondary/30 transition-transform duration-300">
-        <div className="flex justify-between items-center max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-5 md:py-6">
+        <div className="flex justify-between items-center max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-2 md:py-2">
 
           {/* Brand Logo */}
           <div className="flex items-center space-x-4">
             <Link href="/">
-              <Image src="/logos/1.png" width="120" height="80" alt="logo" />
+              <Image src={logoSrc} width="100" height="70" alt={storeName} />
             </Link>
           </div>
 
           {/* ── Desktop Navigation — dynamic from DB ──────────────────────── */}
-          <nav className="hidden md:flex space-x-8 lg:space-x-10 items-center">
+          <nav className="hidden md:flex space-x-4 lg:space-x-6 items-center">
             {navItems.map((item) => {
               const hasChildren = item.children && item.children.length > 0;
               return (
                 <div key={item.id} className="relative group py-2">
                   <Link
                     href={item.url}
-                    className="text-on-surface-variant font-label-md hover:text-secondary transition-colors duration-300 nav-link-underline flex items-center gap-1"
+                    className="text-sm text-on-surface-variant font-label-md hover:text-secondary transition-colors duration-300 nav-link-underline flex items-center gap-1"
                   >
                     {item.title}
                     {hasChildren && (
@@ -67,17 +173,11 @@ export default function Navbar() {
                     )}
                   </Link>
 
-                  {/* Children dropdown */}
+                  {/* Children dropdown (recursive) */}
                   {hasChildren && (
-                    <div className="absolute top-full left-0 mt-1 min-w-[180px] bg-surface border border-secondary/20 shadow-lg py-2 hidden group-hover:block transition-all duration-300 z-50 rounded-sm">
+                    <div className="absolute top-full left-0 mt-1 min-w-[200px] bg-surface border border-secondary/20 shadow-lg py-2 hidden group-hover:block transition-all duration-300 z-50 rounded-sm">
                       {item.children.map((child) => (
-                        <Link
-                          key={child.id}
-                          href={child.url}
-                          className="block px-4 py-2 font-label-md text-on-surface-variant hover:bg-secondary/10 hover:text-secondary transition-colors"
-                        >
-                          {child.title}
-                        </Link>
+                        <DesktopSubMenuItem key={child.id} item={child} depth={1} />
                       ))}
                     </div>
                   )}
@@ -88,12 +188,73 @@ export default function Navbar() {
 
           {/* Actions (Right Side) */}
           <div className="flex items-center space-x-3 md:space-x-4">
-            <Link
-              href="/login"
-              className="text-primary hover:text-secondary transition-colors duration-300 active:scale-95 duration-150 ease-in-out flex items-center justify-center"
-            >
-              <User className="w-5 h-5 md:w-5 md:h-5" />
-            </Link>
+            {/* User account — dropdown when signed in, redirect to login otherwise */}
+            <div className="relative" ref={userMenuRef}>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!isAuthenticated) {
+                    router.push('/login');
+                  } else {
+                    setUserMenuOpen((open) => !open);
+                  }
+                }}
+                className="text-primary hover:text-secondary transition-colors duration-300 active:scale-95 flex items-center justify-center"
+                aria-label="Account"
+                aria-haspopup="menu"
+                aria-expanded={userMenuOpen}
+              >
+                <User className="w-5 h-5 md:w-5 md:h-5" />
+              </button>
+
+              {isAuthenticated && userMenuOpen && (
+                <div
+                  role="menu"
+                  className="absolute right-0 mt-2 w-56 bg-surface border border-secondary/20 shadow-xl z-50 rounded-sm py-2"
+                >
+                  <div className="px-4 py-2 border-b border-secondary/10 mb-1">
+                    <p className="font-label-sm text-label-sm text-primary font-medium truncate">
+                      {customer?.name || 'My Account'}
+                    </p>
+                    <p className="text-[11px] text-on-surface-variant truncate">
+                      {customer?.email}
+                    </p>
+                  </div>
+                  <Link
+                    href="/dashboard"
+                    role="menuitem"
+                    onClick={() => setUserMenuOpen(false)}
+                    className="block px-4 py-2.5 font-label-md text-label-md text-on-surface-variant hover:bg-secondary/10 hover:text-secondary transition-colors"
+                  >
+                    Dashboard
+                  </Link>
+                  <Link
+                    href="/profile"
+                    role="menuitem"
+                    onClick={() => setUserMenuOpen(false)}
+                    className="block px-4 py-2.5 font-label-md text-label-md text-on-surface-variant hover:bg-secondary/10 hover:text-secondary transition-colors"
+                  >
+                    Profile
+                  </Link>
+                  <Link
+                    href="/address"
+                    role="menuitem"
+                    onClick={() => setUserMenuOpen(false)}
+                    className="block px-4 py-2.5 font-label-md text-label-md text-on-surface-variant hover:bg-secondary/10 hover:text-secondary transition-colors"
+                  >
+                    Addresses
+                  </Link>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={handleLogout}
+                    className="w-full text-left px-4 py-2.5 font-label-md text-label-md text-error hover:bg-error-container transition-colors"
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
             <button
               onClick={() => setIsCartOpen(true)}
               className="text-primary hover:text-secondary transition-colors duration-300 active:scale-95 duration-150 ease-in-out relative flex items-center justify-center"
@@ -132,7 +293,7 @@ export default function Navbar() {
       >
         <div className="flex items-center justify-between border-b border-secondary/20 pb-4 mb-6">
           <span className="text-primary uppercase tracking-wider font-bold" style={{ fontSize: '16px' }}>
-            Nazish Apparels
+            {storeName}
           </span>
           <button
             onClick={() => setMenuOpen(false)}
@@ -143,57 +304,11 @@ export default function Navbar() {
           </button>
         </div>
 
-        {/* ── Mobile Navigation Links — Dynamic ────────────────────────── */}
+        {/* ── Mobile Navigation Links — Dynamic (recursive) ────────────── */}
         <nav className="flex flex-col space-y-1">
-          {navItems.map((item) => {
-            const hasChildren = item.children && item.children.length > 0;
-            return (
-              <div key={item.id} className="flex flex-col">
-                <div className="flex items-center justify-between py-2.5 border-b border-secondary/10">
-                  <Link
-                    href={item.url}
-                    onClick={() => setMenuOpen(false)}
-                    className="text-on-surface font-label-md hover:text-secondary transition-colors uppercase tracking-wider"
-                  >
-                    {item.title}
-                  </Link>
-                  {hasChildren && (
-                    <button
-                      onClick={() => toggleSubmenu(item.id)}
-                      className="text-secondary/70 hover:text-secondary bg-transparent border-none flex items-center justify-center cursor-pointer p-1"
-                    >
-                      {activeSubmenu === item.id
-                        ? <ChevronUp className="w-4 h-4" />
-                        : <ChevronDown className="w-4 h-4" />
-                      }
-                    </button>
-                  )}
-                </div>
-
-                {/* Mobile children accordion */}
-                {hasChildren && (
-                  <div
-                    className={`pl-4 flex flex-col space-y-1 overflow-hidden transition-all duration-300 ${
-                      activeSubmenu === item.id
-                        ? 'max-h-60 opacity-100 mt-2 mb-1'
-                        : 'max-h-0 opacity-0'
-                    }`}
-                  >
-                    {item.children.map((child) => (
-                      <Link
-                        key={child.id}
-                        href={child.url}
-                        onClick={() => setMenuOpen(false)}
-                        className="text-on-surface-variant font-label-md hover:text-secondary py-1.5 transition-colors text-sm block"
-                      >
-                        {child.title}
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+          {navItems.map((item) => (
+            <MobileNavItem key={item.id} item={item} depth={0} onClose={() => setMenuOpen(false)} />
+          ))}
         </nav>
       </div>
     </>

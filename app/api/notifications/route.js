@@ -1,11 +1,15 @@
 import { NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import Notification from '@/models/Notification';
+import client from '@/lib/sanityClient';
+
+const NOTIFICATION_PROJECTION = `{
+  ...,
+  "createdAt": _createdAt,
+  "updatedAt": _updatedAt
+}`;
 
 // GET /api/notifications — paginated, searchable, filterable
 export async function GET(request) {
   try {
-    await dbConnect();
     const { searchParams } = new URL(request.url);
 
     const search = searchParams.get('q') || '';
@@ -14,30 +18,32 @@ export async function GET(request) {
     const page = parseInt(searchParams.get('page') || '1', 10);
     const limit = parseInt(searchParams.get('limit') || '20', 10);
 
-    const filter = {};
+    const conditions = ['_type == "notification"'];
+    const params = {};
 
     if (search) {
-      filter.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { message: { $regex: search, $options: 'i' } },
-      ];
+      conditions.push('(title match $search || message match $search)');
+      params.search = `*${search}*`;
     }
 
-    if (isReadParam === 'true') filter.isRead = true;
-    else if (isReadParam === 'false') filter.isRead = false;
+    if (isReadParam === 'true') conditions.push('isRead == true');
+    else if (isReadParam === 'false') conditions.push('isRead == false');
 
     if (type && type !== 'all') {
-      filter.type = type;
+      conditions.push('type == $type');
+      params.type = type;
     }
 
-    const total = await Notification.countDocuments(filter);
+    const filterStr = conditions.join(' && ');
+    const total = await client.fetch(`count(*[${filterStr}])`, params);
     const totalPages = Math.ceil(total / limit);
+    const start = (page - 1) * limit;
+    const end = start + limit;
 
-    const notifications = await Notification.find(filter)
-      .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .lean();
+    const notifications = await client.fetch(
+      `*[${filterStr}] | order(_createdAt desc) [${start}...${end}]${NOTIFICATION_PROJECTION}`,
+      params
+    );
 
     return NextResponse.json(
       { success: true, notifications, total, totalPages, currentPage: page },
@@ -52,34 +58,26 @@ export async function GET(request) {
 // PATCH /api/notifications — mark isRead for given ids (or all if markAll=true)
 export async function PATCH(request) {
   try {
-    await dbConnect();
     const body = await request.json().catch(() => ({}));
     const { ids, isRead = true, markAll = false } = body;
 
     if (markAll) {
-      const result = await Notification.updateMany({}, { $set: { isRead } });
-      return NextResponse.json(
-        { success: true, message: `${result.modifiedCount} notifications updated` },
-        { status: 200 }
-      );
+      const allIds = await client.fetch(`*[_type == "notification"]._id`);
+      const tx = client.transaction();
+      allIds.forEach((id) => tx.patch(id, { set: { isRead } }));
+      await tx.commit();
+      return NextResponse.json({ success: true, message: `${allIds.length} notifications updated` }, { status: 200 });
     }
 
     if (!ids || !Array.isArray(ids) || ids.length === 0) {
-      return NextResponse.json(
-        { success: false, message: 'No notification IDs provided' },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, message: 'No notification IDs provided' }, { status: 400 });
     }
 
-    const result = await Notification.updateMany(
-      { _id: { $in: ids } },
-      { $set: { isRead } }
-    );
+    const tx = client.transaction();
+    ids.forEach((id) => tx.patch(id, { set: { isRead } }));
+    await tx.commit();
 
-    return NextResponse.json(
-      { success: true, message: `${result.modifiedCount} notifications updated` },
-      { status: 200 }
-    );
+    return NextResponse.json({ success: true, message: `${ids.length} notifications updated` }, { status: 200 });
   } catch (error) {
     console.error('Error updating notifications:', error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
@@ -89,22 +87,18 @@ export async function PATCH(request) {
 // DELETE /api/notifications — delete by ids
 export async function DELETE(request) {
   try {
-    await dbConnect();
     const body = await request.json().catch(() => ({}));
     const { ids } = body;
 
     if (!ids || !Array.isArray(ids) || ids.length === 0) {
-      return NextResponse.json(
-        { success: false, message: 'No notification IDs provided' },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, message: 'No notification IDs provided' }, { status: 400 });
     }
 
-    const result = await Notification.deleteMany({ _id: { $in: ids } });
-    return NextResponse.json(
-      { success: true, message: `${result.deletedCount} notifications deleted` },
-      { status: 200 }
-    );
+    const tx = client.transaction();
+    ids.forEach((id) => tx.delete(id));
+    await tx.commit();
+
+    return NextResponse.json({ success: true, message: `${ids.length} notifications deleted` }, { status: 200 });
   } catch (error) {
     console.error('Error deleting notifications:', error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });

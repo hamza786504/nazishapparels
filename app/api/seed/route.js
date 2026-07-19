@@ -1,24 +1,13 @@
 import { NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import Collection from '@/models/Collection';
-import Product from '@/models/Product';
-import Customer from '@/models/Customer';
-import Review from '@/models/Review';
-import Order from '@/models/Order';
-import Menu from '@/models/Menu';
+import client from '@/lib/sanityClient';
 import productsJson from '@/app/data/products.json';
 
 export async function POST() {
   try {
-    await dbConnect();
-
     // 1. Clear existing data
-    await Collection.deleteMany({});
-    await Product.deleteMany({});
-    await Customer.deleteMany({});
-    await Review.deleteMany({});
-    await Order.deleteMany({});
-    await Menu.deleteMany({});
+    await client.delete({
+      query: '*[_type in ["collection", "product", "customer", "review", "order", "menu", "siteSettings"]]',
+    });
 
     // 2. Create Collections matching the frontend fabrics
     const collectionsData = [
@@ -42,7 +31,9 @@ export async function POST() {
       },
     ];
 
-    const collections = await Collection.insertMany(collectionsData);
+    const collections = await Promise.all(
+      collectionsData.map((doc) => client.create({ _type: 'collection', ...doc }))
+    );
     const colBySlug = {};
     for (const col of collections) colBySlug[col.slug] = col;
 
@@ -60,7 +51,7 @@ export async function POST() {
           price: p.priceNumeric || 0,
           status: p.badge === 'Sold Out' ? 'draft' : 'active',
           collectionId: collection ? collection._id : null,
-          vendor: 'Nazish Apparels',
+          vendor: 'Zaragems',
           productType: p.fabric || 'General',
           sizes: p.sizes || [],
           colors: p.colors || [],
@@ -74,7 +65,7 @@ export async function POST() {
         };
       });
 
-    const products = await Product.insertMany(productsData);
+    const products = await Promise.all(productsData.map((doc) => client.create({ _type: 'product', ...doc })));
     const firstProduct = products[0];
     const secondProduct = products[1] || products[0];
 
@@ -86,7 +77,7 @@ export async function POST() {
       { firstName: 'Nadia', lastName: 'Hussain', email: 'nadia.h@example.com', phone: '+92 312 7778888', status: 'inactive', address: 'Block C, Model Town, Lahore', ordersCount: 1, totalSpent: 18500 },
       { firstName: 'Fatima', lastName: 'Raza', email: 'fatima.r@example.com', phone: '+92 345 4449999', status: 'active', address: 'Bahria Town, Phase 4, Rawalpindi', ordersCount: 7, totalSpent: 178000 },
     ];
-    await Customer.insertMany(customersData);
+    await Promise.all(customersData.map((doc) => client.create({ _type: 'customer', ...doc })));
 
     // 5. Create Reviews
     const reviewsData = [
@@ -95,7 +86,7 @@ export async function POST() {
       { productId: secondProduct._id, customerName: 'Sara Ahmed', customerEmail: 'sara.a@example.com', rating: 4, reviewText: 'Beautiful fabric but the sizing runs slightly large. Still a great purchase for the price.', status: 'approved' },
       { productId: secondProduct._id, customerName: 'Nadia Hussain', customerEmail: 'nadia.h@example.com', rating: 3, reviewText: 'Good quality but delivery took longer than expected.', status: 'pending' },
     ];
-    await Review.insertMany(reviewsData);
+    await Promise.all(reviewsData.map((doc) => client.create({ _type: 'review', ...doc })));
 
     // 6. Create Orders (spread over last 15 days)
     const ordersData = [];
@@ -121,18 +112,20 @@ export async function POST() {
           email: emails[custIndex],
           avatar: names[custIndex].split(' ').map((n) => n[0]).join(''),
         },
-        date: orderDate,
+        date: orderDate.toISOString(),
         total,
         paymentStatus: payStatus,
         fulfillmentStatus: fulfillStatus,
         items: Math.floor(1 + Math.random() * 3),
         channel: 'Online Store',
         tags: Math.random() > 0.7 ? ['VIP'] : [],
-        createdAt: orderDate,
-        updatedAt: orderDate,
+        status: 'active',
       });
     }
-    await Order.insertMany(ordersData);
+    // `date` (not Sanity's system-managed, immutable _createdAt) is what the orders
+    // API/dashboard use for chronology, so backdating it here is what spreads these
+    // seeded orders across the last 15 days for realistic-looking sales trend charts.
+    await Promise.all(ordersData.map((doc) => client.create({ _type: 'order', ...doc })));
 
     // 7. Seed demo Menus
     const mainMenuItems = [
@@ -188,9 +181,30 @@ export async function POST() {
       { id: 'f-contact', title: 'Contact Us',    url: '/contact',       resourceType: 'page', resourceId: 'contact', children: [] },
     ];
 
-    await Menu.insertMany([
-      { name: 'Main Menu',    handle: 'main-menu',    position: 'header', items: mainMenuItems },
-      { name: 'Footer Links', handle: 'footer-links', position: 'footer', items: footerMenuItems },
+    await Promise.all([
+      client.create({ _type: 'menu', name: 'Main Menu', handle: 'main-menu', position: 'header', items: mainMenuItems }),
+      client.create({ _type: 'menu', name: 'Footer Links', handle: 'footer-links', position: 'footer', items: footerMenuItems }),
+      client.create({
+        _type: 'siteSettings',
+        storeName: 'Zaragems',
+        legalName: 'Zaragems Fashion House',
+        industry: 'Fashion',
+        senderEmail: 'hello@zaragems.com',
+        accountEmail: 'info@zaragems.com',
+        timezone: '(GMT+05:00) Pakistan Standard Time',
+        unitSystem: 'Metric system (kg, cm, etc.)',
+        orderPrefix: '#ZAR-',
+        orderSuffix: '',
+        address: '',
+        apartment: '',
+        city: '',
+        zipCode: '',
+        country: 'Pakistan',
+        logo: null,
+        logoAlt: '',
+        typography: { headingFont: 'EB Garamond', bodyFont: 'Manrope' },
+        theme: null,
+      }),
     ]);
 
     return NextResponse.json(

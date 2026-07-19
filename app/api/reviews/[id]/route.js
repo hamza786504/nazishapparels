@@ -1,17 +1,22 @@
 import { NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import Review from '@/models/Review';
+import client from '@/lib/sanityClient';
+
+const REVIEW_PROJECTION = `{
+  ...,
+  "createdAt": _createdAt,
+  "updatedAt": _updatedAt,
+  "productId": *[_type == "product" && _id == ^.productId][0]{ _id, title, images }
+}`;
 
 export async function GET(request, { params }) {
   try {
-    await dbConnect();
     const { id } = await params;
-    const review = await Review.findById(id).populate('productId', 'title images');
-    
+    const review = await client.fetch(`*[_type == "review" && _id == $id][0]${REVIEW_PROJECTION}`, { id });
+
     if (!review) {
       return NextResponse.json({ success: false, message: 'Review not found' }, { status: 404 });
     }
-    
+
     return NextResponse.json({ success: true, review }, { status: 200 });
   } catch (error) {
     console.error('Error fetching review:', error);
@@ -21,19 +26,17 @@ export async function GET(request, { params }) {
 
 export async function PUT(request, { params }) {
   try {
-    await dbConnect();
     const { id } = await params;
     const body = await request.json();
 
-    const review = await Review.findByIdAndUpdate(id, body, {
-      new: true,
-      runValidators: true,
-    });
-    
-    if (!review) {
+    const existing = await client.fetch(`*[_type == "review" && _id == $id][0]{_id}`, { id });
+    if (!existing) {
       return NextResponse.json({ success: false, message: 'Review not found' }, { status: 404 });
     }
-    
+
+    await client.patch(id).set(body).commit();
+    const review = await client.fetch(`*[_type == "review" && _id == $id][0]${REVIEW_PROJECTION}`, { id });
+
     return NextResponse.json({ success: true, review }, { status: 200 });
   } catch (error) {
     console.error('Error updating review:', error);
@@ -43,15 +46,15 @@ export async function PUT(request, { params }) {
 
 export async function DELETE(request, { params }) {
   try {
-    await dbConnect();
     const { id } = await params;
-    
-    const review = await Review.findByIdAndDelete(id);
-    
-    if (!review) {
+
+    const existing = await client.fetch(`*[_type == "review" && _id == $id][0]{_id}`, { id });
+    if (!existing) {
       return NextResponse.json({ success: false, message: 'Review not found' }, { status: 404 });
     }
-    
+
+    await client.delete(id);
+
     return NextResponse.json({ success: true, message: 'Review deleted successfully' }, { status: 200 });
   } catch (error) {
     console.error('Error deleting review:', error);

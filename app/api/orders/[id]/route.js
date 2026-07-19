@@ -1,17 +1,21 @@
 import { NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import Order from '@/models/Order';
+import client from '@/lib/sanityClient';
+
+const ORDER_PROJECTION = `{
+  ...,
+  "createdAt": _createdAt,
+  "updatedAt": _updatedAt
+}`;
 
 export async function GET(request, { params }) {
   try {
-    await dbConnect();
     const { id } = await params;
-    const order = await Order.findById(id);
-    
+    const order = await client.fetch(`*[_type == "order" && _id == $id][0]${ORDER_PROJECTION}`, { id });
+
     if (!order) {
       return NextResponse.json({ success: false, message: 'Order not found' }, { status: 404 });
     }
-    
+
     return NextResponse.json({ success: true, order }, { status: 200 });
   } catch (error) {
     console.error('Error fetching order:', error);
@@ -21,19 +25,17 @@ export async function GET(request, { params }) {
 
 export async function PUT(request, { params }) {
   try {
-    await dbConnect();
     const { id } = await params;
     const body = await request.json();
 
-    const order = await Order.findByIdAndUpdate(id, body, {
-      new: true,
-      runValidators: true,
-    });
-    
-    if (!order) {
+    const existing = await client.fetch(`*[_type == "order" && _id == $id][0]{_id}`, { id });
+    if (!existing) {
       return NextResponse.json({ success: false, message: 'Order not found' }, { status: 404 });
     }
-    
+
+    await client.patch(id).set(body).commit();
+    const order = await client.fetch(`*[_type == "order" && _id == $id][0]${ORDER_PROJECTION}`, { id });
+
     return NextResponse.json({ success: true, order }, { status: 200 });
   } catch (error) {
     console.error('Error updating order:', error);
@@ -43,15 +45,15 @@ export async function PUT(request, { params }) {
 
 export async function DELETE(request, { params }) {
   try {
-    await dbConnect();
     const { id } = await params;
-    
-    const order = await Order.findByIdAndDelete(id);
-    
-    if (!order) {
+
+    const existing = await client.fetch(`*[_type == "order" && _id == $id][0]{_id}`, { id });
+    if (!existing) {
       return NextResponse.json({ success: false, message: 'Order not found' }, { status: 404 });
     }
-    
+
+    await client.delete(id);
+
     return NextResponse.json({ success: true, message: 'Order deleted successfully' }, { status: 200 });
   } catch (error) {
     console.error('Error deleting order:', error);
