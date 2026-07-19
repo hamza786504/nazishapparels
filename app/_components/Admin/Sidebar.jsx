@@ -12,7 +12,7 @@ function Sidebar() {
   const pathname = usePathname();
     const settings = useSiteSettings();
     const logoSrc = settings?.logoUrl || '/logo.png';
-    const storeName = settings?.storeName || 'Zaragems';
+    const storeName = settings?.storeName || 'NazishApparels';
 
   // While on any /admin/settings/* route we reveal the Settings sub-menu
   // instead of the main nav (with a cross-slide animation).

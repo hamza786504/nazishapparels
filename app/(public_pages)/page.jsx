@@ -22,8 +22,8 @@ import { publicClient } from '@/lib/sanityClientPublic';
 export const revalidate = 300;
 
 export const metadata = {
-    title: 'Zaragems | Luxury Jewellery & Accessories',
-    description: 'Discover handcrafted rings, handchains, earrings and accessories from Zaragems.',
+    title: 'NazishApparels | Luxury Clothing & Accessories',
+    description: 'Discover handcrafted dresses, suits, and accessories from NazishApparels.',
 };
 
 export default async function Home() {
@@ -48,8 +48,8 @@ export default async function Home() {
             {/* collections + initialProducts pre-seed the default tab — no client fetch waterfall */}
             <CategoryShowcase collections={collections} initialProducts={initialShowcaseProducts} />
             <HandcraftedCategories />
-            <FeaturedProducts collectionSlug="handcuff-baracelts" title="HandCuff/Baracelts" />
-            <FeaturedProducts collectionSlug="studs-earings" title="Studs/Earings" />
+            <FeaturedProducts collectionSlug="lawn" title="Lawn" />
+            <FeaturedProducts collectionSlug="chiffon" title="Chiffon" />
             {/* <HandcraftedAccessories /> */}
             <Testimonials />
             <BrandStory />

@@ -11,7 +11,7 @@ export default function Footer() {
     const [message, setMessage] = useState('');
     const settings = useSiteSettings();
     const logoSrc = settings?.logoUrl || '/logo.png';
-    const storeName = settings?.storeName || 'Zaragems';
+    const storeName = settings?.storeName || 'NazishApparels';
 
     const handleWhatsAppSubmit = (e) => {
         e.preventDefault();
@@ -35,7 +35,7 @@ export default function Footer() {
                             <Image src={logoSrc} width="150" height="100" alt={storeName} />
                         </Link>
                         <p className="text-body-lg font-body-md text-on-surface-variant leading-relaxed">
-                            Dedicated to the art of fine jewellery, fusing age-old traditions of gem cutting and goldsmithing with modern, sculptural design.
+                            Dedicated to the art of fine clothing, fusing age-old traditions of tailoring with modern, elegant design.
                         </p>
                     </div>
 
@@ -160,7 +160,7 @@ export default function Footer() {
                                 <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-[#25D366] rounded-full border-2 border-primary" />
                             </div>
                             <div>
-                                <h4 className="text-sm font-semibold uppercase tracking-wide text-white">Zaragems</h4>
+                                <h4 className="text-sm font-semibold uppercase tracking-wide text-white">NazishApparels</h4>
                                 <p className="text-[10px] text-white/70">Typically replies in minutes</p>
                             </div>
                         </div>
@@ -176,7 +176,7 @@ export default function Footer() {
                     {/* Chat Area */}
                     <div className="flex-grow p-4 bg-[#F4F1EB] min-h-[160px] flex flex-col justify-end">
                         <div className="bg-white text-primary p-3 rounded-2xl rounded-tl-none shadow-sm text-[13px] leading-relaxed max-w-[85%] border border-secondary/5 self-start mb-2">
-                            <p>Assalam-o-Alaikum! Welcome to Zaragems. How can we assist you with our luxury collections today?</p>
+                            <p>Assalam-o-Alaikum! Welcome to NazishApparels. How can we assist you with our luxury collections today?</p>
                             <span className="text-[9px] text-on-surface-variant/50 block text-right mt-1">
                                 Today
                             </span>

@@ -11,7 +11,7 @@ const testimonials = [
     {
         id: 2,
         quote:
-            'Zaragems captures the essence of heritage with such modern grace. The fabric quality is exceptional.',
+            'NazishApparels captures the essence of heritage with such modern grace. The fabric quality is exceptional.',
         name: 'Zahra K.',
         location: 'Dubai, UAE',
     },

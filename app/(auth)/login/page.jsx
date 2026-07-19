@@ -225,7 +225,7 @@ export default function LoginPage() {
             {/* Footer */}
             <footer className="w-full py-unit border-t border-secondary/10 px-margin-mobile text-center">
                 <p className="font-label-sm text-label-sm text-on-surface-variant">
-                    © 2026 Zaragems. All Rights Reserved.
+                    © 2026 NazishApparels. All Rights Reserved.
                 </p>
             </footer>
         </div>

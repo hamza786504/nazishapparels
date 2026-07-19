@@ -33,7 +33,7 @@ const jost = Jost({
 export const revalidate = 60;
 
 export const metadata = {
-    title: 'Zaragems | Heritage Meets Luxury',
+    title: 'NazishApparels | Heritage Meets Luxury',
     description: 'Premium Eastern wear blending centuries-old traditions with modern silhouettes.',
     keywords: 'lawn, chiffon, 3pc, eastern wear, luxury fashion, Pakistan',
 };

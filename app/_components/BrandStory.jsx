@@ -11,8 +11,8 @@ export default function BrandStory() {
           <div className="border border-secondary/30 absolute -inset-4 z-0 translate-x-8 translate-y-8" />
           <Image
             className="relative z-10 w-full h-[600px] object-cover"
-            alt="Master goldsmith setting a rare sapphire into a bespoke Zaragems ring"
-            src="/baracelts.jpg"   // Replace with a jewellery‑focused image if available
+            alt="Master tailor crafting a bespoke NazishApparels outfit"
+            src="/baracelts.jpg"   // Replace with a clothing‑focused image if available
             width={600}
             height={600}
           />
@@ -25,8 +25,8 @@ export default function BrandStory() {
             Where Rare Gemstones Meet Masterful Design
           </h3>
           <p className="text-body-lg font-body-lg text-on-surface-variant mb-10 leading-relaxed">
-            Zaragems was born from a passion for the world’s most exceptional
-            gemstones and the ancient art of fine jewellery making. Every piece we
+            NazishApparels was born from a passion for the world’s most exceptional
+            fabrics and the ancient art of fine clothing making. Every piece we
             create is a dialogue between nature’s rarest treasures and the hands of
             master artisans — a fusion of heirloom-quality craftsmanship with a
             modern, sculptural aesthetic. From responsibly sourced sapphires to

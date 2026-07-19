@@ -67,7 +67,7 @@ export default function AboutPage() {
         {
             year: '2024',
             title: 'Global Heritage',
-            description: "Today, Zaragems stands as a beacon of luxury, shipping to over 20 countries and maintaining a legacy of 'Heritage in every thread'.",
+            description: "Today, NazishApparels stands as a beacon of luxury, shipping to over 20 countries and maintaining a legacy of 'Heritage in every thread'.",
         },
     ];
 
@@ -93,7 +93,7 @@ export default function AboutPage() {
         {
             city: 'Lahore',
             address: 'GULBERG III MAIN BOULEVARD',
-            description: 'The original home of Zaragems, featuring our private bridal lounge and heritage archive.',
+            description: 'The original home of NazishApparels, featuring our private bridal lounge and heritage archive.',
             linkText: 'Book an Appointment',
         },
         {
@@ -159,7 +159,7 @@ export default function AboutPage() {
                             <span className="italic">Timeless Heritage</span>
                         </h1>
                         <p className="font-body-lg text-body-lg text-on-surface-variant max-w-lg">
-                            Zaragems is more than a fashion house; it is a custodian of century-old
+                            NazishApparels is more than a fashion house; it is a custodian of century-old
                             Eastern traditions, woven into the modern silhouette of the sophisticated woman.
                         </p>
                     </div>
@@ -317,7 +317,7 @@ export default function AboutPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-gutter px-margin-mobile md:px-margin-desktop py-stack-lg max-w-container-max mx-auto">
                     <div className="space-y-6">
                         <div className="font-headline-sm text-headline-sm text-secondary-fixed tracking-tight">
-                            Zaragems
+                            NazishApparels
                         </div>
                         <p className="text-on-tertiary/70 max-w-xs">
                             Crafting heritage into every thread, bringing the soul of Eastern artistry to the world.
@@ -386,7 +386,7 @@ export default function AboutPage() {
                     </div>
                 </div>
                 <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-8 border-t border-on-tertiary/10 flex flex-col sm:flex-row justify-between items-center gap-4 text-label-sm text-on-tertiary/50">
-                    <span>© 2024 Zaragems. Heritage in every thread.</span>
+                    <span>© 2024 NazishApparels. Heritage in every thread.</span>
                     <div className="flex gap-6">
                         <span>TERMS</span>
                         <span>PRIVACY</span>

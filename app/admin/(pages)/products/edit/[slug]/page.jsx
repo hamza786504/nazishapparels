@@ -424,7 +424,7 @@ const EditProductPage = () => {
                     <input
                       className="w-full border border-outline-variant rounded-lg p-2.5 bg-white text-on-surface"
                       type="text"
-                      placeholder="e.g. Zaragems"
+                      placeholder="e.g. NazishApparels"
                       value={vendor}
                       onChange={(e) => setVendor(e.target.value)}
                     />

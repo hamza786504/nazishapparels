@@ -38,11 +38,11 @@ const SETTINGS_PROJECTION = `{
 }`;
 
 const DEFAULT_SETTINGS = {
-  storeName: 'Zaragems',
-  legalName: 'Zaragems Fashion House',
+  storeName: 'NazishApparels',
+  legalName: 'NazishApparels Fashion House',
   industry: 'Fashion',
-  senderEmail: 'hello@zaragems.com',
-  accountEmail: 'info@zaragems.com',
+  senderEmail: 'hello@nazishapparels.com',
+  accountEmail: 'info@nazishapparels.com',
   timezone: '(GMT+05:00) Pakistan Standard Time',
   unitSystem: 'Metric system (kg, cm, etc.)',
   orderPrefix: '#ZAR-',

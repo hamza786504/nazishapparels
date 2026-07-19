@@ -81,7 +81,7 @@ function cartReducer(state, action) {
 
             // Save to localStorage
             if (typeof window !== 'undefined') {
-                localStorage.setItem('zaragems_cart', JSON.stringify(newCartItems));
+                localStorage.setItem('nazishapparels_cart', JSON.stringify(newCartItems));
             }
 
             return {
@@ -95,7 +95,7 @@ function cartReducer(state, action) {
             const newCartItems = state.cartItems.filter(item => item.id !== itemId);
 
             if (typeof window !== 'undefined') {
-                localStorage.setItem('zaragems_cart', JSON.stringify(newCartItems));
+                localStorage.setItem('nazishapparels_cart', JSON.stringify(newCartItems));
             }
 
             return {
@@ -113,7 +113,7 @@ function cartReducer(state, action) {
             );
 
             if (typeof window !== 'undefined') {
-                localStorage.setItem('zaragems_cart', JSON.stringify(newCartItems));
+                localStorage.setItem('nazishapparels_cart', JSON.stringify(newCartItems));
             }
 
             return {
@@ -161,7 +161,7 @@ function cartReducer(state, action) {
             }
 
             if (typeof window !== 'undefined') {
-                localStorage.setItem('zaragems_cart', JSON.stringify(newCartItems));
+                localStorage.setItem('nazishapparels_cart', JSON.stringify(newCartItems));
             }
 
             return {
@@ -172,7 +172,7 @@ function cartReducer(state, action) {
 
         case CART_ACTIONS.CLEAR_CART: {
             if (typeof window !== 'undefined') {
-                localStorage.removeItem('zaragems_cart');
+                localStorage.removeItem('nazishapparels_cart');
             }
             return {
                 ...state,
@@ -192,7 +192,7 @@ export function CartProvider({ children }) {
     // Hydrate cart from localStorage on mount
     useEffect(() => {
         if (typeof window !== 'undefined') {
-            const savedCart = localStorage.getItem('zaragems_cart');
+            const savedCart = localStorage.getItem('nazishapparels_cart');
             if (savedCart) {
                 try {
                     const parsed = JSON.parse(savedCart);

@@ -136,7 +136,7 @@ export default function ContactPage() {
                             Concierge &amp; Inquiries
                         </h1>
                         <p className="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto">
-                            Experience the personal touch of Zaragems craftsmanship. Whether you seek
+                            Experience the personal touch of NazishApparels craftsmanship. Whether you seek
                             style advice or order assistance, our team is at your service.
                         </p>
                     </div>
@@ -278,7 +278,7 @@ export default function ContactPage() {
                                                 Direct Email
                                             </p>
                                             <p className="font-body-md text-on-surface-variant">
-                                                concierge@zaragems.com
+                                                concierge@nazishapparels.com
                                             </p>
                                         </div>
                                     </div>

@@ -309,7 +309,7 @@ export default function ShippingSettingsPage() {
                     <input
                       type="text"
                       className="w-full px-3 py-2 text-body-md border border-[#C9CCCF] rounded focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition-all"
-                      placeholder="e.g. Zaragems Fashion House"
+                      placeholder="e.g. NazishApparels Fashion House"
                       value={shipping.bankDetails.accountTitle}
                       onChange={e => setBank('accountTitle', e.target.value)}
                     />

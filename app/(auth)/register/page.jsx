@@ -157,7 +157,7 @@ export default function RegisterPage() {
                                     Create Account
                                 </h1>
                                 <p className="font-body-md text-on-surface-variant">
-                                    Step into the world of Zaragems.
+                                    Step into the world of NazishApparels.
                                 </p>
                             </header>
 

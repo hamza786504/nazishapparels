@@ -133,7 +133,7 @@ export default function Navbar() {
   const navItems = clientNavItems || serverItems;
   const settings = useSiteSettings();
   const logoSrc = settings?.logoUrl || '/logo.png';
-  const storeName = settings?.storeName || 'Zaragems';
+  const storeName = settings?.storeName || 'NazishApparels';
 
   const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 
