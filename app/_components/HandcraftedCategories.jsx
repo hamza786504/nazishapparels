@@ -44,7 +44,7 @@ const categories = [
     
     {
         name: 'Stiched',
-        image: '/stiched-collection.jpg',
+        image: '/stiched-collection.JPG',
         link: '/stitched',
     },
 ];
