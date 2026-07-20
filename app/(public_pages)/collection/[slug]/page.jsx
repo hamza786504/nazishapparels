@@ -295,7 +295,7 @@ export default function CollectionPage() {
             </header>
 
             {/* Filter & Sort Bar */}
-            <section className="sticky top-[73px] md:top-[88px] z-40 bg-surface/95 backdrop-blur-md border-b border-secondary/10">
+            <section className={`sticky top-0 z-40 bg-surface/95 backdrop-blur-md border-b border-secondary/10`}>
                 <div className="max-w-container-max mx-auto px-2 md:px-4 py-4 flex flex-wrap items-center justify-between gap-4">
                     <div className="flex items-center">
                         <button onClick={() => setShowFilters(!showFilters)} className="md:hidden flex items-center space-x-2 cursor-pointer bg-transparent border-none outline-none" aria-label="Toggle Filters">

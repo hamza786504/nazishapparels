@@ -9,6 +9,7 @@ import { useCart } from '../store/cartContext';
 import { useAuth } from '../store/authContext';
 import { useNavMenu } from '../store/navMenuContext';
 import { useSiteSettings } from '../store/siteSettingsContext';
+import { useParams } from 'next/navigation';
 import {
   Menu,
   X,
@@ -91,6 +92,7 @@ export default function Navbar() {
   const [userMenuOpen, setUserMenuOpen]   = useState(false);
   const [clientNavItems, setClientNavItems] = useState(null);
 
+
   // Client-side fetch: override fallback if the server gave us the static fallback
   useEffect(() => {
     (async () => {
@@ -147,7 +149,7 @@ export default function Navbar() {
         onRemoveItem={removeFromCart}
       />
 
-      <header className="bg-white docked w-full top-0 sticky z-50 border-b border-secondary/30 transition-transform duration-300">
+      <header className="bg-white docked w-full top-0  z-50 border-b border-secondary/30 transition-transform duration-300">
         <div className="flex justify-between items-center max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-2 md:py-2">
 
           {/* Brand Logo */}
