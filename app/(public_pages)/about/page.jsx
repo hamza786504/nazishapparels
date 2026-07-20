@@ -132,8 +132,6 @@ export default function AboutPage() {
                 }
             `}</style>
 
-            <Navbar />
-
             {/* Hero Section */}
             <header className="relative min-h-screen flex items-center overflow-hidden">
                 {/* Background Image */}
