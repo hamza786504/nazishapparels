@@ -11,25 +11,25 @@ const products = [
         id: 1,
         title: '2pc Collection',
         slug: '2pc-collection',
-        image: '/2pc.jpg',
+        image: '/2pc.JPG',
     },
     {
         id: 2,
         title: '3pc Collection',
         slug: '3pc-collection',
-        image: '/3pc.jpg',
+        image: '/3pc.JPG',
     },
     {
         id: 3,
         title: 'Unstitched Collection',
         slug: 'unstitched',
-        image: '/unstiched.jpg',
+        image: '/unstiched.JPG',
     },
      {
         id: 4,
         title: 'Stitched Collection',
         slug: 'stitched',
-        image: '/stiched.jpg',
+        image: '/stiched.JPG',
     },
 ];
 
