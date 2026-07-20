@@ -27,7 +27,7 @@ export const metadata = {
 };
 
 export default async function Home() {
-    const SHOWCASE_SLUGS = ['rings-collection', 'handcuff-bracelets', 'pendants-malaset'];
+    const SHOWCASE_SLUGS = ['organza', 'silk'];
     const collections = await publicClient.fetch(
         `*[_type == "collection" && slug in $slugs] | order(name asc){slug, name, _id}`,
         { slugs: SHOWCASE_SLUGS }
@@ -48,6 +48,7 @@ export default async function Home() {
             {/* collections + initialProducts pre-seed the default tab — no client fetch waterfall */}
             <CategoryShowcase collections={collections} initialProducts={initialShowcaseProducts} />
             <HandcraftedCategories />
+            <FeaturedProducts collectionSlug="new-arrivals" title="New Arrivals" />
             <FeaturedProducts collectionSlug="lawn" title="Lawn" />
             <FeaturedProducts collectionSlug="chiffon" title="Chiffon" />
             {/* <HandcraftedAccessories /> */}

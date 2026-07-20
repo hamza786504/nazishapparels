@@ -12,7 +12,7 @@ export default function BrandStory() {
           <Image
             className="relative z-10 w-full h-[600px] object-cover"
             alt="Master tailor crafting a bespoke NazishApparels outfit"
-            src="/baracelts.jpg"   // Replace with a clothing‑focused image if available
+            src="/about.jpg"   // Replace with a clothing‑focused image if available
             width={600}
             height={600}
           />

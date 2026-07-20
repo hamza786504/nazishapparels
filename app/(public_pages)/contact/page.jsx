@@ -15,25 +15,12 @@ const subjects = [
 const boutiques = [
     {
         city: 'Lahore Flagship',
-        address: 'Plot 42-C, Gulberg III,\nMain Boulevard, Lahore',
-        phone: '+92 42 111 000 222',
+        address: 'Address: Askari, House no 596-E, Askari X Lahore E Sector, X, Block E Askari X, Lahore, 54000',
+        phone: '+923443413824',
         hours: '11:00 AM – 09:30 PM',
         image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDzm1_aRMBNQQjYzFrjUbquhJGaruDS0N0Zezr459hn8y0q3aG8jmqjv0AbisSz603t_0MkPsCJwIDZ_MV6ye2NpBSFsKtNIoATmSpzyYkqZkfotuRQfftbCfh6FsIRcXZCgUXVgWBP95sjyi85XPwnkKNEnSXxc9FvHNXGTvWjgPA5xC-D3zPLOCZLjGZIzyxgkM_fAtUt5-ix7rA37s6wruMX1uO5Le_FeGzpSkqw1pj4laM2RWhZIsSKfY8BdaqKz_OHgOGbiuQs',
     },
-    {
-        city: 'Karachi Studio',
-        address: 'E-Street, Block 4,\nClifton, Karachi',
-        phone: '+92 21 3555 1234',
-        hours: '10:30 AM – 09:00 PM',
-        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAhwncIKcSu59ILiqIKftqWPKZ0nJfeVNXnLntfaIMHQJOhouloOZSFDBIazaljhKlZVELGY_BxshSjMupxWyI3XhPm2Z_Wotu-rj6yWmUp_DePZ9Ueqo2TRlfnIRRMLzlMkgaMLx_1wxIg74EWmtJ0yl37noPAIJuN0JH3Gug4JJDkUY6Aeu2RM764ikltpY6br-SR9pBp6zHztosx06HIuQ5A3ysoytJaEbMbTinBq1qDbUMNUkrXznV8Z9vlxbrdPvlVBCp-9gZm',
-    },
-    {
-        city: 'Islamabad Boutique',
-        address: 'The Centaurus Mall,\nF-8, Islamabad',
-        phone: '+92 51 844 5678',
-        hours: '11:00 AM – 10:00 PM',
-        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBtHRphJbfIJ7cLDSyI62r-bbz83HKikd2A60IJLxHDp9FxLX4gNA7KExE0cSxR0j_eEHSNnghzF1z8SHjGNyJXaTNFa07zdMAAw_vZH24h5Fb7aTJ4HTY7cCZEE2Ry5z06cgaWtcuV0GRIw851_IDAf8db9dC_9Fut5bbsCzAnOpQYqIbOolMXeR0CIXU5u2EMMvPQjEGsa-twiolurppqlqqN7qC5K-MJ1cE_o1BynfbB7-LPb6ITwmHBVfWMtVuHPnYOso5zEgCH',
-    },
+
 ];
 
 export default function ContactPage() {

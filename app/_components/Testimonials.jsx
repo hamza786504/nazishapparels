@@ -37,32 +37,55 @@ export default function Testimonials() {
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-gutter">
-                    {testimonials.map((t) => (
-                        <div
-                            key={t.id}
-                            className="bg-surface-container-low p-10 flex flex-col items-center text-center space-y-6 border border-secondary/10"
+                <div className="relative group">
+                    <div id="testimonials-carousel" className="flex gap-6 overflow-x-auto snap-x snap-mandatory no-scrollbar pb-4 scroll-smooth touch-pan-x carousel-container">
+                        {testimonials.map((t) => (
+                            <div
+                                key={t.id}
+                                className="flex-none w-[85%] md:w-[350px] lg:w-[400px] snap-center bg-surface-container-low p-10 flex flex-col items-center text-center space-y-6 border border-secondary/10 select-none"
+                            >
+                                <div className="flex text-secondary">
+                                    <span className="material-symbols-outlined">star</span>
+                                    <span className="material-symbols-outlined">star</span>
+                                    <span className="material-symbols-outlined">star</span>
+                                    <span className="material-symbols-outlined">star</span>
+                                    <span className="material-symbols-outlined">star</span>
+                                </div>
+                                <p className="text-body-lg font-headline-sm italic text-on-surface-variant leading-relaxed flex-grow">
+                                    &quot;{t.quote}&quot;
+                                </p>
+                                <div className="pt-4 mt-auto">
+                                    <p className="text-label-md font-label-md text-primary uppercase tracking-widest">
+                                        {t.name}
+                                    </p>
+                                    <p className="text-label-sm font-label-sm text-on-tertiary-container mt-1">
+                                        {t.location}
+                                    </p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    {/* Navigation Arrows (Desktop) */}
+                    <div className="absolute top-1/2 -translate-y-1/2 -left-4 -right-4 flex justify-between pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden md:flex">
+                        <button
+                            className="pointer-events-auto w-10 h-10 flex items-center justify-center bg-white shadow-md text-primary hover:bg-secondary hover:text-white transition-all rounded-full"
+                            onClick={() => {
+                                const el = document.getElementById('testimonials-carousel');
+                                if (el) el.scrollBy({ left: -374, behavior: 'smooth' });
+                            }}
                         >
-                            <div className="flex text-secondary">
-                                <span className="material-symbols-outlined">star</span>
-                                <span className="material-symbols-outlined">star</span>
-                                <span className="material-symbols-outlined">star</span>
-                                <span className="material-symbols-outlined">star</span>
-                                <span className="material-symbols-outlined">star</span>
-                            </div>
-                            <p className="text-body-lg font-headline-sm italic text-on-surface-variant leading-relaxed">
-                                &quot;{t.quote}&quot;
-                            </p>
-                            <div className="pt-4">
-                                <p className="text-label-md font-label-md text-primary uppercase tracking-widest">
-                                    {t.name}
-                                </p>
-                                <p className="text-label-sm font-label-sm text-on-tertiary-container mt-1">
-                                    {t.location}
-                                </p>
-                            </div>
-                        </div>
-                    ))}
+                            <span className="material-symbols-outlined">chevron_left</span>
+                        </button>
+                        <button
+                            className="pointer-events-auto w-10 h-10 flex items-center justify-center bg-white shadow-md text-primary hover:bg-secondary hover:text-white transition-all rounded-full"
+                            onClick={() => {
+                                const el = document.getElementById('testimonials-carousel');
+                                if (el) el.scrollBy({ left: 374, behavior: 'smooth' });
+                            }}
+                        >
+                            <span className="material-symbols-outlined">chevron_right</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </section>

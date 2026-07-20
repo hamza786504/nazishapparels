@@ -17,7 +17,7 @@ export default function Footer() {
         e.preventDefault();
         if (!message.trim()) return;
         const encodedMessage = encodeURIComponent(message.trim());
-        window.open(`https://wa.me/+923305056010?text=${encodedMessage}`, '_blank');
+        window.open(`https://wa.me/+923124190029?text=${encodedMessage}`, '_blank');
         setMessage('');
         setIsOpen(false);
     };
@@ -47,30 +47,24 @@ export default function Footer() {
                                 COLLECTIONS
                             </h4>
                             <ul className="space-y-4">
-                                <li>
-                                    <Link
-                                        href="/collection/new-arrival"
-                                        className="text-on-surface-variant font-label-sm hover:text-secondary transition-all"
-                                    >
-                                        New Arrival
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link
-                                        href="/collection/rings-collection"
-                                        className="text-on-surface-variant font-label-sm hover:text-secondary transition-all"
-                                    >
-                                        Rings Collection
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link
-                                        href="/collection/studs-earings"
-                                        className="text-on-surface-variant font-label-sm hover:text-secondary transition-all"
-                                    >
-                                        Studs Earings
-                                    </Link>
-                                </li>
+                                {[
+                                    { name: 'New Arrivals', slug: 'new-arrivals' },
+                                    { name: 'Lawn', slug: 'lawn' },
+                                    { name: 'Chiffon', slug: 'chiffon' },
+                                    { name: '2PC Collection', slug: '2pc-collection' },
+                                    { name: '3PC Collection', slug: '3pc-collection' },
+                                    { name: 'Unstitched', slug: 'unstitched' },
+                                    { name: 'Stitched', slug: 'stitched' },
+                                ].map((cat) => (
+                                    <li key={cat.slug}>
+                                        <Link
+                                            href={`/collection/${cat.slug}`}
+                                            className="text-on-surface-variant font-label-sm hover:text-secondary transition-all"
+                                        >
+                                            {cat.name}
+                                        </Link>
+                                    </li>
+                                ))}
                             </ul>
                         </div>
 
@@ -114,7 +108,7 @@ export default function Footer() {
                                     <FaFacebook size={24} />
                                 </Link> */}
                                 <Link
-                                    href="https://www.instagram.com/reel/DZ0HEf-NNKh/?igsh=MTlla2hyMTByaXV1NA=="
+                                    href="https://www.instagram.com/nazishapparels/"
                                     className="text-secondary hover:text-primary transition-all duration-300 active:scale-95"
                                     aria-label="Instagram"
                                 >

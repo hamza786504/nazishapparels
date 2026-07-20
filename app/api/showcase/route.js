@@ -19,17 +19,24 @@ export async function GET(request) {
     }
 
     try {
-        const collection = await publicClient.fetch(
-            `*[_type == "collection" && slug == $slug][0]{ _id }`,
-            { slug: collectionSlug }
-        );
-        if (!collection) {
-            return NextResponse.json({ success: false, error: 'Collection not found' }, { status: 404 });
+        let products;
+        if (collectionSlug === 'new-arrivals') {
+            products = await publicClient.fetch(
+                `*[_type == "product" && status == "active"] | order(_createdAt desc) [0...${limit}] ${SHOWCASE_PROJECTION}`
+            );
+        } else {
+            const collection = await publicClient.fetch(
+                `*[_type == "collection" && slug == $slug][0]{ _id }`,
+                { slug: collectionSlug }
+            );
+            if (!collection) {
+                return NextResponse.json({ success: false, error: 'Collection not found' }, { status: 404 });
+            }
+            products = await publicClient.fetch(
+                `*[_type == "product" && status == "active" && collectionId == $collectionId] | order(_createdAt desc) [0...${limit}] ${SHOWCASE_PROJECTION}`,
+                { collectionId: collection._id }
+            );
         }
-        const products = await publicClient.fetch(
-            `*[_type == "product" && status == "active" && collectionId == $collectionId] | order(_createdAt desc) [0...${limit}] ${SHOWCASE_PROJECTION}`,
-            { collectionId: collection._id }
-        );
         return NextResponse.json(
             { success: true, products: products || [] },
             { status: 200, headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=30' } }

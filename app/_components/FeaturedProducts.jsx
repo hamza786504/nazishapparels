@@ -38,7 +38,7 @@ export default function FeaturedProducts({ collectionSlug, title, initialProduct
 
     if (loading) {
         return (
-            <section className="py-3 max-w-container-max mx-auto">
+            <section className="py-0 max-w-container-max mx-auto">
                 <div className="flex justify-between items-end mb-4">
                     <div>
                         <h2 className="text-headline-md font-headline-md">{title || collectionSlug}</h2>
@@ -57,7 +57,7 @@ export default function FeaturedProducts({ collectionSlug, title, initialProduct
     }
 
     return (
-        <section className="py-4 px-1 max-w-container-max mx-auto">
+        <section className="py-2 px-1 max-w-container-max mx-auto">
             <div className="flex justify-between items-end mb-4">
                 <div>
                     <h2 className="text-headline-lg font-headline-lg font-bold">{title || collectionSlug}</h2>
@@ -99,10 +99,10 @@ export default function FeaturedProducts({ collectionSlug, title, initialProduct
             </div>
 
             {products.length > 0 && collectionSlug && (
-                <div className="mt-16 flex justify-center">
+                <div className="mt-8 flex justify-center">
                     <Link
                         href={`/collection/${collectionSlug}`}
-                        className="border border-primary text-primary px-6 py-4 font-label-md uppercase tracking-[0.2em] hover:bg-primary hover:text-white transition-all duration-300 text-sm group"
+                        className="border border-primary text-primary px-6 py-2.5 md:py-4 font-label-md uppercase tracking-[0.2em] hover:bg-primary hover:text-white transition-all duration-300 text-sm group"
                     >
                         SHOW MORE
                     </Link>

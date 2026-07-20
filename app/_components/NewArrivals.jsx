@@ -6,29 +6,30 @@ import Link from 'next/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const products = [
+   
     {
         id: 1,
-        title: 'Rings Collection',
-        slug: 'rings-collection',
-        image: '/rings.jpg',
+        title: '2pc Collection',
+        slug: '2pc-collection',
+        image: '/2pc.jpg',
     },
     {
         id: 2,
-        title: 'HandCuff/Baracelts',
-        slug: 'handcuff-baracelts',
-        image: '/baracelts.jpg',
+        title: '3pc Collection',
+        slug: '3pc-collection',
+        image: '/3pc.jpg',
     },
     {
         id: 3,
-        title: 'Pendants/MalaSet',
-        slug: 'pendants-malaset',
-        image: '/pendant.jpg',
+        title: 'Unstitched Collection',
+        slug: 'unstitched',
+        image: '/unstiched.jpg',
     },
-    {
+     {
         id: 4,
-        title: 'Studs/Earings',
-        slug: 'studs-earings',
-        image: '/studs-earings.jpg',
+        title: 'Stitched Collection',
+        slug: 'stitched',
+        image: '/stiched.jpg',
     },
 ];
 
