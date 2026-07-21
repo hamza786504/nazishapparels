@@ -2,14 +2,13 @@
 'use client';
 import Image from 'next/image';
 import CartDrawer from './CartDrawer';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCart } from '../store/cartContext';
 import { useAuth } from '../store/authContext';
 import { useNavMenu } from '../store/navMenuContext';
 import { useSiteSettings } from '../store/siteSettingsContext';
-import { useParams } from 'next/navigation';
 import {
   Menu,
   X,
@@ -17,7 +16,11 @@ import {
   ShoppingBag,
   ChevronDown,
   ChevronUp,
-  ChevronRight,
+  Search,
+  MapPin,
+  Tag,
+  Package,
+  FileText,
 } from 'lucide-react';
 
 // ── Recursive desktop sub-menu item ──────────────────────────────────────────
@@ -83,6 +86,247 @@ function MobileNavItem({ item, depth, onClose }) {
   );
 }
 
+// ── Category icon helper ──────────────────────────────────────────────────────
+function getResultIcon(type) {
+  switch (type) {
+    case 'product':    return <Package className="w-3.5 h-3.5 text-secondary" />;
+    case 'collection': return <Tag     className="w-3.5 h-3.5 text-emerald-500" />;
+    default:           return <FileText className="w-3.5 h-3.5 text-gray-400" />;
+  }
+}
+
+// ── Category Dropdown Logic ──────────────────────────────────────────────────
+function CategoryDropdown({ navItems, selectedCategory, onSelect, alignRight }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  const displayLabel = selectedCategory?.title || 'All';
+
+  return (
+    <div ref={ref} className="relative flex-shrink-0">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex items-center gap-1 text-sm text-gray-600 py-2 px-2 hover:text-secondary transition-colors bg-transparent"
+      >
+        <span className="truncate font-medium">{displayLabel}</span>
+        <ChevronDown className={`w-3.5 h-3.5 flex-shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+      </button>
+
+      {open && (
+        <div className={`absolute ${alignRight ? 'right-0' : 'left-0'} top-full mt-2 w-52 bg-white border border-gray-200 shadow-xl rounded-md py-1 z-50 max-h-72 overflow-y-auto`}>
+          {/* All option */}
+          <button
+            type="button"
+            onClick={() => { onSelect(null); setOpen(false); }}
+            className={`w-full text-left px-4 py-2 text-sm flex items-center justify-between hover:bg-gray-50 transition-colors ${!selectedCategory ? 'text-secondary font-medium' : 'text-gray-700'}`}
+          >
+            All Categories
+            {!selectedCategory && <span className="text-secondary text-xs">✓</span>}
+          </button>
+
+          {/* Divider */}
+          {navItems.length > 0 && <div className="border-t border-gray-100 my-1" />}
+
+          {/* Dynamic nav items from admin */}
+          {navItems.map((item) => (
+            <button
+              key={item.id || item.title}
+              type="button"
+              onClick={() => { onSelect(item); setOpen(false); }}
+              className={`w-full text-left px-4 py-2 text-sm flex items-center justify-between hover:bg-gray-50 transition-colors ${selectedCategory?.title === item.title ? 'text-secondary font-medium' : 'text-gray-700'}`}
+            >
+              <span className="truncate">{item.title}</span>
+              {selectedCategory?.title === item.title && <span className="text-secondary text-xs flex-shrink-0">✓</span>}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Desktop Search Box ──────────────────────────────────────────────────────
+function SearchBox({ navItems }) {
+  const router = useRouter();
+  const [query, setQuery]           = useState('');
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [loading, setLoading]       = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const inputRef   = useRef(null);
+  const wrapperRef = useRef(null);
+  const debounceRef = useRef(null);
+
+  // Close suggestion panel on outside click
+  useEffect(() => {
+    const handler = (e) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  // Debounced typeahead
+  const fetchSuggestions = useCallback((q) => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (!q || q.trim().length < 2) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+    debounceRef.current = setTimeout(async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/menus/search?q=${encodeURIComponent(q.trim())}`);
+        const data = await res.json();
+        if (data.success) {
+          setSuggestions(data.results || []);
+          setShowSuggestions(true);
+        }
+      } catch {} finally {
+        setLoading(false);
+      }
+    }, 300);
+  }, []);
+
+  const handleChange = (e) => {
+    const val = e.target.value;
+    setQuery(val);
+    fetchSuggestions(val);
+  };
+
+  const doSearch = useCallback((q) => {
+    const trimmed = (q || query).trim();
+    if (!trimmed) return;
+    setShowSuggestions(false);
+    const categorySlug = selectedCategory?.url ? selectedCategory.url.replace('/collection/', '') : '';
+    const params = new URLSearchParams({ q: trimmed });
+    if (categorySlug) params.set('category', categorySlug);
+    router.push(`/search?${params.toString()}`);
+  }, [query, selectedCategory, router]);
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      doSearch();
+    }
+    if (e.key === 'Escape') setShowSuggestions(false);
+  };
+
+  const handleSuggestionClick = (result) => {
+    setShowSuggestions(false);
+    setQuery(result.label);
+    router.push(result.url);
+  };
+
+  return (
+    <div ref={wrapperRef} className="flex-1 hidden md:flex items-center relative">
+      <div className="flex items-center w-full bg-gray-50 border border-gray-200 rounded-lg hover:border-secondary focus-within:border-secondary focus-within:ring-1 focus-within:ring-secondary/30 transition-all px-2 max-w-2xl mx-4">
+        {/* Category Dropdown */}
+        <CategoryDropdown
+          navItems={navItems}
+          selectedCategory={selectedCategory}
+          onSelect={setSelectedCategory}
+        />
+
+        {/* Search Input */}
+        <input
+          ref={inputRef}
+          type="text"
+          value={query}
+          onChange={handleChange}
+          onKeyDown={handleKeyDown}
+          onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true); }}
+          placeholder={selectedCategory ? `Search in ${selectedCategory.title}…` : 'Search products, collections…'}
+          className="flex-1 bg-transparent outline-none text-sm text-gray-700 py-2.5 placeholder:text-gray-400"
+          autoComplete="off"
+        />
+
+        {/* Search Icon */}
+        <button type="button" onClick={() => doSearch()} className="p-1.5 rounded-md hover:bg-secondary/10 transition-colors flex-shrink-0">
+          {loading ? (
+            <span className="w-4 h-4 border-2 border-secondary border-t-transparent rounded-full animate-spin inline-block" />
+          ) : (
+            <Search className="w-4 h-4 text-gray-500 hover:text-secondary transition-colors" />
+          )}
+        </button>
+      </div>
+
+      {/* Typeahead Suggestions Dropdown */}
+      {showSuggestions && suggestions.length > 0 && (
+        <div className="absolute top-full left-4 right-4 mt-1 bg-white border border-gray-200 shadow-2xl rounded-lg z-50 overflow-hidden max-w-2xl">
+          {suggestions.map((result) => (
+            <button key={result.id} type="button" onClick={() => handleSuggestionClick(result)} className="w-full text-left px-4 py-2.5 flex items-center gap-3 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-none group">
+              <span className="flex-shrink-0">{getResultIcon(result.type)}</span>
+              <span className="text-sm text-gray-700 group-hover:text-secondary transition-colors truncate flex-1">{result.label}</span>
+              <span className="text-[10px] text-gray-400 uppercase tracking-wider flex-shrink-0">{result.type}</span>
+            </button>
+          ))}
+          <div className="px-4 py-2 bg-gray-50 border-t border-gray-100">
+            <button type="button" onClick={() => doSearch()} className="text-xs text-secondary hover:underline">
+              See all results for &ldquo;{query}&rdquo; →
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Mobile Search Bar (New Design) ──────────────────────────────────────────
+function MobileSearchBar({ navItems }) {
+  const router = useRouter();
+  const [query, setQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState(null);
+
+  const doSearch = () => {
+    const trimmed = query.trim();
+    if (!trimmed) return;
+    const categorySlug = selectedCategory?.url ? selectedCategory.url.replace('/collection/', '') : '';
+    const params = new URLSearchParams({ q: trimmed });
+    if (categorySlug) params.set('category', categorySlug);
+    router.push(`/search?${params.toString()}`);
+  };
+
+  return (
+    <div className="flex items-center bg-gray-50/80 border border-gray-200 rounded-full px-3 py-2 gap-2 mt-3 mb-4 shadow-sm">
+      <Search className="w-4 h-4 text-gray-500 flex-shrink-0" />
+      <input
+        type="text"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        onKeyDown={(e) => e.key === 'Enter' && doSearch()}
+        placeholder="Search for products, brands and categories"
+        className="flex-1 bg-transparent outline-none text-sm text-gray-700 placeholder:text-gray-400"
+      />
+      
+      {/* Vertical Divider */}
+      <div className="w-[1px] h-4 bg-gray-300 mx-1"></div>
+
+      {/* Mobile Category Dropdown (Aligned Right) */}
+      <CategoryDropdown
+        navItems={navItems}
+        selectedCategory={selectedCategory}
+        onSelect={setSelectedCategory}
+        alignRight={true}
+      />
+    </div>
+  );
+}
+
+// ── Main Navbar ───────────────────────────────────────────────────────────────
 export default function Navbar() {
   const { cartItems, updateQuantity, removeFromCart } = useCart();
   const { isAuthenticated, customer, logout } = useAuth();
@@ -90,34 +334,15 @@ export default function Navbar() {
   const [isCartOpen, setIsCartOpen]       = useState(false);
   const [menuOpen, setMenuOpen]           = useState(false);
   const [userMenuOpen, setUserMenuOpen]   = useState(false);
-  const [clientNavItems, setClientNavItems] = useState(null);
-
-
-  // Client-side fetch: override fallback if the server gave us the static fallback
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch('/api/menus?position=header');
-        const data = await res.json();
-        if (data.success && data.menu?.items?.length) {
-          setClientNavItems(data.menu.items);
-        }
-      } catch { /* server data is fine */ }
-    })();
-  }, []);
   const userMenuRef = useRef(null);
 
   const handleLogout = async () => {
     setUserMenuOpen(false);
-    try {
-      await logout();
-    } catch {
-      // ignore — clear local state regardless
-    }
+    try { await logout(); } catch {}
     router.push('/login');
   };
 
-  // Close the user dropdown when clicking outside of it.
+  // Close user dropdown when clicking outside
   useEffect(() => {
     if (!userMenuOpen) return;
     const onClick = (e) => {
@@ -129,10 +354,7 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', onClick);
   }, [userMenuOpen]);
 
-  // ── Dynamic header menu, fetched server-side and provided via context ──────
-  // so it's present in the very first render (no client-side fetch/flash).
-  const serverItems = useNavMenu();
-  const navItems = clientNavItems || serverItems;
+  const navItems = useNavMenu();        
   const settings = useSiteSettings();
   const logoSrc = settings?.logoUrl || '/logo.png';
   const storeName = settings?.storeName || 'NazishApparels';
@@ -149,165 +371,122 @@ export default function Navbar() {
         onRemoveItem={removeFromCart}
       />
 
-      <header className="bg-white docked w-full top-0  z-50 border-b border-secondary/30 transition-transform duration-300">
-        <div className="flex justify-between items-center max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-2 md:py-2">
+      <header className="bg-white docked w-full top-0 z-50 border-b border-gray-200 transition-transform duration-300">
+        {/* 
+          Layout logic:
+          MD+: One row: Logo - Search - Actions
+          Mobile: Two rows: 
+            Row 1: Logo - Deliver To/Currency - User - Cart - Hamburger
+            Row 2: Full-width Search (Icon Left, Category Right)
+        */}
+        <div className="flex flex-col max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-2 md:py-3">
+          
+          {/* Row 1: Logo & Right Actions */}
+          <div className="flex justify-between items-center w-full gap-2">
+            
+            {/* Brand Logo */}
+            <div className="flex-shrink-0 flex items-center">
+              <Link href="/" className="block">
+                <Image src={logoSrc} width="140" height="80" alt={storeName} className="h-10 w-auto object-contain" />
+              </Link>
+            </div>
 
-          {/* Brand Logo */}
-          <div className="flex items-center space-x-4">
-            <Link href="/">
-              <Image src={logoSrc} width="100" height="70" alt={storeName} />
-            </Link>
-          </div>
+            {/* Desktop Search Bar (Visible MD+) */}
+            <SearchBox navItems={navItems} />
 
-          {/* ── Desktop Navigation — dynamic from DB ──────────────────────── */}
-          <nav className="hidden md:flex space-x-4 lg:space-x-6 items-center">
-            {navItems.map((item) => {
-              const hasChildren = item.children && item.children.length > 0;
-              return (
-                <div key={item.id} className="relative group py-2">
-                  <Link
-                    href={item.url}
-                    className="text-sm text-on-surface-variant font-label-md hover:text-secondary transition-colors duration-300 nav-link-underline flex items-center gap-1"
-                  >
-                    {item.title}
-                    {hasChildren && (
-                      <ChevronDown className="w-4 h-4 transition-transform duration-300 group-hover:rotate-180" />
-                    )}
-                  </Link>
-
-                  {/* Children dropdown (recursive) */}
-                  {hasChildren && (
-                    <div className="absolute top-full left-0 mt-1 min-w-[200px] bg-surface border border-secondary/20 shadow-lg py-2 hidden group-hover:block transition-all duration-300 z-50 rounded-sm">
-                      {item.children.map((child) => (
-                        <DesktopSubMenuItem key={child.id} item={child} depth={1} />
-                      ))}
-                    </div>
-                  )}
+            {/* Actions (User, Cart, Hamburger) */}
+            <div className="flex items-center gap-3 sm:gap-4 ml-auto">
+              {/* Deliver To (Only visible on Mobile to match screenshot) */}
+              <div className="flex md:hidden items-center gap-1 cursor-pointer hover:text-secondary text-xs">
+                <div className="bg-green-700 text-white rounded-full p-0.5 w-5 h-5 flex items-center justify-center flex-shrink-0">
+                  <MapPin className="w-3 h-3 fill-current" />
                 </div>
-              );
-            })}
-          </nav>
+                <div className="flex items-center gap-0.5 font-medium text-gray-700">
+                  PKR <ChevronDown className="w-3 h-3" />
+                </div>
+              </div>
+              
+              {/* Deliver To (Desktop only) */}
+              <div className="hidden md:flex lg:flex items-center gap-1.5 cursor-pointer hover:text-secondary text-sm">
+                <div className="bg-green-700 text-white rounded-full p-1 w-6 h-6 flex items-center justify-center">
+                  <MapPin className="w-3 h-3 fill-current" />
+                </div>
+                <div className="flex flex-col leading-tight">
+                  <span className="text-[10px] text-gray-500">Deliver To / Currency</span>
+                  <span className="font-medium">PK / PKR <ChevronDown className="w-3 h-3 inline ml-0.5" /></span>
+                </div>
+              </div>
 
-          {/* Actions (Right Side) */}
-          <div className="flex items-center space-x-3 md:space-x-4">
-            {/* User account — dropdown when signed in, redirect to login otherwise */}
-            <div className="relative" ref={userMenuRef}>
+              {/* User account */}
+              <div className="relative hidden sm:block" ref={userMenuRef}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!isAuthenticated) router.push('/login');
+                    else setUserMenuOpen((open) => !open);
+                  }}
+                  className="text-gray-700 hover:text-secondary transition-colors duration-300 active:scale-95 flex items-center justify-center p-1"
+                >
+                  <User className="w-5 h-5" />
+                </button>
+
+                {isAuthenticated && userMenuOpen && (
+                  <div role="menu" className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 shadow-xl z-50 rounded-sm py-2">
+                    <div className="px-4 py-2 border-b border-gray-100 mb-1">
+                      <p className="text-sm font-medium text-gray-800 truncate">{customer?.name || 'My Account'}</p>
+                      <p className="text-[11px] text-gray-500 truncate">{customer?.email}</p>
+                    </div>
+                    <Link href="/dashboard" onClick={() => setUserMenuOpen(false)} className="block px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-secondary">Dashboard</Link>
+                    <Link href="/profile"   onClick={() => setUserMenuOpen(false)} className="block px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-secondary">Profile</Link>
+                    <button type="button" onClick={handleLogout} className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50">Logout</button>
+                  </div>
+                )}
+              </div>
+
+              {/* Cart Button */}
               <button
-                type="button"
-                onClick={() => {
-                  if (!isAuthenticated) {
-                    router.push('/login');
-                  } else {
-                    setUserMenuOpen((open) => !open);
-                  }
-                }}
-                className="text-primary hover:text-secondary transition-colors duration-300 active:scale-95 flex items-center justify-center"
-                aria-label="Account"
-                aria-haspopup="menu"
-                aria-expanded={userMenuOpen}
+                onClick={() => setIsCartOpen(true)}
+                className="text-gray-700 hover:text-secondary transition-colors duration-300 active:scale-95 relative flex items-center justify-center p-1"
               >
-                <User className="w-5 h-5 md:w-5 md:h-5" />
+                <ShoppingBag className="w-5 h-5" />
+                <span className="absolute -top-1 -right-1 bg-secondary text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full">
+                  {cartCount}
+                </span>
               </button>
 
-              {isAuthenticated && userMenuOpen && (
-                <div
-                  role="menu"
-                  className="absolute right-0 mt-2 w-56 bg-surface border border-secondary/20 shadow-xl z-50 rounded-sm py-2"
-                >
-                  <div className="px-4 py-2 border-b border-secondary/10 mb-1">
-                    <p className="font-label-sm text-label-sm text-primary font-medium truncate">
-                      {customer?.name || 'My Account'}
-                    </p>
-                    <p className="text-[11px] text-on-surface-variant truncate">
-                      {customer?.email}
-                    </p>
-                  </div>
-                  <Link
-                    href="/dashboard"
-                    role="menuitem"
-                    onClick={() => setUserMenuOpen(false)}
-                    className="block px-4 py-2.5 font-label-md text-label-md text-on-surface-variant hover:bg-secondary/10 hover:text-secondary transition-colors"
-                  >
-                    Dashboard
-                  </Link>
-                  <Link
-                    href="/profile"
-                    role="menuitem"
-                    onClick={() => setUserMenuOpen(false)}
-                    className="block px-4 py-2.5 font-label-md text-label-md text-on-surface-variant hover:bg-secondary/10 hover:text-secondary transition-colors"
-                  >
-                    Profile
-                  </Link>
-                  <Link
-                    href="/address"
-                    role="menuitem"
-                    onClick={() => setUserMenuOpen(false)}
-                    className="block px-4 py-2.5 font-label-md text-label-md text-on-surface-variant hover:bg-secondary/10 hover:text-secondary transition-colors"
-                  >
-                    Addresses
-                  </Link>
-                  <button
-                    type="button"
-                    role="menuitem"
-                    onClick={handleLogout}
-                    className="w-full text-left px-4 py-2.5 font-label-md text-label-md text-error hover:bg-error-container transition-colors"
-                  >
-                    Logout
-                  </button>
-                </div>
-              )}
+              {/* Hamburger — Mobile */}
+              <button
+                onClick={() => setMenuOpen(!menuOpen)}
+                className="md:hidden text-gray-700 hover:text-secondary focus:outline-none flex items-center justify-center p-1"
+              >
+                {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </button>
             </div>
-            <button
-              onClick={() => setIsCartOpen(true)}
-              className="text-primary hover:text-secondary transition-colors duration-300 active:scale-95 duration-150 ease-in-out relative flex items-center justify-center"
-            >
-              <ShoppingBag className="w-5 h-5 md:w-5 md:h-5" />
-              <span className="absolute -top-2 -right-1 bg-secondary text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full">
-                {cartCount}
-              </span>
-            </button>
-
-            {/* Hamburger — Mobile */}
-            <button
-              onClick={() => setMenuOpen(!menuOpen)}
-              className="md:hidden text-primary hover:text-secondary focus:outline-none flex items-center justify-center"
-              aria-label="Toggle Menu"
-            >
-              {menuOpen ? <X className="w-7 h-7" /> : <Menu className="w-5 h-5" />}
-            </button>
           </div>
+
+          {/* Row 2: Mobile Search Bar (Only visible < md) */}
+          <div className="md:hidden block w-full mt-2">
+            <MobileSearchBar navItems={navItems} />
+          </div>
+
         </div>
       </header>
 
       {/* ── Mobile Drawer Overlay ──────────────────────────────────────────── */}
       {menuOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity duration-300 md:hidden"
-          onClick={() => setMenuOpen(false)}
-        />
+        <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity duration-300 md:hidden" onClick={() => setMenuOpen(false)} />
       )}
 
       {/* ── Mobile Drawer ─────────────────────────────────────────────────── */}
-      <div
-        className={`fixed top-0 left-0 bottom-0 z-50 w-[80%] max-w-[360px] bg-surface shadow-2xl p-6 transition-transform duration-300 ease-in-out transform md:hidden ${
-          menuOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
-      >
-        <div className="flex items-center justify-between border-b border-secondary/20 pb-4 mb-6">
-          <span className="text-primary uppercase tracking-wider font-bold" style={{ fontSize: '16px' }}>
-            {storeName}
-          </span>
-          <button
-            onClick={() => setMenuOpen(false)}
-            className="text-primary hover:text-secondary focus:outline-none flex items-center justify-center"
-            aria-label="Close Menu"
-          >
+      <div className={`fixed top-0 left-0 bottom-0 z-50 w-[80%] max-w-[360px] bg-white shadow-2xl p-6 transition-transform duration-300 ease-in-out transform md:hidden ${menuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="flex items-center justify-between border-b border-gray-200 pb-4 mb-4">
+          <span className="text-gray-800 uppercase tracking-wider font-bold text-lg">{storeName}</span>
+          <button onClick={() => setMenuOpen(false)} className="text-gray-800 hover:text-secondary p-1">
             <X className="w-6 h-6" />
           </button>
         </div>
 
-        {/* ── Mobile Navigation Links — Dynamic (recursive) ────────────── */}
-        <nav className="flex flex-col space-y-1">
+        <nav className="flex flex-col space-y-1 mt-2">
           {navItems.map((item) => (
             <MobileNavItem key={item.id} item={item} depth={0} onClose={() => setMenuOpen(false)} />
           ))}

@@ -196,7 +196,7 @@ export default function ProductPageClient({ initialProduct }) {
                             width={720}
                             src={mainImage}
                             alt="Main Product View"
-                            className="w-full h-[580px] object-cover transition-transform duration-700 ease-in-out group-hover:scale-105"
+                            className="w-full h-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-105"
                         />
                         <div className="absolute top-4 right-4 bg-surface/80 backdrop-blur-sm px-3 py-1 rounded-full">
                             <span className="text-label-sm text-primary uppercase tracking-widest">New Arrival</span>
@@ -221,7 +221,7 @@ export default function ProductPageClient({ initialProduct }) {
                 <div className="lg:col-span-5 flex flex-col gap-8 fade-in">
                     <header className="flex flex-col gap-2">
                         <p className="text-label-md text-secondary uppercase tracking-[0.2em]">{product.productType || 'General'}</p>
-                        <h1 className="font-headline-lg text-display-lg-mobile md:text-headline-lg text-primary leading-tight">{product.title}</h1>
+                        <h1 className="text-lg sm:text-headline-lg text-primary leading-tight">{product.title}</h1>
                         <p className="text-headline-sm font-headline-sm text-secondary">{product.price} Pkr</p>
                     </header>
 
