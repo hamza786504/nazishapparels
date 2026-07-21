@@ -9,6 +9,8 @@ import { useCart } from '../store/cartContext';
 import { useAuth } from '../store/authContext';
 import { useNavMenu } from '../store/navMenuContext';
 import { useSiteSettings } from '../store/siteSettingsContext';
+import { useFavorites } from '../store/favoritesContext';
+import { usePathname } from 'next/navigation';
 import {
   Menu,
   X,
@@ -21,6 +23,7 @@ import {
   Tag,
   Package,
   FileText,
+  Heart,
 } from 'lucide-react';
 
 // ── Recursive desktop sub-menu item ──────────────────────────────────────────
@@ -285,43 +288,69 @@ function SearchBox({ navItems }) {
   );
 }
 
-// ── Mobile Search Bar (New Design) ──────────────────────────────────────────
-function MobileSearchBar({ navItems }) {
+// ── Mobile Search Bar ────────────────────────────────────────────────────────
+function MobileSearchBar() {
   const router = useRouter();
   const [query, setQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState(null);
 
   const doSearch = () => {
     const trimmed = query.trim();
     if (!trimmed) return;
-    const categorySlug = selectedCategory?.url ? selectedCategory.url.replace('/collection/', '') : '';
-    const params = new URLSearchParams({ q: trimmed });
-    if (categorySlug) params.set('category', categorySlug);
-    router.push(`/search?${params.toString()}`);
+    router.push(`/search?q=${encodeURIComponent(trimmed)}`);
   };
 
   return (
-    <div className="flex items-center bg-gray-50/80 border border-gray-200 rounded-full px-3 py-2 gap-2 mt-3 mb-4 shadow-sm">
-      <Search className="w-4 h-4 text-gray-500 flex-shrink-0" />
+    <div className="flex items-center bg-[#F5F5F5] rounded-lg px-4 py-2.5 gap-3 mt-2 transition-colors focus-within:bg-white focus-within:ring-1 focus-within:ring-secondary">
+      <Search className="w-5 h-5 text-gray-700 flex-shrink-0" strokeWidth={2} />
       <input
         type="text"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         onKeyDown={(e) => e.key === 'Enter' && doSearch()}
         placeholder="Search for products, brands and categories"
-        className="flex-1 bg-transparent outline-none text-sm text-gray-700 placeholder:text-gray-400"
+        className="flex-1 bg-transparent outline-none text-[15px] text-gray-800 placeholder:text-gray-500"
       />
-      
-      {/* Vertical Divider */}
-      <div className="w-[1px] h-4 bg-gray-300 mx-1"></div>
+    </div>
+  );
+}
 
-      {/* Mobile Category Dropdown (Aligned Right) */}
-      <CategoryDropdown
-        navItems={navItems}
-        selectedCategory={selectedCategory}
-        onSelect={setSelectedCategory}
-        alignRight={true}
-      />
+// ── Mobile Horizontal Categories ─────────────────────────────────────────────
+function MobileHorizontalCategories({ navItems }) {
+  const pathname = usePathname();
+  return (
+   <div className="md:hidden w-full overflow-x-auto whitespace-nowrap scrollbar-hide pt-3 px-0 flex items-center gap-6 no-scrollbar">
+      {/* "All" Link */}
+      <Link 
+        href="/search" 
+        className={`text-[15px] transition-colors pb-1 border-b-2 ${
+          pathname === '/search' 
+            ? 'text-gray-900 border-black font-medium' 
+            : 'text-gray-600 border-transparent hover:text-secondary'
+        }`}
+      >
+        All
+      </Link>
+
+      {/* Dynamic Nav Links */}
+      {navItems.map((item) => {
+        const isActive = pathname === item.url || (pathname.startsWith(item.url) && item.url !== '/');
+
+        return (
+          <Link 
+            key={item.id} 
+            href={item.url} 
+            className={`text-[15px] transition-colors pb-1 border-b-2 ${
+              isActive 
+                ? 'text-gray-900 border-black font-medium' 
+                : 'text-gray-600 border-transparent hover:text-secondary'
+            }`}
+          >
+            {item.title}
+          </Link>
+        );
+      })}
+      
+      <div className="w-4 flex-shrink-0"></div>
     </div>
   );
 }
@@ -330,6 +359,7 @@ function MobileSearchBar({ navItems }) {
 export default function Navbar() {
   const { cartItems, updateQuantity, removeFromCart } = useCart();
   const { isAuthenticated, customer, logout } = useAuth();
+  const { favoritesCount } = useFavorites();
   const router = useRouter();
   const [isCartOpen, setIsCartOpen]       = useState(false);
   const [menuOpen, setMenuOpen]           = useState(false);
@@ -371,14 +401,12 @@ export default function Navbar() {
         onRemoveItem={removeFromCart}
       />
 
+      {/* 1. Announcement Bar */}
+      <div className="w-full bg-[#111111] text-white text-[11px] sm:text-[13px] font-medium py-2 text-center px-4 tracking-wide">
+        Get Free Delivery on 10,000PKR above Shopping
+      </div>
+
       <header className="bg-white docked w-full top-0 z-50 border-b border-gray-200 transition-transform duration-300">
-        {/* 
-          Layout logic:
-          MD+: One row: Logo - Search - Actions
-          Mobile: Two rows: 
-            Row 1: Logo - Deliver To/Currency - User - Cart - Hamburger
-            Row 2: Full-width Search (Icon Left, Category Right)
-        */}
         <div className="flex flex-col max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-2 md:py-3">
           
           {/* Row 1: Logo & Right Actions */}
@@ -396,24 +424,11 @@ export default function Navbar() {
 
             {/* Actions (User, Cart, Hamburger) */}
             <div className="flex items-center gap-3 sm:gap-4 ml-auto">
-              {/* Deliver To (Only visible on Mobile to match screenshot) */}
-              <div className="flex md:hidden items-center gap-1 cursor-pointer hover:text-secondary text-xs">
-                <div className="bg-green-700 text-white rounded-full p-0.5 w-5 h-5 flex items-center justify-center flex-shrink-0">
-                  <MapPin className="w-3 h-3 fill-current" />
-                </div>
-                <div className="flex items-center gap-0.5 font-medium text-gray-700">
-                  PKR <ChevronDown className="w-3 h-3" />
-                </div>
-              </div>
               
-              {/* Deliver To (Desktop only) */}
-              <div className="hidden md:flex lg:flex items-center gap-1.5 cursor-pointer hover:text-secondary text-sm">
-                <div className="bg-green-700 text-white rounded-full p-1 w-6 h-6 flex items-center justify-center">
+              {/* Mobile Location Pin (Only visual, no currency) */}
+              <div className="flex md:hidden items-center gap-1.5 cursor-pointer text-sm">
+                <div className="bg-[#0c7f3a] text-white rounded-full p-0.5 w-5 h-5 flex items-center justify-center flex-shrink-0">
                   <MapPin className="w-3 h-3 fill-current" />
-                </div>
-                <div className="flex flex-col leading-tight">
-                  <span className="text-[10px] text-gray-500">Deliver To / Currency</span>
-                  <span className="font-medium">PK / PKR <ChevronDown className="w-3 h-3 inline ml-0.5" /></span>
                 </div>
               </div>
 
@@ -425,7 +440,7 @@ export default function Navbar() {
                     if (!isAuthenticated) router.push('/login');
                     else setUserMenuOpen((open) => !open);
                   }}
-                  className="text-gray-700 hover:text-secondary transition-colors duration-300 active:scale-95 flex items-center justify-center p-1"
+                  className="text-gray-800 hover:text-secondary transition-colors duration-300 active:scale-95 flex items-center justify-center p-1"
                 >
                   <User className="w-5 h-5" />
                 </button>
@@ -443,12 +458,26 @@ export default function Navbar() {
                 )}
               </div>
 
+              {/* Favorites / Wishlist */}
+              <Link
+                href="/favorites"
+                aria-label="Wishlist"
+                className="relative text-gray-800 hover:text-red-500 transition-colors duration-300 flex items-center justify-center p-1"
+              >
+                <Heart className="w-5 h-5" strokeWidth={1.5} />
+                {favoritesCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold">
+                    {favoritesCount > 9 ? '9+' : favoritesCount}
+                  </span>
+                )}
+              </Link>
+
               {/* Cart Button */}
               <button
                 onClick={() => setIsCartOpen(true)}
-                className="text-gray-700 hover:text-secondary transition-colors duration-300 active:scale-95 relative flex items-center justify-center p-1"
+                className="text-gray-800 hover:text-secondary transition-colors duration-300 active:scale-95 relative flex items-center justify-center p-1"
               >
-                <ShoppingBag className="w-5 h-5" />
+                <ShoppingBag className="w-5 h-5" strokeWidth={1.5} />
                 <span className="absolute -top-1 -right-1 bg-secondary text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full">
                   {cartCount}
                 </span>
@@ -457,7 +486,7 @@ export default function Navbar() {
               {/* Hamburger — Mobile */}
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
-                className="md:hidden text-gray-700 hover:text-secondary focus:outline-none flex items-center justify-center p-1"
+                className="md:hidden text-gray-800 hover:text-secondary focus:outline-none flex items-center justify-center p-1"
               >
                 {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
               </button>
@@ -465,9 +494,12 @@ export default function Navbar() {
           </div>
 
           {/* Row 2: Mobile Search Bar (Only visible < md) */}
-          <div className="md:hidden block w-full mt-2">
-            <MobileSearchBar navItems={navItems} />
+          <div className="md:hidden block w-full mt-1">
+            <MobileSearchBar />
           </div>
+
+          {/* Row 3: Mobile Horizontal Categories (Only visible < md) */}
+          <MobileHorizontalCategories navItems={navItems} />
 
         </div>
       </header>

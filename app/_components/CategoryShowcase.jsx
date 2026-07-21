@@ -139,14 +139,17 @@ export default function CategoryShowcase({ collections: serverCollections = null
                                 key={product._id || product.id}
                                 id={product._id || product.id}
                                 title={product.title}
-                                price={product.price}
-                                priceNumeric={product.priceNumeric}
+                                price={`PKR ${Number(product.price).toLocaleString()}`}
+                                priceNumeric={typeof product.price === 'number' ? product.price : Number(product.price)}
+                                compareAtPrice={product.compareAtPrice}
                                 image={product.image || product.primaryImage || ''}
                                 slug={product.slug}
                                 type={product.type}
                                 sizes={product.sizes || []}
                                 colors={product.colors || []}
                                 isAccessory={product.isAccessory}
+                                reviewAvg={product.reviewAvg || 0}
+                                reviewCount={product.reviewCount || 0}
                             />
                         ))
                     ) : (

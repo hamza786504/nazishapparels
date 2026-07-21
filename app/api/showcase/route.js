@@ -1,13 +1,6 @@
 import { NextResponse } from 'next/server';
 import { publicClient } from '@/lib/sanityClientPublic';
-
-const SHOWCASE_PROJECTION = `{
-    _id, "id": _id, title, slug,
-    "price": "PKR " + string(price), "priceNumeric": price,
-    "type": productType,
-    "image": coalesce(images[0], ""),
-    sizes, colors, isAccessory
-}`;
+import { CARD_PROJECTION } from '@/lib/sanityQueries';
 
 export async function GET(request) {
     const { searchParams } = new URL(request.url);
@@ -22,7 +15,7 @@ export async function GET(request) {
         let products;
         if (collectionSlug === 'new-arrivals') {
             products = await publicClient.fetch(
-                `*[_type == "product" && status == "active"] | order(_createdAt desc) [0...${limit}] ${SHOWCASE_PROJECTION}`
+                `*[_type == "product" && status == "active"] | order(_createdAt desc) [0...${limit}] ${CARD_PROJECTION}`
             );
         } else {
             const collection = await publicClient.fetch(
@@ -33,7 +26,7 @@ export async function GET(request) {
                 return NextResponse.json({ success: false, error: 'Collection not found' }, { status: 404 });
             }
             products = await publicClient.fetch(
-                `*[_type == "product" && status == "active" && collectionId == $collectionId] | order(_createdAt desc) [0...${limit}] ${SHOWCASE_PROJECTION}`,
+                `*[_type == "product" && status == "active" && collectionId == $collectionId] | order(_createdAt desc) [0...${limit}] ${CARD_PROJECTION}`,
                 { collectionId: collection._id }
             );
         }

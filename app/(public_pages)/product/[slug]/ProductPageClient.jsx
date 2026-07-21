@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useCart } from '../../../store/cartContext';
+import { useFavorites } from '../../../store/favoritesContext';
 import ProductCard from '../../../_components/ProductCard';
 import SizeChartModal from '../../../_components/SizeChartModal';
 import Link from 'next/link';
@@ -9,6 +10,7 @@ import Image from 'next/image';
 
 export default function ProductPageClient({ initialProduct }) {
     const { addToCart } = useCart();
+    const { isFavorite, toggleFavorite } = useFavorites();
     const [product] = useState(initialProduct);
     const [relatedProducts, setRelatedProducts] = useState([]);
 
@@ -311,6 +313,37 @@ export default function ProductPageClient({ initialProduct }) {
                                     <>Add to Cart</>
                                 )}
                             </button>
+
+                            {/* Wishlist toggle */}
+                            <button
+                                type="button"
+                                onClick={() => toggleFavorite({
+                                    id: product._id,
+                                    slug: product.slug,
+                                    title: product.title,
+                                    price: `PKR ${Number(product.price).toLocaleString()}`,
+                                    priceNumeric: product.price,
+                                    image: product.images?.[0] || '',
+                                    type: product.productType,
+                                    sizes: product.sizes || [],
+                                    colors: product.colors || [],
+                                })}
+                                className={`cursor-pointer w-full py-3.5 font-label-md uppercase tracking-widest transition-all duration-300 flex justify-center items-center gap-2 border ${
+                                    isFavorite(product._id)
+                                        ? 'bg-red-50 border-red-400 text-red-600'
+                                        : 'border-secondary text-primary hover:bg-surface-container-low'
+                                }`}
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                    fill={isFavorite(product._id) ? 'currentColor' : 'none'}
+                                    strokeWidth={1.8} stroke="currentColor"
+                                    className={`w-4 h-4 ${isFavorite(product._id) ? 'text-red-500' : ''}`}
+                                >
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+                                </svg>
+                                {isFavorite(product._id) ? 'Saved to Wishlist' : 'Save to Wishlist'}
+                            </button>
+
                             <button className="cursor-pointer w-full py-3.5 border border-secondary text-primary font-label-md uppercase tracking-widest hover:bg-surface-container-low transition-all">
                                 Buy Now
                             </button>
@@ -565,11 +598,14 @@ export default function ProductPageClient({ initialProduct }) {
                                 title={item.title}
                                 price={`PKR ${Number(item.price).toLocaleString()}`}
                                 priceNumeric={item.price}
+                                compareAtPrice={item.compareAtPrice}
                                 image={item.images?.[0] || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&h=700&fit=crop'}
                                 slug={item.slug}
                                 type={item.productType}
                                 sizes={item.sizes}
                                 colors={item.colors}
+                                reviewAvg={item.reviewAvg || 0}
+                                reviewCount={item.reviewCount || 0}
                             />
                         ))}
                     </div>

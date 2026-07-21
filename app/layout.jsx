@@ -3,6 +3,7 @@ import { EB_Garamond, Manrope, Jost } from 'next/font/google';
 import { CartProvider } from './store/cartContext';
 import { AuthProvider } from './store/authContext';
 import { NavMenuProvider } from './store/navMenuContext';
+import { FavoritesProvider } from './store/favoritesContext';
 import { getHeaderMenuItems } from '@/lib/getHeaderMenu';
 import { getSiteSettings } from '..//lib/getSiteSettings';
 import { SiteSettingsProvider } from './store/siteSettingsContext';
@@ -64,9 +65,11 @@ export default async function RootLayout({ children }) {
                 <SiteSettingsProvider  settings={settings}>
                     <AuthProvider>
                         <CartProvider>
-                            <NavMenuProvider items={headerNavItems}>
-                                {children}
-                            </NavMenuProvider>
+                            <FavoritesProvider>
+                                <NavMenuProvider items={headerNavItems}>
+                                    {children}
+                                </NavMenuProvider>
+                            </FavoritesProvider>
                         </CartProvider>
                     </AuthProvider>
                 </SiteSettingsProvider>

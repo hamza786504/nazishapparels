@@ -32,12 +32,15 @@ export default function HandcraftedAccessories() {
                         title={item.title}
                         price={item.price}
                         priceNumeric={item.priceNumeric}
+                        compareAtPrice={item.compareAtPrice}
                         image={item.image || item.primaryImage}
                         slug={item.slug}
                         type={item.type}
                         sizes={item.sizes}
                         colors={item.colors}
                         isAccessory={item.isAccessory}
+                        reviewAvg={item.reviewAvg || 0}
+                        reviewCount={item.reviewCount || 0}
                     />
                 ))}
             </div>

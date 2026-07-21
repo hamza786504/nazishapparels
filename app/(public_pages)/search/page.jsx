@@ -15,6 +15,7 @@ function mapProduct(p) {
     slug: p.slug,
     price: `PKR ${Number(p.price).toLocaleString()}`,
     priceNumeric: p.price,
+    compareAtPrice: p.compareAtPrice || null,
     type: p.productType || 'Product',
     sizes: p.sizes || [],
     colors: p.colors || [],
@@ -22,6 +23,8 @@ function mapProduct(p) {
     primaryImage:
       p.images?.[0] ||
       'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&h=700&fit=crop',
+    reviewAvg: p.reviewAvg || 0,
+    reviewCount: p.reviewCount || 0,
   };
 }
 
@@ -238,10 +241,13 @@ function SearchPageInner() {
                     title={product.title}
                     price={product.price}
                     priceNumeric={product.priceNumeric}
+                    compareAtPrice={product.compareAtPrice}
                     image={product.primaryImage}
                     type={product.type}
                     sizes={product.sizes}
                     colors={product.colors}
+                    reviewAvg={product.reviewAvg}
+                    reviewCount={product.reviewCount}
                   />
                 ))}
               </div>

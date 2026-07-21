@@ -24,6 +24,7 @@ export default function FeaturedProducts({ collectionSlug, title, initialProduct
                     const mapped = data.products.map((p) => ({
                         ...p,
                         displayImage: p.image || PLACEHOLDER_IMAGE,
+                        priceFormatted: `PKR ${Number(p.price).toLocaleString()}`,
                     }));
                     setProducts(mapped);
                 }
@@ -82,13 +83,16 @@ export default function FeaturedProducts({ collectionSlug, title, initialProduct
                             key={product._id}
                             id={product._id}
                             title={product.title}
-                            price={product.price}
-                            priceNumeric={product.price}
+                            price={product.priceFormatted || `PKR ${Number(product.price).toLocaleString()}`}
+                            priceNumeric={typeof product.price === 'number' ? product.price : Number(product.price)}
+                            compareAtPrice={product.compareAtPrice}
                             image={product.displayImage}
                             slug={product.slug}
-                            type={product.productType}
+                            type={product.type || product.productType}
                             sizes={product.sizes}
                             colors={product.colors}
+                            reviewAvg={product.reviewAvg || 0}
+                            reviewCount={product.reviewCount || 0}
                         />
                     ))
                 ) : (
