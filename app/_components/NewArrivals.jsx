@@ -47,10 +47,13 @@ export default function NewArrivals() {
     };
 
     return (
-        <section className="overflow-x-hidden max-w-container-max mx-auto px-1 md:pr-0 md:ps-margin-mobile pt-5 lg:py-1">
-            <div className="flex flex-col lg:flex-row gap-gutter items-center">
+        <section className="overflow-x-hidden max-w-container-max mx-auto px-3 pt-5 py-3">
+             <h1 className="font-bold text-3xl mb-4 text-primary !text-black leading-tight">
+                            New Arrivals
+                        </h1>
+            <div className="flex flex-col lg:flex-row items-center">
                 {/* Left Side: Static Editorial Content */}
-                <div className="w-full lg:w-4/12 flex flex-col items-start space-y-4 md:space-y-6 animate-fade-in-up">
+                {/* <div className="w-full lg:w-4/12 flex flex-col items-start space-y-4 md:space-y-6 animate-fade-in-up">
                     <div className="inline-flex items-center px-3 py-1 bg-surface-container-high rounded-full">
                         <span className="text-label-sm font-label-sm text-on-surface-variant tracking-wider uppercase">
                             Established 1994
@@ -70,19 +73,19 @@ export default function NewArrivals() {
                     <Link href="/collection/rings-collection" className="text-sm group bg-primary text-on-primary px-6 py-4 font-label-xs uppercase tracking-[0.2em] w-fit transition-all duration-300 hover:bg-primary-container hover:scale-[1.02]">
                         SHOP NOW
                     </Link>
-                </div>
+                </div> */}
 
                 {/* Right Side: Product Carousel */}
-                <div className="w-full lg:w-8/12 relative group">
+                <div className="w-full relative group">
                     <div
                         ref={carouselRef}
-                        className="flex gap-1 overflow-x-auto no-scrollbar carousel-container scroll-smooth"
+                        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-5 overflow-x-auto no-scrollbar carousel-container scroll-smooth"
                     >
                         {products.map((product) => (
                             <Link
                                 key={product.id}
                                 href={`/collection/${product.slug}`}
-                                className="carousel-item flex-none w-1/2 md:w-1/3 group/card cursor-pointer"
+                                className="carousel-item overflow-hidden flex-none group/card rounded-xl cursor-pointer"
                             >
                                 <div className="relative overflow-hidden aspect-[0.73] bg-surface-container">
                                     <Image
@@ -94,7 +97,7 @@ export default function NewArrivals() {
                                     />
                                     <div className="absolute inset-0 bg-gradient-to-t from-primary/60 via-transparent to-transparent opacity-80" />
                                     <div className="absolute bottom-6 left-6">
-                                        <span className="text-sm text-white font-headline-md">{product.title}</span>
+                                        <span className="text-sm text-white">{product.title}</span>
                                         <div className="h-0.5 w-0 bg-secondary transition-all duration-500 group-hover/card:w-full mt-1" />
                                     </div>
                                 </div>
@@ -118,13 +121,7 @@ export default function NewArrivals() {
                         </button>
                     </div>
 
-                    {/* Progress Bar */}
-                    <div className="mt-8 flex justify-end gap-4 items-center">
-                        <span className="text-label-sm font-label-sm text-outline">01 / 03</span>
-                        <div className="w-32 h-px bg-outline-variant relative">
-                            <div className="absolute inset-y-0 left-0 bg-secondary w-1/3" />
-                        </div>
-                    </div>
+                    
                 </div>
             </div>
         </section>

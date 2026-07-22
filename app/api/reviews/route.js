@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import client from '@/lib/sanityClient';
 import { withTimestamps } from '@/lib/sanityHelpers';
+import { updateProductReviewMetrics } from '@/lib/reviewMetrics';
 
 const REVIEW_PROJECTION = `{
   ...,
@@ -48,18 +49,44 @@ export async function POST(request) {
       const tx = client.transaction();
       body.ids.forEach((id) => tx.patch(id, { set: { status: 'approved' } }));
       await tx.commit();
+
+      // Recalculate metrics for affected products
+      const affectedReviews = await client.fetch(
+        `*[_type == "review" && _id in $ids]{ productId }`,
+        { ids: body.ids }
+      );
+      const productIds = [...new Set(affectedReviews.map((r) => r.productId).filter(Boolean))];
+      await Promise.all(productIds.map((pId) => updateProductReviewMetrics(pId)));
+
       return NextResponse.json({ success: true, modifiedCount: body.ids.length }, { status: 200 });
     }
 
     if (body.action === 'bulk-delete' && body.ids) {
+      const affectedReviews = await client.fetch(
+        `*[_type == "review" && _id in $ids]{ productId }`,
+        { ids: body.ids }
+      );
+      const productIds = [...new Set(affectedReviews.map((r) => r.productId).filter(Boolean))];
+
       const tx = client.transaction();
       body.ids.forEach((id) => tx.delete(id));
       await tx.commit();
+
+      await Promise.all(productIds.map((pId) => updateProductReviewMetrics(pId)));
+
       return NextResponse.json({ success: true, deletedCount: body.ids.length }, { status: 200 });
     }
 
     // Single review creation
-    const review = await client.create({ _type: 'review', status: 'pending', ...body });
+    // Automatically approve if status is explicitly provided as approved, or default to pending
+    const initialStatus = body.status || 'pending';
+    const review = await client.create({ _type: 'review', status: initialStatus, ...body });
+
+    // Update product metrics if approved
+    if (review.productId) {
+      await updateProductReviewMetrics(review.productId);
+    }
+
     return NextResponse.json({ success: true, review: withTimestamps(review) }, { status: 201 });
   } catch (error) {
     console.error('Error processing review request:', error);

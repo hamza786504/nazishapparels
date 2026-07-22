@@ -236,7 +236,7 @@ function SearchBox({ navItems }) {
 
   return (
     <div ref={wrapperRef} className="flex-1 hidden md:flex items-center relative">
-      <div className="flex items-center w-full bg-gray-50 border border-gray-200 rounded-lg hover:border-secondary focus-within:border-secondary focus-within:ring-1 focus-within:ring-secondary/30 transition-all px-2 max-w-2xl mx-4">
+      <div className="flex items-center w-full bg-gray-50 border border-gray-200 rounded-lg hover:border-secondary focus-within:border-secondary focus-within:ring-1 focus-within:ring-secondary/30 transition-all px-2 max-w-[400px] mx-4">
         {/* Category Dropdown */}
         <CategoryDropdown
           navItems={navItems}
@@ -252,7 +252,7 @@ function SearchBox({ navItems }) {
           onChange={handleChange}
           onKeyDown={handleKeyDown}
           onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true); }}
-          placeholder={selectedCategory ? `Search in ${selectedCategory.title}…` : 'Search products, collections…'}
+          placeholder={selectedCategory ? `Search in ${selectedCategory.title}…` : 'Search products...'}
           className="flex-1 bg-transparent outline-none text-sm text-gray-700 py-2.5 placeholder:text-gray-400"
           autoComplete="off"
         />
@@ -415,7 +415,7 @@ export default function Navbar() {
             {/* Brand Logo */}
             <div className="flex-shrink-0 flex items-center">
               <Link href="/" className="block">
-                <Image src={logoSrc} width="140" height="80" alt={storeName} className="h-10 w-auto object-contain" />
+                <Image src={logoSrc} width="160" height="90" alt={storeName} className="h-14 w-auto object-contain" />
               </Link>
             </div>
 

@@ -58,7 +58,7 @@ export default function FeaturedProducts({ collectionSlug, title, initialProduct
     }
 
     return (
-        <section className="py-2 px-1 max-w-container-max mx-auto">
+        <section className="py-2 px-3 max-w-container-max mx-auto">
             <div className="flex justify-between items-end mb-4">
                 <div>
                     <h2 className="text-headline-lg font-headline-lg font-bold">{title || collectionSlug}</h2>
@@ -76,7 +76,7 @@ export default function FeaturedProducts({ collectionSlug, title, initialProduct
                 )}
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1 gap-y-2">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-5 gap-y-2">
                 {products.length > 0 ? (
                     products.map((product) => (
                         <ProductCard

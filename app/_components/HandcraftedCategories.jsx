@@ -7,7 +7,7 @@ const categories = [
     {
         name: 'New Arrivals',
         //  image:
-            //  'https://lh3.googleusercontent.com/aida-public/AB6AXuAwHhdg66Yq_NMjsR6kN6j8AfUsr_XOMnrg83jzZk6f72hed8JY1f-vLfZQAg6gjt7hT9L9YPeSOJcOIiMd8Kegz2k9TkwgtqPCUsQgUeEF8JkMM3r6ZMMRg_zxDC-_pmgci6s4U-Ycj7ggYcMUbacTTCGJyN9z1_2G2aWxS2JpDglOKM41vEYTramXOIKpkTVhWbvIuegw1kk3V3C9wjCz34fICWnUedCS-K-TMebrNsJXKTWlhh2X1RPt4_lpZ85_h8iofyk8mADG',
+        //  'https://lh3.googleusercontent.com/aida-public/AB6AXuAwHhdg66Yq_NMjsR6kN6j8AfUsr_XOMnrg83jzZk6f72hed8JY1f-vLfZQAg6gjt7hT9L9YPeSOJcOIiMd8Kegz2k9TkwgtqPCUsQgUeEF8JkMM3r6ZMMRg_zxDC-_pmgci6s4U-Ycj7ggYcMUbacTTCGJyN9z1_2G2aWxS2JpDglOKM41vEYTramXOIKpkTVhWbvIuegw1kk3V3C9wjCz34fICWnUedCS-K-TMebrNsJXKTWlhh2X1RPt4_lpZ85_h8iofyk8mADG',
         image: '/newarrivals-collection.JPG',
         link: "/newsarrivals"
     },
@@ -25,7 +25,7 @@ const categories = [
         image:
             '/chiffon-collection.JPG',
     },
-       {
+    {
         name: '2PC',
         link: '/2pc',
         // image:
@@ -33,7 +33,7 @@ const categories = [
         image:
             '/2pc-collection.JPG',
     },
-       {
+    {
         name: '3PC',
         link: '/3pc',
         // image:
@@ -41,17 +41,27 @@ const categories = [
         image:
             '/3pc-collection.JPG',
     },
-    
+
     {
         name: 'Stiched',
         image: '/stiched-collection.JPG',
         link: '/stitched',
     },
+    {
+        name: 'Silk',
+        image: '/2pc-collection.JPG',
+        link: '/silk',
+    },
+    {
+        name: 'Organza',
+        image: '/3pc-collection.JPG',
+        link: '/organza',
+    },
 ];
 
 export default function HandcraftedCategories() {
     return (
-        <section className="p-1 max-w-container-max mx-auto">
+        <section className="p-1 px-3 max-w-container-max mx-auto">
             <div className="flex justify-between items-end mb-4">
                 <div>
                     <h2 className="font-bold text-headline-lg font-headline-lg">Popular Categories</h2>
@@ -61,51 +71,38 @@ export default function HandcraftedCategories() {
                 </div>
             </div>
 
-            <div className="relative group">
-                <div id="category-carousel" className="flex gap-4 overflow-x-auto no-scrollbar pb-4 scroll-smooth carousel-container md:justify-center md:flex-wrap md:overflow-hidden touch-pan-x">
-                    {categories.map((cat) => (
-                        <Link
-                            key={cat.name}
-                            className="flex-none w-32 group/cat text-center rounded-full md:w-40 select-none"
-                            href={`/collection/${cat.link.toLowerCase().replace(/\s+/g, '-')}`}
-                        >
-                            <div className="relative aspect-square rounded-full overflow-hidden border border-secondary/20 transition-all duration-500 group-hover/cat:scale-105 group-hover/cat:border-secondary shadow-sm">
-                                <Image
-                                    alt={cat.name}
-                                    className="w-full rounded-full h-full object-cover"
-                                    src={cat.image}
-                                    width={160}
-                                    height={160}
-                                    draggable={false}
-                                />
-                            </div>
-                            <h3 className="text-xs mt-3 font-headline-sm uppercase tracking-widest text-primary">
-                                {cat.name}
-                            </h3>
-                        </Link>
-                    ))}
-                </div>
+            <div className="overflow-x-auto touch-pan-x no-scrollbar ">
+                <div className="relative group">
+                    {/* 2-row grid with horizontal scroll */}
+                    {/* don't need full width */}
+                    <div
+                        id="category-carousel"
+                        className="grid grid-rows-2 grid-flow-col inline-grid gap-4 w-auto overflow-x-auto no-scrollbar pb-4 scroll-smooth carousel-container touch-pan-x"
+                    >
+                        {categories.map((cat) => (
+                            <Link
+                                key={cat.name}
+                                className="w-36 group/cat text-center overflow-hidden rounded-full select-none"
+                                href={`/collection/${cat.link.toLowerCase().replace(/\s+/g, '-')}`}
+                            >
+                                <div className="relative aspect-square rounded-[50%] overflow-hidden border border-secondary/20 transition-all duration-500 group-hover/cat:border-secondary shadow-sm">
+                                    <Image
+                                        alt={cat.name}
+                                        className="w-full rounded-full overflow-hidden h-full object-cover"
+                                        src={cat.image}
+                                        width={160}
+                                        height={160}
+                                        draggable={false}
+                                    />
+                                </div>
+                                <h3 className="text-xs mt-3 font-bold uppercase tracking-widest text-primary">
+                                    {cat.name}
+                                </h3>
+                            </Link>
+                        ))}
+                    </div>
 
-                {/* Minimalist Controls (mobile only) */}
-                <div className="absolute top-1/2 -translate-y-1/2 -left-4 -right-4 flex justify-between pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 md:hidden">
-                    <button
-                        className="pointer-events-auto w-10 h-10 flex items-center justify-center bg-white shadow-md text-primary hover:bg-secondary hover:text-white transition-all rounded-full"
-                        onClick={() => {
-                            const el = document.getElementById('category-carousel');
-                            if (el) el.scrollBy({ left: -300, behavior: 'smooth' });
-                        }}
-                    >
-                        <span className="material-symbols-outlined">chevron_left</span>
-                    </button>
-                    <button
-                        className="pointer-events-auto w-10 h-10 flex items-center justify-center bg-white shadow-md text-primary hover:bg-secondary hover:text-white transition-all rounded-full"
-                        onClick={() => {
-                            const el = document.getElementById('category-carousel');
-                            if (el) el.scrollBy({ left: 300, behavior: 'smooth' });
-                        }}
-                    >
-                        <span className="material-symbols-outlined">chevron_right</span>
-                    </button>
+
                 </div>
             </div>
         </section>
