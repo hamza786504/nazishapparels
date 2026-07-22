@@ -8,32 +8,15 @@ import { useCart } from "../store/cartContext"
 import { useFavorites } from "../store/favoritesContext"
 import { Star, Heart, ShoppingBag, Play, Zap } from "lucide-react"
 
-// ── Helper to deterministically generate realistic dynamic ratings per product ─
-function getDynamicRating(id, slug, title, reviewAvg, reviewCount) {
-    if (reviewAvg && reviewCount) {
-        return {
-            avg: Number(reviewAvg).toFixed(1),
-            count: reviewCount > 999 ? '1k+' : `${reviewCount}`
-        };
-    }
+// ── Helper to resolve product review rating & count from database ─────────────
+function getRatingData(reviewAvg, reviewCount) {
+    const avgNum = Number(reviewAvg) || 0;
+    const countNum = Number(reviewCount) || 0;
 
-    const key = String(id || slug || title || 'product');
-    let hash = 0;
-    for (let i = 0; i < key.length; i++) {
-        hash = (hash << 5) - hash + key.charCodeAt(i);
-        hash |= 0;
-    }
-    const positiveHash = Math.abs(hash);
-
-    // Rating between 3.8 and 4.9
-    const ratingSeed = (positiveHash % 12) / 10; // 0.0 to 1.1
-    const avg = (3.8 + ratingSeed).toFixed(1);
-
-    // Review count between 12 and 480
-    const rawCount = 12 + (positiveHash % 468);
-    const countStr = rawCount > 100 ? `${Math.floor(rawCount / 10) * 10}+` : `${rawCount}`;
-
-    return { avg, count: countStr };
+    return {
+        avg: avgNum > 0 ? avgNum.toFixed(1) : "0.0",
+        count: countNum > 999 ? '1k+' : `${countNum}`
+    };
 }
 
 export default function ProductCard({
@@ -112,8 +95,8 @@ export default function ProductCard({
     // Display brand or fallback from type/title
     const brandName = brand || type || "Nazish";
 
-    // Dynamic rating & review count per product
-    const { avg: ratingVal, count: ratingCountStr } = getDynamicRating(id, slug, title, reviewAvg, reviewCount);
+    // Dynamic rating & review count per product from database
+    const { avg: ratingVal, count: ratingCountStr } = getRatingData(reviewAvg, reviewCount);
 
     return (
         <div className="product-card group cursor-pointer block">
@@ -134,10 +117,10 @@ export default function ProductCard({
                     />
                 </Link>
 
-                {/* Discount badge — top-left pill */}
+                {/* Discount badge — bottom-left pill */}
                 {discountPct && (
-                    <div className="absolute top-2.5 left-2.5 z-10 bg-[#e52e2e] text-white text-xs font-bold px-2 py-0.5 rounded-md leading-none select-none shadow-sm">
-                        -{discountPct}%
+                    <div className="absolute bottom-2.5 left-2.5 md:bottom-3 md:left-3 z-10 bg-[#e52e2e] text-white text-xs font-semibold px-2 py-2 rounded-md leading-none select-none shadow-sm">
+                        UpTo - {discountPct}% OFF
                     </div>
                 )}
 
@@ -168,10 +151,7 @@ export default function ProductCard({
                     />
                 </button>
 
-                {/* Video Play button indicator — bottom-right */}
-                <div className="absolute bottom-2.5 right-2.5 z-10 w-6 h-6 rounded-full bg-black/40 backdrop-blur-xs flex items-center justify-center text-white">
-                    <Play className="w-3 h-3 fill-white translate-x-[0.5px]" />
-                </div>
+                
             </div>
 
             {/* ── Info area ────────────────────────────────────────────────── */}

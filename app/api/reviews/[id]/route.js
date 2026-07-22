@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import client from '@/lib/sanityClient';
+import { updateProductReviewMetrics } from '@/lib/reviewMetrics';
 
 const REVIEW_PROJECTION = `{
   ...,
@@ -29,13 +30,19 @@ export async function PUT(request, { params }) {
     const { id } = await params;
     const body = await request.json();
 
-    const existing = await client.fetch(`*[_type == "review" && _id == $id][0]{_id}`, { id });
+    const existing = await client.fetch(`*[_type == "review" && _id == $id][0]{_id, productId}`, { id });
     if (!existing) {
       return NextResponse.json({ success: false, message: 'Review not found' }, { status: 404 });
     }
 
     await client.patch(id).set(body).commit();
     const review = await client.fetch(`*[_type == "review" && _id == $id][0]${REVIEW_PROJECTION}`, { id });
+
+    // Update product metrics
+    const targetProductId = review?.productId?._id || existing?.productId;
+    if (targetProductId) {
+      await updateProductReviewMetrics(targetProductId);
+    }
 
     return NextResponse.json({ success: true, review }, { status: 200 });
   } catch (error) {
@@ -48,12 +55,16 @@ export async function DELETE(request, { params }) {
   try {
     const { id } = await params;
 
-    const existing = await client.fetch(`*[_type == "review" && _id == $id][0]{_id}`, { id });
+    const existing = await client.fetch(`*[_type == "review" && _id == $id][0]{_id, productId}`, { id });
     if (!existing) {
       return NextResponse.json({ success: false, message: 'Review not found' }, { status: 404 });
     }
 
     await client.delete(id);
+
+    if (existing.productId) {
+      await updateProductReviewMetrics(existing.productId);
+    }
 
     return NextResponse.json({ success: true, message: 'Review deleted successfully' }, { status: 200 });
   } catch (error) {

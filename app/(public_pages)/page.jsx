@@ -46,15 +46,15 @@ export default async function Home() {
             <img src="/banner.png" alt="banner" style={{width: "100vw"}} />
             <NewArrivals />
             {/* collections + initialProducts pre-seed the default tab — no client fetch waterfall */}
-            <CategoryShowcase collections={collections} initialProducts={initialShowcaseProducts} />
+            {/* <CategoryShowcase collections={collections} initialProducts={initialShowcaseProducts} /> */}
             <HandcraftedCategories />
             <FeaturedProducts collectionSlug="new-arrivals" title="New Arrivals" />
             <FeaturedProducts collectionSlug="lawn" title="Lawn" />
             <FeaturedProducts collectionSlug="chiffon" title="Chiffon" />
             {/* <HandcraftedAccessories /> */}
-            <Testimonials />
+            {/* <Testimonials />
             <BrandStory />
-            <Newsletter />
+            <Newsletter /> */}
         </main>
     );
 }
