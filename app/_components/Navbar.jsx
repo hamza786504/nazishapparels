@@ -307,7 +307,7 @@ function MobileSearchBar() {
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         onKeyDown={(e) => e.key === 'Enter' && doSearch()}
-        placeholder="Search for products, brands and categories"
+        placeholder="Search for products..."
         className="flex-1 bg-transparent outline-none text-[15px] text-gray-800 placeholder:text-gray-500"
       />
     </div>
