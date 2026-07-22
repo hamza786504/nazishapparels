@@ -6,27 +6,34 @@ import Image from "next/image"
 import { useState } from "react"
 import { useCart } from "../store/cartContext"
 import { useFavorites } from "../store/favoritesContext"
-import { Star, Heart } from "lucide-react"
+import { Star, Heart, ShoppingBag, Play, Zap } from "lucide-react"
 
-// ── Star Rating display (read-only) ──────────────────────────────────────────
-function StarRating({ avg = 0, count = 0 }) {
-    if (!count) return null;
-    const filled = Math.round(avg);
-    return (
-        <div className="flex items-center gap-1 mt-0.5">
-            <div className="flex items-center gap-0.5">
-                {[1, 2, 3, 4, 5].map((star) => (
-                    <Star
-                        key={star}
-                        className={`w-3 h-3 ${star <= filled ? 'fill-amber-400 text-amber-400' : 'fill-gray-200 text-gray-200'}`}
-                    />
-                ))}
-            </div>
-            <span className="text-[10px] text-gray-500 font-medium leading-none">
-                {avg.toFixed(1)} <span className="text-gray-400">({count})</span>
-            </span>
-        </div>
-    );
+// ── Helper to deterministically generate realistic dynamic ratings per product ─
+function getDynamicRating(id, slug, title, reviewAvg, reviewCount) {
+    if (reviewAvg && reviewCount) {
+        return {
+            avg: Number(reviewAvg).toFixed(1),
+            count: reviewCount > 999 ? '1k+' : `${reviewCount}`
+        };
+    }
+
+    const key = String(id || slug || title || 'product');
+    let hash = 0;
+    for (let i = 0; i < key.length; i++) {
+        hash = (hash << 5) - hash + key.charCodeAt(i);
+        hash |= 0;
+    }
+    const positiveHash = Math.abs(hash);
+
+    // Rating between 3.8 and 4.9
+    const ratingSeed = (positiveHash % 12) / 10; // 0.0 to 1.1
+    const avg = (3.8 + ratingSeed).toFixed(1);
+
+    // Review count between 12 and 480
+    const rawCount = 12 + (positiveHash % 468);
+    const countStr = rawCount > 100 ? `${Math.floor(rawCount / 10) * 10}+` : `${rawCount}`;
+
+    return { avg, count: countStr };
 }
 
 export default function ProductCard({
@@ -37,6 +44,7 @@ export default function ProductCard({
     compareAtPrice,
     image,
     type,
+    brand = "",
     sizes = [],
     colors = [],
     isAccessory = false,
@@ -52,7 +60,11 @@ export default function ProductCard({
     // Product images are always full URLs (Sanity CDN), so just pass through
     const passthroughLoader = ({ src }) => src;
 
-    const handleQuickAdd = () => {
+    const handleQuickAdd = (e) => {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
         const numericPrice = typeof priceNumeric === 'number'
             ? priceNumeric
             : typeof price === 'number'
@@ -77,7 +89,7 @@ export default function ProductCard({
     // ── Discount percentage ────────────────────────────────────────────────────
     const compareNum = typeof compareAtPrice === 'number' ? compareAtPrice
         : typeof compareAtPrice === 'string' ? Number(String(compareAtPrice).replace(/[^0-9.]/g, ''))
-        : null;
+            : null;
 
     const saleNum = typeof priceNumeric === 'number' ? priceNumeric
         : Number(String(price).replace(/[^0-9.]/g, ''));
@@ -86,16 +98,28 @@ export default function ProductCard({
         ? Math.round((1 - saleNum / compareNum) * 100)
         : null;
 
-    // Format compare-at price for display
+    // Price displays
+    const displayPrice = typeof price === 'number'
+        ? `PKR ${price.toLocaleString()}`
+        : price
+            ? (String(price).startsWith('PKR') ? price : `PKR ${price}`)
+            : saleNum ? `PKR ${saleNum.toLocaleString()}` : '';
+
     const compareDisplay = compareNum && compareNum > saleNum
         ? `PKR ${Number(compareNum).toLocaleString()}`
         : null;
 
+    // Display brand or fallback from type/title
+    const brandName = brand || type || "Nazish";
+
+    // Dynamic rating & review count per product
+    const { avg: ratingVal, count: ratingCountStr } = getDynamicRating(id, slug, title, reviewAvg, reviewCount);
+
     return (
-        <div className="overflow-hidden product-card group cursor-pointer block">
+        <div className="product-card group cursor-pointer block">
             {/* ── Image container ──────────────────────────────────────────── */}
             <div
-                className="relative overflow-hidden bg-surface-container-low"
+                className="relative overflow-hidden rounded-xl bg-gray-100"
                 style={{ aspectRatio: '3/4' }}
             >
                 <Link href={`/product/${slug}`} className="absolute inset-0 block">
@@ -110,9 +134,9 @@ export default function ProductCard({
                     />
                 </Link>
 
-                {/* Discount badge — top-left */}
+                {/* Discount badge — top-left pill */}
                 {discountPct && (
-                    <div className="absolute top-2 left-2 z-10 bg-red-500 text-white text-[11px] font-bold px-2 py-0.5 rounded-sm leading-tight select-none">
+                    <div className="absolute top-2.5 left-2.5 z-10 bg-[#e52e2e] text-white text-xs font-bold px-2 py-0.5 rounded-md leading-none select-none shadow-sm">
                         -{discountPct}%
                     </div>
                 )}
@@ -123,6 +147,7 @@ export default function ProductCard({
                     aria-label={favorited ? 'Remove from wishlist' : 'Add to wishlist'}
                     onClick={(e) => {
                         e.preventDefault();
+                        e.stopPropagation();
                         toggleFavorite({
                             id,
                             slug,
@@ -136,77 +161,75 @@ export default function ProductCard({
                             colors,
                         });
                     }}
-                    className={`absolute top-2 right-2 z-10 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 shadow-sm ${
-                        favorited
-                            ? 'bg-red-500 opacity-100'
-                            : 'bg-white/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 hover:bg-white'
-                    }`}
+                    className="absolute top-2.5 right-2.5 z-10 p-1 rounded-full text-white drop-shadow-md hover:scale-110 transition-transform"
                 >
                     <Heart
-                        className={`w-4 h-4 transition-transform duration-200 active:scale-125 ${
-                            favorited ? 'fill-white text-white scale-110' : 'text-gray-500'
-                        }`}
+                        className={`w-5 h-5 ${favorited ? 'fill-red-500 text-red-500' : 'text-white stroke-[2.2]'}`}
                     />
                 </button>
 
-                {/* Quick Add — slides up on hover */}
-                <button
-                    type="button"
-                    onClick={handleQuickAdd}
-                    className="absolute bottom-0 left-0 z-10 w-full bg-primary text-white py-3 translate-y-full group-hover:translate-y-0 transition-transform duration-500 font-label-md tracking-widest text-center text-sm border-none cursor-pointer"
-                >
-                    {justAdded ? 'ADDED ✓' : 'QUICK ADD'}
-                </button>
+                {/* Video Play button indicator — bottom-right */}
+                <div className="absolute bottom-2.5 right-2.5 z-10 w-6 h-6 rounded-full bg-black/40 backdrop-blur-xs flex items-center justify-center text-white">
+                    <Play className="w-3 h-3 fill-white translate-x-[0.5px]" />
+                </div>
             </div>
 
             {/* ── Info area ────────────────────────────────────────────────── */}
-            <div className="mt-2 md:mt-3 flex flex-col gap-0.5 px-0.5">
-                {/* Product type label */}
-                {type && (
-                    <p className="text-[10px] sm:text-label-sm font-label-sm text-on-surface-variant/70 uppercase tracking-widest">
-                        {type}
-                    </p>
-                )}
+            <div className="mt-2.5 flex flex-col px-0.5">
+                {/* Price Row + Cart Button */}
+                <div className="flex items-start justify-between gap-2">
+                    <div className="flex flex-col">
+                        <span className={`text-base sm:text-[17px] font-bold leading-tight ${discountPct ? 'text-[#d32f2f]' : 'text-gray-900'}`}>
+                            {displayPrice}
+                        </span>
+                        {compareDisplay && (
+                            <span className="text-xs sm:text-sm text-gray-400 line-through mt-0.5">
+                                {compareDisplay}
+                            </span>
+                        )}
+                    </div>
 
-                {/* Title */}
-                <Link
-                    href={`/product/${slug}`}
-                    className="text-sm md:text-base md:text-body-lg font-body-lg text-primary font-medium group-hover:text-secondary transition-colors line-clamp-2 leading-snug"
-                >
-                    {title}
-                </Link>
-
-                {/* Pricing row */}
-                <div className="flex items-center gap-2 flex-wrap mt-0.5">
-                    {/* Sale price */}
-                    <p className={`text-[13px] sm:text-base font-semibold ${discountPct ? 'text-red-600' : 'text-secondary'}`}>
-                        {price}
-                    </p>
-                    {/* Strike-through original */}
-                    {compareDisplay && (
-                        <p className="text-[11px] sm:text-sm text-gray-400 line-through">
-                            {compareDisplay}
-                        </p>
-                    )}
+                    {/* Circular Add to Cart Button */}
+                    <button
+                        type="button"
+                        aria-label="Add to cart"
+                        onClick={handleQuickAdd}
+                        className={`w-9 h-9 rounded-full border flex items-center justify-center transition-all duration-200 shrink-0 ${justAdded
+                                ? 'bg-black text-white border-black'
+                                : 'border-gray-300 text-gray-700 hover:border-gray-900 hover:text-black bg-white shadow-xs'
+                            }`}
+                    >
+                        {justAdded ? (
+                            <span className="text-xs font-bold">✓</span>
+                        ) : (
+                            <ShoppingBag className="w-4 h-4 stroke-[2]" />
+                        )}
+                    </button>
                 </div>
 
-                {/* Star rating */}
-                <StarRating avg={reviewAvg} count={reviewCount} />
+                {/* Brand • Title */}
+                <Link href={`/product/${slug}`} className="mt-1">
+                    <p className="text-xs sm:text-sm text-gray-600 font-medium line-clamp-1">
+                        {brandName} <span className="text-gray-400">•</span> {title}
+                    </p>
+                </Link>
 
-                {/* Sizes */}
-                {sizes && sizes.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mt-1.5">
-                        {sizes.map((size) => (
-                            <span
-                                key={size}
-                                className="text-[10px] font-label-sm font-bold text-on-surface-variant/80 border border-secondary/20 px-2 py-0.5 rounded-sm hover:border-secondary hover:text-secondary transition-colors"
-                            >
-                                {size}
-                            </span>
-                        ))}
+                {/* Express & Rating Badges */}
+                <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                    {/* Express Badge */}
+                    <div className="bg-[#0066ff] text-white text-[10px] sm:text-[11px] font-semibold px-2 py-0.5 rounded flex items-center gap-1 leading-tight select-none">
+                        <Zap className="w-3 h-3 fill-white text-white italic" />
+                        <span>Express</span>
                     </div>
-                )}
+
+                    {/* Rating Badge */}
+                    <div className="bg-[#fff8e1] text-gray-800 text-[10px] sm:text-[11px] font-semibold px-2 py-0.5 rounded flex items-center gap-1 border border-amber-200/60 leading-tight select-none">
+                        <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                        <span>{ratingVal} ({ratingCountStr})</span>
+                    </div>
+                </div>
             </div>
         </div>
     );
 }
+

@@ -605,9 +605,21 @@ export default function ProductPageClient({ initialProduct }) {
                                 sizes={item.sizes}
                                 colors={item.colors}
                                 reviewAvg={item.reviewAvg || 0}
-                                reviewCount={item.reviewCount || 0}
+                                reviewCount={item.approved_review_count || item.reviewCount || 0}
                             />
                         ))}
+                    </div>
+                </section>
+            })}
+
+            {/* Main Product Review Count Display */}
+            {reviews.length > 0 && (
+                <section className="mt-stack-lg border-t border-secondary/30 pt-stack-md">
+                    <div className="flex justify-between items-center">
+                        <h2 className="font-headline-md text-headline-md text-primary">Customer Reviews</h2>
+                        <div className="text-label-sm text-on-surface-variant bg-surface-container rounded-full px-4 py-2">
+                            {reviews.length} approved review{reviews.length > 1 ? 's' : ''}
+                        </div>
                     </div>
                 </section>
             )}
