@@ -384,7 +384,7 @@ export default function CollectionPage() {
                             <button onClick={resetFilters} className="bg-primary text-white font-label-md px-8 py-3 uppercase tracking-wider hover:bg-primary-container transition-all">Reset Filters</button>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-1 animate-fade-in-up gap-y-4">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-5 animate-fade-in-up gap-y-4">
                             {sortedProducts.map(product => (
                                 <ProductCard
                                     key={product.id}
