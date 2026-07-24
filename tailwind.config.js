@@ -95,6 +95,9 @@ module.exports = {
                 'lg': '24px'
             },
             fontFamily: {
+                sans: ['var(--font-manrope)', 'sans-serif'],
+                serif: ['var(--font-eb-garamond)', 'serif'],
+
                 // Heading font: maps to --font-eb-garamond which next/font sets to EB Garamond by
                 // default. The public layout overrides it to whatever the admin picked via buildFontVars().
                 'display-lg-mobile': ['var(--font-eb-garamond)', 'serif'],
@@ -108,11 +111,6 @@ module.exports = {
                 'body-lg':    ['var(--font-manrope)', 'sans-serif'],
                 'label-sm':   ['var(--font-manrope)', 'sans-serif'],
                 'label-md':   ['var(--font-manrope)', 'sans-serif'],
-
-                // Admin-only sizes that have no storefront equivalent — use Inter directly.
-                // The admin panel wraps content in .admin-layout { font-family: var(--font-jost) !important }
-                // so these rarely render as Inter in the admin anyway.
-               
             },
             fontSize: {
                 // From the second config

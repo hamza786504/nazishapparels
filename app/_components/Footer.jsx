@@ -24,7 +24,7 @@ export default function Footer() {
 
     return (
         <>
-            <footer className="bg-white border-t border-secondary/30 pt-stack-lg pb-10">
+            <footer className="mt-8 bg-white border-t border-secondary/30 pt-stack-lg pb-10">
                 <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop flex flex-col md:flex-row flex-wrap gap-gutter mb-20">
                     {/* First Column - 35% width on desktop */}
                     <div className="w-full md:w-[35%] lg:w-[35%]">

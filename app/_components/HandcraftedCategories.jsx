@@ -61,10 +61,10 @@ const categories = [
 
 export default function HandcraftedCategories() {
     return (
-        <section className="p-1 px-3 max-w-container-max mx-auto">
+        <section className="p-1 px-0 max-w-container-max mx-auto">
             <div className="flex justify-between items-end mb-4">
                 <div>
-                    <h2 className="font-bold text-headline-lg font-headline-lg">Popular Categories</h2>
+                    <h2 className="font-[600] !text-black text-[1.12rem] md:text-[1.4rem] mb-2 leading-tight">Popular Categories</h2>
                     <p className="text-label-md font-label-md text-on-surface-variant tracking-widest uppercase mt-2">
                         Explore Our Signature Style
                     </p>
@@ -77,7 +77,7 @@ export default function HandcraftedCategories() {
                     {/* don't need full width */}
                     <div
                         id="category-carousel"
-                        className="grid grid-rows-2 grid-flow-col inline-grid gap-4 w-auto overflow-x-auto no-scrollbar pb-4 scroll-smooth carousel-container touch-pan-x"
+                        className="grid md:grid-rows-1 grid-rows-2 grid-flow-col inline-grid gap-4 w-auto overflow-x-auto no-scrollbar pb-4 scroll-smooth carousel-container touch-pan-x"
                     >
                         {categories.map((cat) => (
                             <Link

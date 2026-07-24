@@ -3,13 +3,13 @@
 
 
 @layer base {
-    html {
+    html, body {
         scroll-behavior: smooth;
-        font-family: var(--font-manrope);
+        font-family: var(--font-manrope), sans-serif;
     }
 
     .storefront-theme {
-        font-family: var(--font-manrope);
+        font-family: var(--font-manrope), sans-serif;
     }
 
     /* Material Symbols */

@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const products = [
-   
+
     {
         id: 1,
         title: '2pc Collection',
@@ -25,7 +25,7 @@ const products = [
         slug: 'unstitched',
         image: '/unstiched.JPG',
     },
-     {
+    {
         id: 4,
         title: 'Stitched Collection',
         slug: 'stitched',
@@ -47,10 +47,10 @@ export default function NewArrivals() {
     };
 
     return (
-        <section className="overflow-x-hidden max-w-container-max mx-auto px-3 pt-5 py-3">
-             <h1 className="font-bold text-3xl mb-4 text-primary !text-black leading-tight">
-                            New Arrivals
-                        </h1>
+        <section className="overflow-x-hidden max-w-container-max mx-auto px-0 pt-5 py-3">
+            <h1 className="font-[600] !text-black text-[1.12rem] md:text-[1.4rem] mb-4 leading-tight">
+                Best Collections
+            </h1>
             <div className="flex flex-col lg:flex-row items-center">
                 {/* Left Side: Static Editorial Content */}
                 {/* <div className="w-full lg:w-4/12 flex flex-col items-start space-y-4 md:space-y-6 animate-fade-in-up">
@@ -106,7 +106,7 @@ export default function NewArrivals() {
                     </div>
 
                     {/* Navigation Controls */}
-                    <div className="absolute top-1/2 -translate-y-1/2 -left-0 -right-0 flex justify-between pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    {/* <div className="absolute top-1/2 -translate-y-1/2 -left-0 -right-0 flex justify-between pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                         <button
                             className="pointer-events-auto w-12 h-12 flex items-center justify-center bg-white/90 shadow-lg text-primary hover:bg-secondary hover:text-white transition-all active:scale-95"
                             onClick={() => scrollCarousel('prev')}
@@ -119,9 +119,9 @@ export default function NewArrivals() {
                         >
                             <ChevronRight className="w-6 h-6" />
                         </button>
-                    </div>
+                    </div> */}
 
-                    
+
                 </div>
             </div>
         </section>

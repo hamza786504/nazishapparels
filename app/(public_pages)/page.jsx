@@ -1,21 +1,16 @@
-// app/(public_pages)/page.jsx  ← Server Component (no 'use client')
-//
-// ISR strategy:
-//   • Pre-rendered at build time, cached on CDN edge for 5 minutes
-//   • Admin product mutations call revalidateTag('products') → instant cache purge
-//   • CategoryShowcase receives initialProducts as a prop → no skeleton flash on first paint
-//   • Other showcase tabs fetch lazily client-side only when the user clicks them
-
+import Image from 'next/image';
 import HeroCarousel from '../_components/HeroCarousel';
 import NewArrivals from '../_components/NewArrivals';
 import CategoryShowcase from '../_components/CategoryShowcase';
 import HandcraftedCategories from '../_components/HandcraftedCategories';
 import BrandStory from '../_components/BrandStory';
-import FeaturedProducts from '../_components/FeaturedProducts';
+import FeaturedProductsSection from '../_components/FeaturedProductsSection';
 import HandcraftedAccessories from '../_components/HandcraftedAccessories';
 import Newsletter from '../_components/Newsletter';
 import Testimonials from '../_components/Testimonials';
 import ScrollAnimations from '../_components/ScrollAnimations';
+import CategorySidebar from '../_components/CategorySidebar';
+import LazySection from '../_components/LazySection';
 import { getShowcaseProducts } from '@/lib/getShowcaseProducts';
 import { publicClient } from '@/lib/sanityClientPublic';
 
@@ -27,34 +22,48 @@ export const metadata = {
 };
 
 export default async function Home() {
-    const SHOWCASE_SLUGS = ['organza', 'silk'];
+    const initialProducts = await getShowcaseProducts('chiffon');
     const collections = await publicClient.fetch(
-        `*[_type == "collection" && slug in $slugs] | order(name asc){slug, name, _id}`,
-        { slugs: SHOWCASE_SLUGS }
+        `*[_type == "collection"] | order(name asc){slug, name, "productCount": count(*[_type == "product" && collectionId == ^._id])}`
     );
-    const firstCollection = collections[0];
-    const initialShowcaseProducts = firstCollection
-        ? await getShowcaseProducts(firstCollection.slug)
-        : [];
 
     return (
-        <main>
-            {/* Zero-render client island — attaches scroll + IntersectionObserver */}
+        <main className="h-full overflow-hidden">
             <ScrollAnimations />
 
-            {/* <HeroCarousel /> */}
-            <img src="/banner.png" alt="banner" style={{width: "100vw"}} />
-            <NewArrivals />
-            {/* collections + initialProducts pre-seed the default tab — no client fetch waterfall */}
-            {/* <CategoryShowcase collections={collections} initialProducts={initialShowcaseProducts} /> */}
-            <HandcraftedCategories />
-            <FeaturedProducts collectionSlug="new-arrivals" title="New Arrivals" />
-            <FeaturedProducts collectionSlug="lawn" title="Lawn" />
-            <FeaturedProducts collectionSlug="chiffon" title="Chiffon" />
-            {/* <HandcraftedAccessories /> */}
-            {/* <Testimonials />
-            <BrandStory />
-            <Newsletter /> */}
+            {/* Flex container that takes full height */}
+            <div className="flex h-full max-w-container-max mx-auto">
+                {/* Sidebar - scrollable */}
+                <aside className="hidden lg:block w-60 flex-shrink-0 border-r border-secondary/10 overflow-y-auto h-full">
+                    <CategorySidebar initialCollections={collections} />
+                </aside>
+                
+                {/* Main content - scrollable */}
+                <div className="flex-1 min-w-0 overflow-y-auto px-2 md:px-5 md:pt-5">
+                    <div className="lg:rounded-3xl overflow-hidden relative w-full aspect-[21/9] sm:aspect-[24/9]">
+                        <Image
+                            src="/banner.png"
+                            alt="NazishApparels Featured Collection"
+                            fill
+                            priority
+                            sizes="(max-width: 768px) 100vw, 1200px"
+                            className="object-cover"
+                        />
+                    </div>
+
+                    <div className="px-0 md:px-3 lg:px-0 pb-8">
+                        <NewArrivals />
+
+                        <LazySection minHeight="200px">
+                            <HandcraftedCategories />
+                        </LazySection>
+
+                        <LazySection minHeight="400px">
+                            <FeaturedProductsSection initialProducts={initialProducts} />
+                        </LazySection>
+                    </div>
+                </div>
+            </div>
         </main>
     );
 }

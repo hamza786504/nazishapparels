@@ -117,10 +117,10 @@ export default function ProductCard({
                     />
                 </Link>
 
-                {/* Discount badge — bottom-left pill */}
+                {/* Discount badge — top-left pill (LAAM style) */}
                 {discountPct && (
-                    <div className="absolute bottom-2.5 left-2.5 md:bottom-3 md:left-3 z-10 bg-[#e52e2e] text-white text-xs font-semibold px-2 py-2 rounded-md leading-none select-none shadow-sm">
-                        UpTo - {discountPct}% OFF
+                    <div className="absolute top-2.5 left-2.5 z-10 bg-[#e91e63] text-white text-[11px] font-bold px-2 py-1 rounded-md leading-none select-none shadow-sm">
+                        -{discountPct}%
                     </div>
                 )}
 

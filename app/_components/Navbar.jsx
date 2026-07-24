@@ -92,9 +92,9 @@ function MobileNavItem({ item, depth, onClose }) {
 // ── Category icon helper ──────────────────────────────────────────────────────
 function getResultIcon(type) {
   switch (type) {
-    case 'product':    return <Package className="w-3.5 h-3.5 text-secondary" />;
-    case 'collection': return <Tag     className="w-3.5 h-3.5 text-emerald-500" />;
-    default:           return <FileText className="w-3.5 h-3.5 text-gray-400" />;
+    case 'product': return <Package className="w-3.5 h-3.5 text-secondary" />;
+    case 'collection': return <Tag className="w-3.5 h-3.5 text-emerald-500" />;
+    default: return <FileText className="w-3.5 h-3.5 text-gray-400" />;
   }
 }
 
@@ -161,12 +161,12 @@ function CategoryDropdown({ navItems, selectedCategory, onSelect, alignRight }) 
 // ── Desktop Search Box ──────────────────────────────────────────────────────
 function SearchBox({ navItems }) {
   const router = useRouter();
-  const [query, setQuery]           = useState('');
+  const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [loading, setLoading]       = useState(false);
+  const [loading, setLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const inputRef   = useRef(null);
+  const inputRef = useRef(null);
   const wrapperRef = useRef(null);
   const debounceRef = useRef(null);
 
@@ -198,7 +198,7 @@ function SearchBox({ navItems }) {
           setSuggestions(data.results || []);
           setShowSuggestions(true);
         }
-      } catch {} finally {
+      } catch { } finally {
         setLoading(false);
       }
     }, 300);
@@ -318,15 +318,14 @@ function MobileSearchBar() {
 function MobileHorizontalCategories({ navItems }) {
   const pathname = usePathname();
   return (
-   <div className="md:hidden w-full overflow-x-auto whitespace-nowrap scrollbar-hide pt-3 px-0 flex items-center gap-6 no-scrollbar">
+    <div className="md:hidden w-full overflow-x-auto whitespace-nowrap scrollbar-hide pt-3 px-0 flex items-center gap-6 no-scrollbar">
       {/* "All" Link */}
-      <Link 
-        href="/search" 
-        className={`text-[15px] transition-colors pb-1 border-b-2 ${
-          pathname === '/search' 
-            ? 'text-gray-900 border-black font-medium' 
+      <Link
+        href="/search"
+        className={`text-[15px] transition-colors pb-1 border-b-2 ${pathname === '/search'
+            ? 'text-gray-900 border-black font-medium'
             : 'text-gray-600 border-transparent hover:text-secondary'
-        }`}
+          }`}
       >
         All
       </Link>
@@ -336,20 +335,19 @@ function MobileHorizontalCategories({ navItems }) {
         const isActive = pathname === item.url || (pathname.startsWith(item.url) && item.url !== '/');
 
         return (
-          <Link 
-            key={item.id} 
-            href={item.url} 
-            className={`text-[15px] transition-colors pb-1 border-b-2 ${
-              isActive 
-                ? 'text-gray-900 border-black font-medium' 
+          <Link
+            key={item.id}
+            href={item.url}
+            className={`text-[15px] transition-colors pb-1 border-b-2 ${isActive
+                ? 'text-gray-900 border-black font-medium'
                 : 'text-gray-600 border-transparent hover:text-secondary'
-            }`}
+              }`}
           >
             {item.title}
           </Link>
         );
       })}
-      
+
       <div className="w-4 flex-shrink-0"></div>
     </div>
   );
@@ -361,14 +359,58 @@ export default function Navbar() {
   const { isAuthenticated, customer, logout } = useAuth();
   const { favoritesCount } = useFavorites();
   const router = useRouter();
-  const [isCartOpen, setIsCartOpen]       = useState(false);
-  const [menuOpen, setMenuOpen]           = useState(false);
-  const [userMenuOpen, setUserMenuOpen]   = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef(null);
+  const [isMobileCategoriesVisible, setIsMobileCategoriesVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
+  // Add scroll detection for mobile categories
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+
+      if (window.innerWidth < 768) {
+        if (currentScrollY > lastScrollY && currentScrollY > 80) {
+          setIsMobileCategoriesVisible(false);
+        } else if (currentScrollY < lastScrollY) {
+          setIsMobileCategoriesVisible(true);
+        }
+      } else {
+        setIsMobileCategoriesVisible(true);
+      }
+
+      setLastScrollY(currentScrollY);
+    };
+
+    let timeoutId;
+    const throttledScroll = () => {
+      if (timeoutId) return;
+      timeoutId = setTimeout(() => {
+        handleScroll();
+        timeoutId = null;
+      }, 100);
+    };
+
+    window.addEventListener('scroll', throttledScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', throttledScroll);
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [lastScrollY]);
+
+  // Close mobile drawer when scrolling
+  useEffect(() => {
+    if (!menuOpen) return;
+    const closeOnScroll = () => setMenuOpen(false);
+    window.addEventListener('scroll', closeOnScroll, { passive: true });
+    return () => window.removeEventListener('scroll', closeOnScroll);
+  }, [menuOpen]);
 
   const handleLogout = async () => {
     setUserMenuOpen(false);
-    try { await logout(); } catch {}
+    try { await logout(); } catch { }
     router.push('/login');
   };
 
@@ -384,7 +426,7 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', onClick);
   }, [userMenuOpen]);
 
-  const navItems = useNavMenu();        
+  const navItems = useNavMenu();
   const settings = useSiteSettings();
   const logoSrc = settings?.logoUrl || '/logo.png';
   const storeName = settings?.storeName || 'NazishApparels';
@@ -406,12 +448,12 @@ export default function Navbar() {
         Get Free Delivery on 10,000PKR above Shopping
       </div>
 
-      <header className="bg-white docked w-full top-0 z-50 border-b border-gray-200 transition-transform duration-300">
+      <header className="!static top-0 h-[170px] md:h-[80px] bg-white docked w-full top-0 z-50 border-b border-gray-200 transition-transform duration-300">
         <div className="flex flex-col max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-2 md:py-3">
-          
+
           {/* Row 1: Logo & Right Actions */}
           <div className="flex justify-between items-center w-full gap-2">
-            
+
             {/* Brand Logo */}
             <div className="flex-shrink-0 flex items-center">
               <Link href="/" className="block">
@@ -424,7 +466,7 @@ export default function Navbar() {
 
             {/* Actions (User, Cart, Hamburger) */}
             <div className="flex items-center gap-3 sm:gap-4 ml-auto">
-              
+
               {/* Mobile Location Pin (Only visual, no currency) */}
               <div className="flex md:hidden items-center gap-1.5 cursor-pointer text-sm">
                 <div className="bg-[#0c7f3a] text-white rounded-full p-0.5 w-5 h-5 flex items-center justify-center flex-shrink-0">
@@ -452,7 +494,7 @@ export default function Navbar() {
                       <p className="text-[11px] text-gray-500 truncate">{customer?.email}</p>
                     </div>
                     <Link href="/dashboard" onClick={() => setUserMenuOpen(false)} className="block px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-secondary">Dashboard</Link>
-                    <Link href="/profile"   onClick={() => setUserMenuOpen(false)} className="block px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-secondary">Profile</Link>
+                    <Link href="/profile" onClick={() => setUserMenuOpen(false)} className="block px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-secondary">Profile</Link>
                     <button type="button" onClick={handleLogout} className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50">Logout</button>
                   </div>
                 )}
@@ -499,31 +541,37 @@ export default function Navbar() {
           </div>
 
           {/* Row 3: Mobile Horizontal Categories (Only visible < md) */}
+          <div
+            className={`md:hidden w-full overflow-x-auto whitespace-nowrap scrollbar-hide pt-3 px-0 flex items-center gap-6 no-scrollbar transition-all duration-300 ease-in-out ${isMobileCategoriesVisible ? 'opacity-100 max-h-20' : 'opacity-0 max-h-0 overflow-hidden'
+              }`}
+          >
           <MobileHorizontalCategories navItems={navItems} />
-
         </div>
-      </header>
-
-      {/* ── Mobile Drawer Overlay ──────────────────────────────────────────── */}
-      {menuOpen && (
-        <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity duration-300 md:hidden" onClick={() => setMenuOpen(false)} />
-      )}
-
-      {/* ── Mobile Drawer ─────────────────────────────────────────────────── */}
-      <div className={`fixed top-0 left-0 bottom-0 z-50 w-[80%] max-w-[360px] bg-white shadow-2xl p-6 transition-transform duration-300 ease-in-out transform md:hidden ${menuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="flex items-center justify-between border-b border-gray-200 pb-4 mb-4">
-          <span className="text-gray-800 uppercase tracking-wider font-bold text-lg">{storeName}</span>
-          <button onClick={() => setMenuOpen(false)} className="text-gray-800 hover:text-secondary p-1">
-            <X className="w-6 h-6" />
-          </button>
-        </div>
-
-        <nav className="flex flex-col space-y-1 mt-2">
-          {navItems.map((item) => (
-            <MobileNavItem key={item.id} item={item} depth={0} onClose={() => setMenuOpen(false)} />
-          ))}
-        </nav>
       </div>
+    </header >
+
+      {/* ── Mobile Drawer Overlay ──────────────────────────────────────────── */ }
+  {
+    menuOpen && (
+      <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity duration-300 md:hidden" onClick={() => setMenuOpen(false)} />
+    )
+  }
+
+  {/* ── Mobile Drawer ─────────────────────────────────────────────────── */ }
+  <div className={`fixed top-0 left-0 bottom-0 z-50 w-[80%] max-w-[360px] bg-white shadow-2xl p-6 transition-transform duration-300 ease-in-out transform md:hidden ${menuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+    <div className="flex items-center justify-between border-b border-gray-200 pb-4 mb-4">
+      <span className="text-gray-800 uppercase tracking-wider font-bold text-lg">{storeName}</span>
+      <button onClick={() => setMenuOpen(false)} className="text-gray-800 hover:text-secondary p-1">
+        <X className="w-6 h-6" />
+      </button>
+    </div>
+
+    <nav className="flex flex-col space-y-1 mt-2">
+      {navItems.map((item) => (
+        <MobileNavItem key={item.id} item={item} depth={0} onClose={() => setMenuOpen(false)} />
+      ))}
+    </nav>
+  </div>
     </>
   );
 }
