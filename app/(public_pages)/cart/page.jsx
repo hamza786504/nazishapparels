@@ -4,28 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useCart } from '../../store/cartContext';
 import { X, ArrowRight, ShieldCheck, Truck, ShoppingBag, ArrowLeft } from 'lucide-react';
-// Custom Hook for scroll header behavior
-const useScrollHeader = () => {
-  const [isVisible, setIsVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        setIsVisible(false);
-      } else {
-        setIsVisible(true);
-      }
-      setLastScrollY(currentScrollY);
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [lastScrollY]);
-
-  return isVisible;
-};
 
 // Quantity Selector Component
 const QuantitySelector = ({ quantity, onQuantityChange }) => {
@@ -79,7 +58,7 @@ const CartItemCard = ({ item, onRemove, onQuantityChange, onSizeChange }) => {
         
         {/* Product Info */}
         <div className="flex-grow min-w-0">
-          <h3 className="font-headline-sm text-primary truncate">{item.title || item.name}</h3>
+          <h3 className="font-headline-sm text-black truncate">{item.title || item.name}</h3>
           <p className="font-label-sm text-secondary">{item.category}</p>
         </div>
         
@@ -147,7 +126,7 @@ const CartItemCard = ({ item, onRemove, onQuantityChange, onSizeChange }) => {
           <div className="flex-grow min-w-0">
             <div className="flex justify-between items-start">
               <div className="min-w-0 flex-grow">
-                <h3 className="font-headline-sm text-primary truncate pr-2">{item.title || item.name}</h3>
+                <h3 className="font-headline-sm text-black truncate pr-2">{item.title || item.name}</h3>
                 <p className="font-label-sm text-secondary">{item.category}</p>
               </div>
               <button
@@ -202,14 +181,14 @@ const CartItemCard = ({ item, onRemove, onQuantityChange, onSizeChange }) => {
 // Order Summary Component
 const OrderSummary = ({ subtotal, tax, total }) => {
   return (
-    <div className="bg-white p-8 border border-secondary/20 shadow-sm">
-      <h2 className="font-headline-sm text-primary mb-8 text-center uppercase tracking-wider">
+    <div className="bg-white p-4 md:p-8 border border-secondary/20 shadow-sm">
+      <h2 className="font-headline-sm text-black mb-8 text-center uppercase tracking-wider">
         Order Summary
       </h2>
       <div className="space-y-6 mb-8">
         <div className="flex justify-between items-center">
           <span className="text-on-surface-variant font-body-md">Subtotal</span>
-          <span className="text-primary font-bold">PKR {subtotal.toLocaleString()}</span>
+          <span className="text-black text-base font-bold">PKR {subtotal.toLocaleString()}</span>
         </div>
         <div className="flex justify-between items-center">
           <span className="text-on-surface-variant font-body-md">Shipping Estimate</span>
@@ -219,18 +198,18 @@ const OrderSummary = ({ subtotal, tax, total }) => {
         </div>
         <div className="flex justify-between items-center">
           <span className="text-on-surface-variant font-body-md">Tax</span>
-          <span className="text-primary font-bold">PKR {tax.toLocaleString()}</span>
+          <span className="text-black font-bold">PKR {tax.toLocaleString()}</span>
         </div>
         <div className="luxury-line" />
         <div className="flex justify-between items-center pt-2">
-          <span className="text-primary font-bold text-lg">Total</span>
-          <span className="text-secondary font-bold text-2xl">
+          <span className="text-black font-bold text-lg">Total</span>
+          <span className="text-secondary font-bold text-lg">
             PKR {total.toLocaleString()}
           </span>
         </div>
       </div>
       <div className="space-y-4">
-        <Link href="/checkout" className="w-full bg-primary text-white py-4 font-label-md tracking-widest uppercase transition-all duration-300 hover:bg-primary-container hover:scale-[1.02] active:scale-95 flex items-center justify-center">
+        <Link href="/checkout" className="w-full bg-primary text-white py-4 text-sm tracking-widest uppercase transition-all duration-300 hover:bg-primary-container hover:scale-[1.02] active:scale-95 flex items-center justify-center">
           PROCEED TO CHECKOUT
           <ArrowRight className="ml-2 w-3.5 h-3.5" />
         </Link>
@@ -240,11 +219,11 @@ const OrderSummary = ({ subtotal, tax, total }) => {
         </p>
       </div>
       <div className="mt-8 pt-8 border-t border-secondary/10 space-y-4">
-        <div className="flex items-center text-on-surface-variant font-label-sm">
+        <div className="flex items-center text-on-surface-variant text-sm">
           <ShieldCheck className="mr-3 text-secondary" />
           SECURE PREMIUM CHECKOUT
         </div>
-        <div className="flex items-center text-on-surface-variant font-label-sm">
+        <div className="flex items-center text-on-surface-variant text-sm">
           <Truck className="mr-3 text-secondary" />
           EXPRESS GLOBAL COURIER
         </div>
@@ -263,14 +242,14 @@ const PromoCodeSection = ({ promoCode, onApplyPromo }) => {
   };
 
   return (
-    <div className="mt-6 p-6 border border-secondary/10 bg-surface-container-low">
+    <div className="mt-6 p-3 md:p-6 border border-secondary/10 bg-surface-container-low">
       <label
         htmlFor="promo-code"
-        className="block font-label-sm text-primary mb-3 uppercase tracking-widest"
+        className="block font-label-sm text-black mb-3 uppercase tracking-widest"
       >
         Promotion Code
       </label>
-      <form onSubmit={handleSubmit} className="flex">
+      <form onSubmit={handleSubmit} className="flex flex-col md:flex-row gap-3">
         <input
           id="promo-code"
           className="flex-grow bg-white border border-outline-variant/30 px-4 py-2 font-label-sm focus:border-secondary focus:ring-0 rounded-none uppercase"
@@ -281,7 +260,7 @@ const PromoCodeSection = ({ promoCode, onApplyPromo }) => {
         />
         <button
           type="submit"
-          className="bg-secondary text-white px-6 py-2 font-label-sm tracking-widest uppercase hover:bg-secondary-container transition-colors"
+          className="bg-secondary text-white px-6 py-3 text-sm tracking-widest uppercase hover:bg-secondary-container transition-colors"
         >
           APPLY
         </button>
@@ -334,15 +313,12 @@ function Cart() {
 
   return (
     <>
-      <main className="max-w-container-max mx-auto px-margin-desktop py-stack-lg min-h-screen">
+      <main className="max-w-container-max mx-auto p-2 min-h-screen">
         {/* Title Section */}
         <div className="text-center mb-stack-md">
-          <h1 className="font-headline-md text-display-lg text-primary mb-2">
+          <h1 className="font-headline-md text-display-lg text-black mb-2">
             Cart
           </h1>
-          <p className="font-label-md text-secondary tracking-widest uppercase">
-            Luxury Eastern Wear Collective
-          </p>
           <div className="luxury-line mt-6 max-w-xs mx-auto" />
         </div>
 
@@ -352,7 +328,7 @@ function Cart() {
             {cartItems.length === 0 ? (
               <div className="text-center py-12">
                 <ShoppingBag className="w-16 h-16 text-outline-variant mb-4" />
-                <h2 className="font-headline-sm text-primary mb-2">Cart is empty</h2>
+                <h2 className="font-headline-sm text-black mb-2">Cart is empty</h2>
                 <p className="text-on-surface-variant mb-6">
                   Discover our latest Eastern luxury collections
                 </p>
@@ -376,7 +352,7 @@ function Cart() {
                 ))}
                 <div className="pt-8 flex justify-between items-center">
                   <Link
-                    className="font-label-md text-primary flex items-center group hover:text-secondary transition-colors"
+                    className="text-sm text-black flex items-center group hover:text-secondary transition-colors"
                     href="/collection/lawn"
                   >
                     <ArrowLeft className="mr-2 transition-transform group-hover:-translate-x-1" />

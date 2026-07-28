@@ -25,7 +25,7 @@ export default async function PublicLayout({ children }) {
             )}
 
             {/* Main layout container - full viewport height */}
-            <div className="flex flex-col h-screen storefront-theme bg-white text-on-surface">
+            <div className="flex flex-col min-h-screen storefront-theme bg-white text-on-surface">
                 <LayoutWrapper>
                     <RecentPurchasePopup />
                     {children}

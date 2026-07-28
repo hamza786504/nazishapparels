@@ -5,7 +5,7 @@ import MobileBottomNav from '../_components/MobileBottomNav';
 import RecentPurchasePopup from '../_components/RecentPurchasePopup';
 
 export default function LayoutWrapper({ children }) {
-    const [bottomNavHidden, setBottomNavHidden] = useState(false);
+    const bottomNavRef = useRef(null);
     const lastScrollYRef = useRef(0);
     const tickingRef = useRef(false);
 
@@ -15,31 +15,39 @@ export default function LayoutWrapper({ children }) {
             tickingRef.current = true;
 
             requestAnimationFrame(() => {
-                const y = window.scrollY;
+                const y = Math.max(0, window.scrollY);
                 const prev = lastScrollYRef.current;
                 const mobile = window.innerWidth < 768;
 
-                if (mobile) {
-                    if (y <= 10) {
+                if (mobile && bottomNavRef.current) {
+                    if (y <= 20) {
                         // Back at top — show bottom nav
-                        setBottomNavHidden(false);
-                    } else if (y > prev + 5) {
-                        // Scrolling down — hide bottom nav
-                        setBottomNavHidden(true);
-                    } else if (y < prev - 5) {
-                        // Scrolling up — show bottom nav
-                        setBottomNavHidden(false);
+                        bottomNavRef.current.style.transform = 'translateY(0)';
+                        lastScrollYRef.current = y;
+                    } else if (Math.abs(y - prev) > 20) {
+                        // Only trigger if scrolled more than 20px
+                        if (y > prev) {
+                            // Scrolling down — hide bottom nav
+                            bottomNavRef.current.style.transform = 'translateY(100%)';
+                        } else {
+                            // Scrolling up — show bottom nav
+                            bottomNavRef.current.style.transform = 'translateY(0)';
+                        }
+                        // Only update the reference point when a large enough scroll happens
+                        lastScrollYRef.current = y;
                     }
-                } else {
-                    setBottomNavHidden(false);
+                } else if (!mobile && bottomNavRef.current) {
+                    bottomNavRef.current.style.transform = 'translateY(0)';
+                    lastScrollYRef.current = y;
                 }
 
-                lastScrollYRef.current = y;
                 tickingRef.current = false;
             });
         };
 
         window.addEventListener('scroll', onScroll, { passive: true });
+        // Set initial state
+        onScroll();
         return () => window.removeEventListener('scroll', onScroll);
     }, []);
 
@@ -54,15 +62,18 @@ export default function LayoutWrapper({ children }) {
             </div>
 
             <div
+                ref={bottomNavRef}
                 className="fixed bottom-0 left-0 right-0 z-50 md:hidden"
                 style={{
-                    transform: bottomNavHidden ? 'translateY(100%)' : 'translateY(0)',
                     transition: 'transform 0.3s ease-in-out',
+                    transform: 'translateY(0)', // Default visible
                 }}
             >
                 <MobileBottomNav />
             </div>
 
+            {/* Bottom spacer so content isn't hidden behind the bottom nav */}
+            <div className="h-[65px] md:hidden" />
         </>
     );
 }

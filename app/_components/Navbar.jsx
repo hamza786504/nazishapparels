@@ -363,26 +363,11 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef(null);
-  const [isMobileCategoriesVisible, setIsMobileCategoriesVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
 
   // Add scroll detection for mobile categories
   useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
 
-      if (window.innerWidth < 768) {
-        if (currentScrollY > lastScrollY && currentScrollY > 80) {
-          setIsMobileCategoriesVisible(false);
-        } else if (currentScrollY < lastScrollY) {
-          setIsMobileCategoriesVisible(true);
-        }
-      } else {
-        setIsMobileCategoriesVisible(true);
-      }
-
-      setLastScrollY(currentScrollY);
-    };
 
     let timeoutId;
     const throttledScroll = () => {
@@ -536,8 +521,7 @@ export default function Navbar() {
 
           {/* Row 3: Mobile Horizontal Categories (Only visible < md) */}
           <div
-            className={`md:hidden w-full overflow-x-auto whitespace-nowrap scrollbar-hide pt-0 px-0 flex items-center gap-6 no-scrollbar transition-all duration-300 ease-in-out ${isMobileCategoriesVisible ? 'opacity-100 max-h-20' : 'opacity-0 max-h-0 overflow-hidden'
-              }`}
+            className={`md:hidden w-full overflow-x-auto whitespace-nowrap scrollbar-hide pt-0 px-0 flex items-center gap-6 no-scrollbar transition-all duration-300 ease-in-out`}
           >
             <MobileHorizontalCategories navItems={navItems} />
           </div>

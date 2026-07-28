@@ -29,7 +29,7 @@ export default function SizeChartModal({ isOpen, onClose }) {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 storefront-theme font-sans">
             <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
 
             <div className="relative bg-surface w-full max-w-2xl max-h-[85vh] overflow-y-auto shadow-2xl">

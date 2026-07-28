@@ -455,12 +455,11 @@ export default function CheckoutPage() {
                 .field-error { border-color: rgb(var(--error, 186 26 26)) !important; }
             `}</style>
 
-            <main className="max-w-container-max mx-auto px-6 md:px-margin-desktop py-stack-md md:py-stack-lg min-h-[calc(100vh-100px)]">
+            <main className="max-w-container-max mx-auto px-2 md:px-margin-desktop py-stack-md md:py-stack-lg min-h-[calc(100vh-100px)]">
                 <form onSubmit={handleSubmit} noValidate>
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-24 items-start">
-
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-24 items-start">
                         {/* Left Panel */}
-                        <div className="lg:col-span-7 space-y-12">
+                        <div className="lg:col-span-7 space-y-12 order-2 lg:order-1 mt-8 lg:mt-0">
 
                             {/* Cart error */}
                             {errors.cart && (
@@ -472,8 +471,8 @@ export default function CheckoutPage() {
 
                             {/* Contact Information */}
                             <section>
-                                <div className="flex justify-between items-end mb-6">
-                                    <h2 className="text-headline-sm font-headline-sm text-primary">Contact Information</h2>
+                                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-6 gap-4">
+                                    <h2 className="text-base md:text-lg text-black font-bold">Contact Information</h2>
                                     {isLoggedIn ? (
                                         <span className="flex items-center gap-2 text-label-sm font-label-sm text-secondary">
                                             <CheckCircle className="w-[18px] h-[18px]" />
@@ -575,7 +574,7 @@ export default function CheckoutPage() {
 
                             {/* Shipping Address */}
                             <section className="pt-4 space-y-6">
-                                <h2 className="text-headline-sm font-headline-sm text-primary">Shipping Address</h2>
+                                <h2 className="text-base md:text-lg text-black font-bold">Shipping Address</h2>
 
                                 {/* Saved addresses from the customer's address book */}
                                 {isLoggedIn && (
@@ -610,13 +609,13 @@ export default function CheckoutPage() {
                                                                     onChange={() => selectSavedAddress(addr)}
                                                                     className="mt-1 w-4 h-4 text-secondary focus:ring-secondary/20 border-secondary"
                                                                 />
-                                                                <span className="flex-1">
+                                                                <span className="flex-1 min-w-0">
                                                                     <span className="flex items-center justify-between mb-1">
-                                                                        <span className="font-label-sm font-label-sm text-primary uppercase tracking-wider">
+                                                                        <span className="font-label-sm font-label-sm text-primary uppercase tracking-wider truncate">
                                                                             {`${addr.firstName || ''} ${addr.lastName || ''}`.trim() || 'Address'}
                                                                         </span>
                                                                         {addr.isDefault && (
-                                                                            <span className="text-[10px] uppercase tracking-wider text-secondary">
+                                                                            <span className="text-[10px] uppercase tracking-wider text-secondary flex-shrink-0 ml-2">
                                                                                 Default
                                                                             </span>
                                                                         )}
@@ -748,28 +747,28 @@ export default function CheckoutPage() {
 
                             {/* Shipping Method — selectable options */}
                             <section className="pt-4 space-y-6">
-                                <h2 className="text-headline-sm font-headline-sm text-primary">Shipping Method</h2>
+                                <h2 className="text-base md:text-lg text-black font-bold">Shipping Method</h2>
                                 <div className="border border-secondary/10 bg-surface-container-low overflow-hidden divide-y divide-secondary/10">
                                     {methods.map((method) => (
                                         <label
                                             key={method.id}
-                                            className={`flex items-center gap-4 p-5 cursor-pointer hover:bg-surface-container-high transition-colors ${formData.shippingMethod === method.id ? 'bg-secondary/5' : ''}`}
+                                            className={`flex items-center gap-4 p-4 md:p-5 cursor-pointer hover:bg-surface-container-high transition-colors ${formData.shippingMethod === method.id ? 'bg-secondary/5' : ''}`}
                                         >
                                             <input
-                                                className="w-4 h-4 text-secondary focus:ring-secondary/20 border-secondary"
+                                                className="w-4 h-4 text-secondary focus:ring-secondary/20 border-secondary flex-shrink-0"
                                                 name="shippingMethod"
                                                 type="radio"
                                                 value={method.id}
                                                 checked={formData.shippingMethod === method.id}
                                                 onChange={handleInputChange}
                                             />
-                                            <div className="flex-1">
-                                                <span className="text-body-md font-label-md text-primary block">{method.name}</span>
+                                            <div className="flex-1 min-w-0">
+                                                <span className="text-body-md font-label-md text-primary block truncate">{method.name}</span>
                                                 {method.description && (
-                                                    <span className="text-body-sm text-on-surface-variant">{method.description}</span>
+                                                    <span className="text-body-sm text-on-surface-variant truncate block">{method.description}</span>
                                                 )}
                                             </div>
-                                            <span className="text-label-md font-label-md text-primary">
+                                            <span className="text-label-md font-label-md text-primary whitespace-nowrap flex-shrink-0">
                                                 {isFreeShipping ? (
                                                     <>
                                                         <span className="line-through text-on-surface-variant mr-1">{formatPrice(method.charge)}</span>
@@ -784,7 +783,7 @@ export default function CheckoutPage() {
                                 </div>
                                 {isFreeShipping && (
                                     <p className="text-body-sm text-primary flex items-center gap-1.5">
-                                        <Truck className="w-4 h-4" />
+                                        <Truck className="w-4 h-4 flex-shrink-0" />
                                         Free shipping applied — your order exceeds Rs. {shippingConfig.freeShippingThreshold.toLocaleString()}!
                                     </p>
                                 )}
@@ -793,42 +792,42 @@ export default function CheckoutPage() {
                             {/* Payment Information */}
                             <section className="pt-4 space-y-6">
                                 <div className="flex flex-col">
-                                    <h2 className="text-headline-sm font-headline-sm text-primary">Payment Method</h2>
+                                    <h2 className="text-base md:text-lg text-black font-bold">Payment Method</h2>
                                     <p className="text-label-sm font-label-sm text-on-surface-variant">All transactions are secure and encrypted.</p>
                                 </div>
                                 <div className="border border-secondary/10 bg-surface-container-low overflow-hidden divide-y divide-secondary/10">
                                     {/* Cash on Delivery */}
                                     {shippingConfig.cod && (
-                                        <label className="flex items-center gap-4 p-5 cursor-pointer hover:bg-surface-container-high transition-colors">
+                                        <label className="flex items-center gap-4 p-4 md:p-5 cursor-pointer hover:bg-surface-container-high transition-colors">
                                             <input
-                                                className="w-4 h-4 text-secondary focus:ring-secondary/20 border-secondary"
+                                                className="w-4 h-4 text-secondary focus:ring-secondary/20 border-secondary flex-shrink-0"
                                                 name="paymentMethod"
                                                 type="radio"
                                                 value="cod"
                                                 checked={formData.paymentMethod === 'cod'}
                                                 onChange={handleInputChange}
                                             />
-                                            <div>
+                                            <div className="min-w-0">
                                                 <span className="text-body-md font-label-md text-primary block">Cash on Delivery (COD)</span>
-                                                <span className="text-body-sm text-on-surface-variant">Pay in cash when your order arrives</span>
+                                                <span className="text-body-sm text-on-surface-variant block truncate">Pay in cash when your order arrives</span>
                                             </div>
                                         </label>
                                     )}
 
                                     {/* Bank Deposit */}
                                     {shippingConfig.bankDeposit && (
-                                        <label className="flex items-center gap-4 p-5 cursor-pointer hover:bg-surface-container-high transition-colors">
+                                        <label className="flex items-center gap-4 p-4 md:p-5 cursor-pointer hover:bg-surface-container-high transition-colors">
                                             <input
-                                                className="w-4 h-4 text-secondary focus:ring-secondary/20 border-secondary"
+                                                className="w-4 h-4 text-secondary focus:ring-secondary/20 border-secondary flex-shrink-0"
                                                 name="paymentMethod"
                                                 type="radio"
                                                 value="bank"
                                                 checked={formData.paymentMethod === 'bank'}
                                                 onChange={handleInputChange}
                                             />
-                                            <div>
+                                            <div className="min-w-0">
                                                 <span className="text-body-md font-label-md text-primary block">Bank Deposit</span>
-                                                <span className="text-body-sm text-on-surface-variant">Transfer to our bank account before delivery</span>
+                                                <span className="text-body-sm text-on-surface-variant block truncate">Transfer to our bank account before delivery</span>
                                             </div>
                                         </label>
                                     )}
@@ -842,34 +841,34 @@ export default function CheckoutPage() {
                                     WhatsApp is NOT a separate payment method; it is a receipt-
                                     submission option gated by shippingConfig.bankDepositReceiptMode. */}
                                 {formData.paymentMethod === 'bank' && shippingConfig.bankDeposit && (
-                                    <div className="border border-secondary/20 bg-surface-container-low p-5 space-y-3">
+                                    <div className="border border-secondary/20 bg-surface-container-low p-4 md:p-5 space-y-3">
                                         <p className="text-label-md font-bold text-primary flex items-center gap-2">
                                             <Landmark className="w-4 h-4" />
                                             Bank Transfer Details
                                         </p>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-body-md">
                                             {shippingConfig.bankDetails.accountTitle && (
-                                                <div>
+                                                <div className="min-w-0">
                                                     <span className="text-on-surface-variant text-xs uppercase tracking-wide block mb-0.5">Account Title</span>
-                                                    <span className="font-medium text-on-surface">{shippingConfig.bankDetails.accountTitle}</span>
+                                                    <span className="font-medium text-on-surface truncate block">{shippingConfig.bankDetails.accountTitle}</span>
                                                 </div>
                                             )}
                                             {shippingConfig.bankDetails.bankName && (
-                                                <div>
+                                                <div className="min-w-0">
                                                     <span className="text-on-surface-variant text-xs uppercase tracking-wide block mb-0.5">Bank</span>
-                                                    <span className="font-medium text-on-surface">{shippingConfig.bankDetails.bankName}</span>
+                                                    <span className="font-medium text-on-surface truncate block">{shippingConfig.bankDetails.bankName}</span>
                                                 </div>
                                             )}
                                             {shippingConfig.bankDetails.accountNumber && (
-                                                <div>
+                                                <div className="min-w-0">
                                                     <span className="text-on-surface-variant text-xs uppercase tracking-wide block mb-0.5">Account Number</span>
-                                                    <span className="font-medium text-on-surface font-mono">{shippingConfig.bankDetails.accountNumber}</span>
+                                                    <span className="font-medium text-on-surface font-mono truncate block">{shippingConfig.bankDetails.accountNumber}</span>
                                                 </div>
                                             )}
                                             {shippingConfig.bankDetails.iban && (
-                                                <div>
+                                                <div className="min-w-0">
                                                     <span className="text-on-surface-variant text-xs uppercase tracking-wide block mb-0.5">IBAN</span>
-                                                    <span className="font-medium text-on-surface font-mono text-sm">{shippingConfig.bankDetails.iban}</span>
+                                                    <span className="font-medium text-on-surface font-mono text-xs sm:text-sm truncate block">{shippingConfig.bankDetails.iban}</span>
                                                 </div>
                                             )}
                                         </div>
@@ -881,23 +880,23 @@ export default function CheckoutPage() {
                                         {receiptUploadEnabled && (
                                             <div className="border-t border-secondary/10 pt-4">
                                                 <p className="text-label-md font-bold text-primary mb-3">Upload Payment Receipt</p>
-                                                <label className="flex items-center justify-center w-full h-32 border-2 border-dashed border-secondary/30 rounded cursor-pointer hover:border-secondary transition-colors bg-surface-container-lowest">
+                                                <label className="flex items-center justify-center w-full h-32 border-2 border-dashed border-secondary/30 rounded cursor-pointer hover:border-secondary transition-colors bg-surface-container-lowest text-center px-4">
                                                     {receiptUrl ? (
                                                         <div className="flex flex-col items-center gap-2">
-                                                            <CheckCircle className="w-8 h-8 text-secondary" />
+                                                            <CheckCircle className="w-6 h-6 md:w-8 md:h-8 text-secondary" />
                                                             <span className="text-label-sm text-secondary">Receipt uploaded</span>
                                                             <span className="text-label-sm text-on-surface-variant">Tap to replace</span>
                                                         </div>
                                                     ) : receiptUploading ? (
                                                         <div className="flex flex-col items-center gap-2">
-                                                            <Loader className="w-8 h-8 animate-spin text-secondary" />
+                                                            <Loader className="w-6 h-6 md:w-8 md:h-8 animate-spin text-secondary" />
                                                             <span className="text-label-sm text-on-surface-variant">Uploading…</span>
                                                         </div>
                                                     ) : (
                                                         <div className="flex flex-col items-center gap-2">
-                                                            <Upload className="w-8 h-8 text-on-surface-variant" />
+                                                            <Upload className="w-6 h-6 md:w-8 md:h-8 text-on-surface-variant" />
                                                             <span className="text-label-sm text-on-surface-variant">Click to upload receipt screenshot</span>
-                                                            <span className="text-label-sm text-on-surface-variant/60">PNG, JPG up to 5MB</span>
+                                                            <span className="text-[10px] sm:text-label-sm text-on-surface-variant/60">PNG, JPG up to 5MB</span>
                                                         </div>
                                                     )}
                                                     <input type="file" accept="image/png,image/jpeg,image/jpg" className="hidden" onChange={handleReceiptUpload} disabled={receiptUploading} />
@@ -922,9 +921,9 @@ export default function CheckoutPage() {
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                         onClick={() => setWhatsappShared(true)}
-                                                        className="flex items-center justify-center gap-2 w-full bg-[#25D366] hover:bg-[#1ebe5b] text-white py-4 font-label-md text-label-md uppercase tracking-widest transition-all active:scale-[0.98]"
+                                                        className="flex items-center justify-center gap-2 w-full bg-[#25D366] hover:bg-[#1ebe5b] text-white py-3 md:py-4 font-label-md text-[11px] sm:text-label-md uppercase tracking-widest transition-all active:scale-[0.98]"
                                                     >
-                                                        <FaWhatsapp className="text-lg" />
+                                                        <FaWhatsapp className="text-base sm:text-lg" />
                                                         Share Receipt on WhatsApp
                                                     </a>
                                                 ) : (
@@ -936,7 +935,7 @@ export default function CheckoutPage() {
 
                                                 {whatsappLink && whatsappShared && (
                                                     <p className="text-body-sm text-secondary flex items-center gap-1.5">
-                                                        <CheckCircle className="w-4 h-4" />
+                                                        <CheckCircle className="w-4 h-4 flex-shrink-0" />
                                                         WhatsApp opened — send your screenshot, then come back and place your order.
                                                     </p>
                                                 )}
@@ -961,10 +960,10 @@ export default function CheckoutPage() {
                             </section>
 
                             {/* Navigation */}
-                            <div className="flex flex-col md:flex-row justify-between items-center pt-8 gap-6">
+                            <div className="flex flex-col-reverse md:flex-row justify-between items-center pt-8 gap-6">
                                 <Link
                                     href="/cart"
-                                    className="flex items-center gap-2 text-label-md font-label-md text-on-surface-variant hover:text-primary transition-colors group"
+                                    className="flex items-center gap-2 text-label-md font-label-md text-on-surface-variant hover:text-primary transition-colors group py-2"
                                 >
                                     <span className="group-hover:-translate-x-1 transition-transform"><ArrowLeft className="w-3.5 h-3.5" /></span>
                                     Return to cart
@@ -972,7 +971,7 @@ export default function CheckoutPage() {
                                 <button
                                     type="submit"
                                     disabled={isSubmitting}
-                                    className="w-full md:w-auto bg-primary text-on-primary px-16 py-5 font-label-md text-label-md uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all border border-secondary/20 shadow-lg shadow-primary/5 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                    className="w-full md:w-auto bg-primary text-on-primary px-8 lg:px-16 py-4 md:py-5 font-label-md text-label-md uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all border border-secondary/20 shadow-lg shadow-primary/5 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                 >
                                     {isSubmitting ? (
                                         <>
@@ -987,27 +986,27 @@ export default function CheckoutPage() {
                         </div>
 
                         {/* Right Panel: Order Summary */}
-                        <aside className="lg:col-span-5 bg-surface-container-low p-8 md:p-10 sticky top-32 border border-secondary/5">
-                            <h3 className="text-headline-sm font-headline-sm text-primary mb-8">Order Summary</h3>
+                        <aside className="lg:col-span-5 bg-surface-container-low p-5 sm:p-8 md:p-10 lg:sticky top-32 border border-secondary/5 order-1 lg:order-2">
+                            <h3 className="text-base md:text-lg text-black font-bold mb-6 md:mb-8">Order Summary</h3>
 
                             {/* Product List */}
-                            <div className="order-summary space-y-6 max-h-[400px] overflow-y-auto pr-4 mb-8">
+                            <div className="order-summary space-y-4 md:space-y-6 max-h-[300px] md:max-h-[400px] overflow-y-auto pr-0 md:pr-4 mb-6 md:mb-8">
                                 {cartItems.map((item) => (
-                                    <div key={item.id} className="flex gap-6 group">
-                                        <div className="relative w-20 h-24 bg-surface-container flex-shrink-0 overflow-hidden">
-                                            <Image className="object-cover" alt={item.title || ''} src={item.image} fill sizes="80px" />
-                                            <span className="absolute -top-2 -right-2 w-6 h-6 bg-secondary text-on-secondary text-[10px] flex items-center justify-center rounded-full font-bold">
+                                    <div key={item.id} className="flex gap-3 md:gap-6 group">
+                                        <div className="relative w-16 h-20 md:w-20 md:h-24 bg-surface-container flex-shrink-0">
+                                            <Image className="object-cover" alt={item.title || ''} src={item.image} fill sizes="(max-width: 768px) 64px, 80px" />
+                                            <span className="absolute -top-1 -right-1 md:-top-2 md:-right-2 w-5 h-5 md:w-6 md:h-6 bg-secondary text-on-secondary text-[10px] flex items-center justify-center rounded-full font-bold">
                                                 {item.quantity}
                                             </span>
                                         </div>
-                                        <div className="flex flex-col justify-center flex-grow">
-                                            <h4 className="text-body-md font-bold text-primary group-hover:text-secondary transition-colors">{item.title}</h4>
-                                            <p className="text-label-sm font-label-sm text-on-surface-variant">
+                                        <div className="flex flex-col justify-center flex-grow min-w-0">
+                                            <h4 className="text-body-sm md:text-body-md font-bold text-primary group-hover:text-secondary transition-colors truncate">{item.title}</h4>
+                                            <p className="text-[10px] md:text-label-sm font-label-sm text-on-surface-variant truncate">
                                                 Size: {item.size} {item.color && item.color !== 'Default' ? `/ Color: ${item.color}` : ''}
                                             </p>
                                         </div>
-                                        <div className="flex flex-col justify-center items-end">
-                                            <p className="text-body-md font-headline-md text-primary">{formatPrice(item.price * item.quantity)}</p>
+                                        <div className="flex flex-col justify-center items-end flex-shrink-0">
+                                            <p className="text-body-sm md:text-body-md font-headline-md text-primary">{formatPrice(item.price * item.quantity)}</p>
                                         </div>
                                     </div>
                                 ))}
@@ -1017,7 +1016,7 @@ export default function CheckoutPage() {
                             </div>
 
                             {/* Discount Code */}
-                            <div className="flex gap-4 mb-8">
+                            <div className="flex flex-col sm:flex-row gap-4 mb-8">
                                 <input
                                     className="flex-grow bg-surface border-none border-b-2 border-outline-variant focus:border-secondary focus:ring-0 py-3 px-4 transition-all duration-300 text-sm"
                                     placeholder="Discount code"
@@ -1049,7 +1048,7 @@ export default function CheckoutPage() {
                                     )}
                                 </div>
                                 <div className="flex justify-between border-t border-secondary/10 pt-4 mt-4">
-                                    <span className="text-headline-sm font-headline-sm text-primary">Total</span>
+                                    <span className="text-base md:text-lg text-black font-bold">Total</span>
                                     <div className="text-right">
                                         <span className="text-label-sm font-label-sm text-on-surface-variant block">PKR</span>
                                         <span className="text-headline-md font-headline-md text-secondary">{formatPrice(total)}</span>

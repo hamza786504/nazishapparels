@@ -78,7 +78,7 @@ export default function CartDrawer({ isOpen, onClose, cartItems = [], onUpdateQu
     if (!isVisible) return null;
 
     return (
-        <div className="fixed inset-0 z-[100]">
+        <div className="fixed inset-0 z-[100] storefront-theme font-sans">
             {/* Overlay */}
             <div
                 className={`absolute inset-0 transition-all duration-500 ${
