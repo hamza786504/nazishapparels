@@ -23,11 +23,6 @@ export default function MobileBottomNav() {
       href: '/',
     },
     {
-      label: 'Categories',
-      icon: Grid2x2,
-      href: '/categories',
-    },
-    {
       label: 'Cart',
       icon: ShoppingBag,
       href: '/cart',
@@ -41,7 +36,7 @@ export default function MobileBottomNav() {
     {
       label: 'Account',
       icon: User,
-      href: '/account',
+      href: '/login',
     },
   ];
 

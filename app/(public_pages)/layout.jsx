@@ -3,6 +3,7 @@ import { getSiteSettings } from '@/lib/getSiteSettings';
 import { SiteSettingsProvider } from '../store/siteSettingsContext';
 import { buildThemeCss, buildGoogleFontsHref } from '@/lib/theme';
 import LayoutWrapper from '../_components/LayoutWrapper';
+import RecentPurchasePopup from '../_components/RecentPurchasePopup';
 
 export const revalidate = 300;
 
@@ -26,6 +27,7 @@ export default async function PublicLayout({ children }) {
             {/* Main layout container - full viewport height */}
             <div className="flex flex-col h-screen storefront-theme bg-white text-on-surface">
                 <LayoutWrapper>
+                    <RecentPurchasePopup />
                     {children}
                 </LayoutWrapper>
             </div>

@@ -1,77 +1,68 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Navbar from '../_components/Navbar';
 import MobileBottomNav from '../_components/MobileBottomNav';
 import RecentPurchasePopup from '../_components/RecentPurchasePopup';
 
 export default function LayoutWrapper({ children }) {
-    const [isVisible, setIsVisible] = useState(true);
-    const [lastScrollY, setLastScrollY] = useState(0);
-    const headerRef = useRef(null);
+    const [bottomNavHidden, setBottomNavHidden] = useState(false);
+    const lastScrollYRef = useRef(0);
+    const tickingRef = useRef(false);
 
     useEffect(() => {
-        const handleScroll = () => {
-            const currentScrollY = window.scrollY;
+        const onScroll = () => {
+            if (tickingRef.current) return;
+            tickingRef.current = true;
 
-            if (currentScrollY > lastScrollY && currentScrollY > 80) {
-                setIsVisible(false);
-            }
-            else if (currentScrollY < lastScrollY) {
-                setIsVisible(true);
-            }
+            requestAnimationFrame(() => {
+                const y = window.scrollY;
+                const prev = lastScrollYRef.current;
+                const mobile = window.innerWidth < 768;
 
-            setLastScrollY(currentScrollY);
+                if (mobile) {
+                    if (y <= 10) {
+                        // Back at top — show bottom nav
+                        setBottomNavHidden(false);
+                    } else if (y > prev + 5) {
+                        // Scrolling down — hide bottom nav
+                        setBottomNavHidden(true);
+                    } else if (y < prev - 5) {
+                        // Scrolling up — show bottom nav
+                        setBottomNavHidden(false);
+                    }
+                } else {
+                    setBottomNavHidden(false);
+                }
+
+                lastScrollYRef.current = y;
+                tickingRef.current = false;
+            });
         };
 
-        let timeoutId;
-        const throttledScroll = () => {
-            if (timeoutId) return;
-            timeoutId = setTimeout(() => {
-                handleScroll();
-                timeoutId = null;
-            }, 100);
-        };
-
-        window.addEventListener('scroll', throttledScroll, { passive: true });
-        return () => {
-            window.removeEventListener('scroll', throttledScroll);
-            if (timeoutId) clearTimeout(timeoutId);
-        };
-    }, [lastScrollY]);
+        window.addEventListener('scroll', onScroll, { passive: true });
+        return () => window.removeEventListener('scroll', onScroll);
+    }, []);
 
     return (
         <>
-            {/* Navbar - fixed top, hides on scroll down */}
-            <div
-                ref={headerRef}
-                className={`fixed top-0 left-0 right-0 z-50 transition-transform duration-300 ease-in-out ${
-                    isVisible ? 'translate-y-0' : '-translate-y-full'
-                }`}
-            >
+            <div className="md:z-50">
                 <Navbar />
             </div>
 
-            {/* Spacer for fixed header */}
-            <div className="h-[210px] md:h-[120px]" />
-
-            {/* Main content area */}
-            <div className="flex-1 min-h-0">
+            <div className="flex-1">
                 {children}
             </div>
 
-            {/* Bottom Navigation - fixed bottom, hides on scroll down */}
             <div
-                className={`fixed bottom-0 left-0 right-0 z-50 md:hidden transition-transform duration-300 ease-in-out ${
-                    isVisible ? 'translate-y-0' : 'translate-y-full'
-                }`}
+                className="fixed bottom-0 left-0 right-0 z-50 md:hidden"
+                style={{
+                    transform: bottomNavHidden ? 'translateY(100%)' : 'translateY(0)',
+                    transition: 'transform 0.3s ease-in-out',
+                }}
             >
                 <MobileBottomNav />
             </div>
 
-            {/* Spacer for fixed bottom nav on mobile */}
-            <div className="h-[65px] md:hidden" />
-
-            <RecentPurchasePopup />
         </>
     );
 }

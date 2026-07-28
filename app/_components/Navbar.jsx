@@ -323,8 +323,8 @@ function MobileHorizontalCategories({ navItems }) {
       <Link
         href="/search"
         className={`text-[15px] transition-colors pb-1 border-b-2 ${pathname === '/search'
-            ? 'text-gray-900 border-black font-medium'
-            : 'text-gray-600 border-transparent hover:text-secondary'
+          ? 'text-gray-900 border-black font-medium'
+          : 'text-gray-600 border-transparent hover:text-secondary'
           }`}
       >
         All
@@ -339,8 +339,8 @@ function MobileHorizontalCategories({ navItems }) {
             key={item.id}
             href={item.url}
             className={`text-[15px] transition-colors pb-1 border-b-2 ${isActive
-                ? 'text-gray-900 border-black font-medium'
-                : 'text-gray-600 border-transparent hover:text-secondary'
+              ? 'text-gray-900 border-black font-medium'
+              : 'text-gray-600 border-transparent hover:text-secondary'
               }`}
           >
             {item.title}
@@ -428,7 +428,7 @@ export default function Navbar() {
 
   const navItems = useNavMenu();
   const settings = useSiteSettings();
-  const logoSrc = settings?.logoUrl || '/logo.png';
+  const logoSrc = settings?.logoUrl || '/logo.webp';
   const storeName = settings?.storeName || 'NazishApparels';
 
   const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
@@ -448,8 +448,8 @@ export default function Navbar() {
         Get Free Delivery on 10,000PKR above Shopping
       </div>
 
-      <header className="!static top-0 h-[170px] md:h-[80px] bg-white docked w-full top-0 z-50 border-b border-gray-200 transition-transform duration-300">
-        <div className="flex flex-col max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-2 md:py-3">
+      <header className="relative bg-white w-full z-50 border-b border-gray-200">
+        <div className="flex flex-col max-w-container-max mx-auto px-2 md:px-5 py-2 md:py-1.5">
 
           {/* Row 1: Logo & Right Actions */}
           <div className="flex justify-between items-center w-full gap-2">
@@ -467,12 +467,6 @@ export default function Navbar() {
             {/* Actions (User, Cart, Hamburger) */}
             <div className="flex items-center gap-3 sm:gap-4 ml-auto">
 
-              {/* Mobile Location Pin (Only visual, no currency) */}
-              <div className="flex md:hidden items-center gap-1.5 cursor-pointer text-sm">
-                <div className="bg-[#0c7f3a] text-white rounded-full p-0.5 w-5 h-5 flex items-center justify-center flex-shrink-0">
-                  <MapPin className="w-3 h-3 fill-current" />
-                </div>
-              </div>
 
               {/* User account */}
               <div className="relative hidden sm:block" ref={userMenuRef}>
@@ -542,36 +536,38 @@ export default function Navbar() {
 
           {/* Row 3: Mobile Horizontal Categories (Only visible < md) */}
           <div
-            className={`md:hidden w-full overflow-x-auto whitespace-nowrap scrollbar-hide pt-3 px-0 flex items-center gap-6 no-scrollbar transition-all duration-300 ease-in-out ${isMobileCategoriesVisible ? 'opacity-100 max-h-20' : 'opacity-0 max-h-0 overflow-hidden'
+            className={`md:hidden w-full overflow-x-auto whitespace-nowrap scrollbar-hide pt-0 px-0 flex items-center gap-6 no-scrollbar transition-all duration-300 ease-in-out ${isMobileCategoriesVisible ? 'opacity-100 max-h-20' : 'opacity-0 max-h-0 overflow-hidden'
               }`}
           >
-          <MobileHorizontalCategories navItems={navItems} />
+            <MobileHorizontalCategories navItems={navItems} />
+          </div>
         </div>
+      </header >
+
+      {/* ── Mobile Drawer Overlay ──────────────────────────────────────────── */}
+      {
+        menuOpen && (
+          <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity duration-300 md:hidden" onClick={() => setMenuOpen(false)} />
+        )
+      }
+
+      {/* ── Mobile Drawer ─────────────────────────────────────────────────── */}
+      <div className={`fixed top-0 left-0 bottom-0 z-50 w-[80%] max-w-[360px] bg-white shadow-2xl p-6 transition-transform duration-300 ease-in-out transform md:hidden ${menuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="flex items-center justify-between border-b border-gray-200 pb-4 mb-4">
+          <Link href="/" onClick={() => setMenuOpen(false)}>
+            <Image src={logoSrc} width={140} height={80} alt={storeName} className="h-12 w-auto object-contain" />
+          </Link>
+          <button onClick={() => setMenuOpen(false)} className="text-gray-800 hover:text-secondary p-1">
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+
+        <nav className="flex flex-col space-y-1 mt-2">
+          {navItems.map((item) => (
+            <MobileNavItem key={item.id} item={item} depth={0} onClose={() => setMenuOpen(false)} />
+          ))}
+        </nav>
       </div>
-    </header >
-
-      {/* ── Mobile Drawer Overlay ──────────────────────────────────────────── */ }
-  {
-    menuOpen && (
-      <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity duration-300 md:hidden" onClick={() => setMenuOpen(false)} />
-    )
-  }
-
-  {/* ── Mobile Drawer ─────────────────────────────────────────────────── */ }
-  <div className={`fixed top-0 left-0 bottom-0 z-50 w-[80%] max-w-[360px] bg-white shadow-2xl p-6 transition-transform duration-300 ease-in-out transform md:hidden ${menuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-    <div className="flex items-center justify-between border-b border-gray-200 pb-4 mb-4">
-      <span className="text-gray-800 uppercase tracking-wider font-bold text-lg">{storeName}</span>
-      <button onClick={() => setMenuOpen(false)} className="text-gray-800 hover:text-secondary p-1">
-        <X className="w-6 h-6" />
-      </button>
-    </div>
-
-    <nav className="flex flex-col space-y-1 mt-2">
-      {navItems.map((item) => (
-        <MobileNavItem key={item.id} item={item} depth={0} onClose={() => setMenuOpen(false)} />
-      ))}
-    </nav>
-  </div>
     </>
   );
 }
