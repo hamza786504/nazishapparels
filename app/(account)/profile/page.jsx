@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../store/authContext';
+import { Eye, EyeOff, AlertCircle } from 'lucide-react';
 
 export default function AccountDetailsPage() {
     const { customer, loading, isAuthenticated, refresh } = useAuth();
@@ -240,9 +241,7 @@ export default function AccountDetailsPage() {
                                     className="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary transition-colors"
                                     aria-label={showCurrentPassword ? 'Hide password' : 'Show password'}
                                 >
-                                    <span className="material-symbols-outlined">
-                                        {showCurrentPassword ? 'visibility' : 'visibility_off'}
-                                    </span>
+                                    {showCurrentPassword ? <Eye className="w-6 h-6" /> : <EyeOff className="w-6 h-6" />}
                                 </button>
                             </div>
                         </div>
@@ -271,9 +270,7 @@ export default function AccountDetailsPage() {
                                     className="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary transition-colors"
                                     aria-label={showNewPassword ? 'Hide password' : 'Show password'}
                                 >
-                                    <span className="material-symbols-outlined">
-                                        {showNewPassword ? 'visibility' : 'visibility_off'}
-                                    </span>
+                                    {showNewPassword ? <Eye className="w-6 h-6" /> : <EyeOff className="w-6 h-6" />}
                                 </button>
                             </div>
                             <p className="text-[10px] text-on-surface-variant/60 font-label-sm italic">
@@ -286,7 +283,7 @@ export default function AccountDetailsPage() {
                 {/* Error Message */}
                 {submitStatus === 'error' && (
                     <div className="flex items-center gap-2 text-error bg-error-container/20 px-4 py-3 border border-error/30">
-                        <span className="material-symbols-outlined text-error">error</span>
+                        <AlertCircle className="w-6 h-6 text-error" />
                         <p className="text-label-sm font-label-sm">
                             Failed to update profile. Please try again.
                         </p>

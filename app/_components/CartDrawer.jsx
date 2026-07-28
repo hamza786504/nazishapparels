@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { ShoppingBag, X, Minus, Plus, ShieldCheck, ArrowRight } from 'lucide-react';
 
 export default function CartDrawer({ isOpen, onClose, cartItems = [], onUpdateQuantity, onRemoveItem }) {
     const router = useRouter();
@@ -99,7 +100,7 @@ export default function CartDrawer({ isOpen, onClose, cartItems = [], onUpdateQu
                 {/* Compact Header */}
                 <div className="flex items-center justify-between px-5 py-4 border-b border-secondary/10">
                     <div className="flex items-center gap-2">
-                        <span className="material-symbols-outlined text-xl text-secondary">shopping_bag</span>
+                        <ShoppingBag className="w-5 h-5 text-secondary" />
                         <h2 className="text-[18px] font-headline-sm uppercase tracking-wide">
                             Bag ({cartItems.length})
                         </h2>
@@ -109,7 +110,7 @@ export default function CartDrawer({ isOpen, onClose, cartItems = [], onUpdateQu
                         onClick={onClose}
                         aria-label="Close cart"
                     >
-                        <span className="material-symbols-outlined text-[20px] text-on-surface-variant">close</span>
+                        <X className="w-5 h-5 text-on-surface-variant" />
                     </button>
                 </div>
 
@@ -117,7 +118,7 @@ export default function CartDrawer({ isOpen, onClose, cartItems = [], onUpdateQu
                 <div className="flex-grow overflow-y-auto px-5 py-3 space-y-4 scrollbar-hide">
                     {cartItems.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-full text-on-surface-variant py-12">
-                            <span className="material-symbols-outlined text-5xl mb-3">shopping_bag</span>
+                            <ShoppingBag className="w-12 h-12 mb-3" />
                             <p className="text-sm">Your bag is empty</p>
                             <button
                                 className="mt-3 text-xs text-secondary underline underline-offset-4 hover:text-primary transition-colors"
@@ -164,7 +165,7 @@ export default function CartDrawer({ isOpen, onClose, cartItems = [], onUpdateQu
                                                     onClick={() => handleRemoveItem(item.id)}
                                                     aria-label={`Remove ${item.title}`}
                                                 >
-                                                    <span className="material-symbols-outlined text-[18px]">close</span>
+                                                    <X className="w-[18px] h-[18px]" />
                                                 </button>
                                             </div>
                                             <p className="text-[11px] text-on-surface-variant/70 mt-0.5">
@@ -178,14 +179,14 @@ export default function CartDrawer({ isOpen, onClose, cartItems = [], onUpdateQu
                                                     onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
                                                     disabled={item.quantity <= 1}
                                                 >
-                                                    <span className="material-symbols-outlined text-[16px]">remove</span>
+                                                    <Minus className="w-4 h-4" />
                                                 </button>
                                                 <span className="text-xs font-medium w-7 text-center">{item.quantity}</span>
                                                 <button
                                                     className="w-7 h-7 flex items-center justify-center text-secondary hover:text-primary hover:bg-surface-container transition-colors"
                                                     onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
                                                 >
-                                                    <span className="material-symbols-outlined text-[16px]">add</span>
+                                                    <Plus className="w-4 h-4" />
                                                 </button>
                                             </div>
                                             <p className="text-sm font-headline-sm text-primary">
@@ -223,9 +224,7 @@ export default function CartDrawer({ isOpen, onClose, cartItems = [], onUpdateQu
                             className="w-full bg-primary text-white py-3 text-sm font-label-md tracking-widest border border-secondary hover:bg-primary-container transition-all flex items-center justify-center gap-2 group"
                         >
                             CHECKOUT
-                            <span className="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">
-                                arrow_forward
-                            </span>
+                            <ArrowRight className="w-[18px] h-[18px] group-hover:translate-x-1 transition-transform" />
                         </Link>
                         
                         {/* View Cart Button - Close drawer then navigate */}
@@ -238,7 +237,7 @@ export default function CartDrawer({ isOpen, onClose, cartItems = [], onUpdateQu
                         </Link>
 
                         <div className="flex items-center justify-center gap-1.5 text-on-surface-variant/40 pt-1">
-                            <span className="material-symbols-outlined text-[14px]">verified_user</span>
+                            <ShieldCheck className="w-3.5 h-3.5" />
                             <span className="text-[10px] font-light">
                                 Secure Checkout
                             </span>

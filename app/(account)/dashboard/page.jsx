@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '../../store/authContext';
+import { Loader, UserCircle, ShoppingBag, MapPin, MapPinOff } from 'lucide-react';
 
 export default function MyAccountPage() {
     const { customer, loading, isAuthenticated, refresh } = useAuth();
@@ -94,15 +95,11 @@ export default function MyAccountPage() {
                 </div>
                 {loading || ordersLoading ? (
                     <div className="flex items-center justify-center py-12">
-                        <span className="material-symbols-outlined animate-spin text-secondary text-4xl">
-                            progress_activity
-                        </span>
+                        <Loader className="animate-spin w-9 h-9 text-secondary" />
                     </div>
                 ) : !isAuthenticated ? (
                     <div className="bg-surface-container-low border premium-border p-8 text-center">
-                        <span className="material-symbols-outlined text-4xl text-on-surface-variant mb-4 block">
-                            account_circle
-                        </span>
+                        <UserCircle className="w-9 h-9 text-on-surface-variant mb-4 block mx-auto" />
                         <h3 className="font-headline-sm text-headline-sm text-primary mb-2">
                             Please sign in to view your orders
                         </h3>
@@ -122,9 +119,7 @@ export default function MyAccountPage() {
                     </div>
                 ) : recentOrders.length === 0 ? (
                     <div className="bg-surface-container-low border premium-border p-8 text-center">
-                        <span className="material-symbols-outlined text-4xl text-on-surface-variant mb-4 block">
-                            shopping_bag
-                        </span>
+                        <ShoppingBag className="w-9 h-9 text-on-surface-variant mb-4 block mx-auto" />
                         <h3 className="font-headline-sm text-headline-sm text-primary mb-2">
                             No orders yet
                         </h3>
@@ -205,15 +200,11 @@ export default function MyAccountPage() {
                         <h3 className="font-headline-sm text-headline-sm text-primary">
                             Default Address
                         </h3>
-                        <span className="material-symbols-outlined text-secondary">
-                            location_on
-                        </span>
+                        <MapPin className="w-6 h-6 text-secondary" />
                     </div>
                     {!isAuthenticated ? (
                         <div className="flex-grow flex flex-col items-center justify-center text-center">
-                            <span className="material-symbols-outlined text-4xl text-on-surface-variant mb-4">
-                                location_off
-                            </span>
+                            <MapPinOff className="w-9 h-9 text-on-surface-variant mb-4 block mx-auto" />
                             <p className="text-on-surface-variant mb-4">
                                 Sign in to view your saved addresses
                             </p>
@@ -230,9 +221,7 @@ export default function MyAccountPage() {
                         </div>
                     ) : addressLoading ? (
                         <div className="flex-grow flex items-center justify-center py-8">
-                                <span className="material-symbols-outlined animate-spin text-secondary text-3xl">
-                                    progress_activity
-                                </span>
+                                <Loader className="animate-spin w-8 h-8 text-secondary" />
                         </div>
                     ) : defaultAddress ? (
                         <div className="flex-grow font-body-md text-body-md text-on-surface-variant leading-relaxed">
@@ -247,9 +236,7 @@ export default function MyAccountPage() {
                         </div>
                     ) : (
                         <div className="flex-grow flex flex-col items-center justify-center text-center py-6">
-                            <span className="material-symbols-outlined text-4xl text-on-surface-variant mb-3">
-                                location_off
-                            </span>
+                            <MapPinOff className="w-9 h-9 text-on-surface-variant mb-3 block mx-auto" />
                             <p className="text-on-surface-variant mb-4">
                                 No saved address yet.
                             </p>
@@ -274,15 +261,11 @@ export default function MyAccountPage() {
                         <h3 className="font-headline-sm text-headline-sm text-primary">
                             Account Summary
                         </h3>
-                        <span className="material-symbols-outlined text-secondary">
-                            account_circle
-                        </span>
+                        <UserCircle className="w-6 h-6 text-secondary" />
                     </div>
                     {!isAuthenticated ? (
                         <div className="flex-grow flex flex-col items-center justify-center text-center">
-                            <span className="material-symbols-outlined text-4xl text-on-surface-variant mb-4">
-                                account_circle
-                            </span>
+                            <UserCircle className="w-9 h-9 text-on-surface-variant mb-4 block mx-auto" />
                             <p className="text-on-surface-variant mb-4">
                                 Sign in to view your account details
                             </p>

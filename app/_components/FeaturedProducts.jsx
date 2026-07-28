@@ -147,7 +147,7 @@ export default function FeaturedProducts({ collectionSlug, title, initialProduct
 
             <div ref={sentinelRef} className="py-0 text-center">
                 {loadingMore && (
-                    <div className="flex items-center justify-center gap-3 text-on-surface-variant">
+                    <div className="flex mt-5 items-center justify-center gap-3 text-on-surface-variant">
                         <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                         <span className="font-label-md text-sm">Loading more products…</span>
                     </div>

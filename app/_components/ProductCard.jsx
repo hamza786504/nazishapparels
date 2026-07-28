@@ -40,8 +40,6 @@ export default function ProductCard({
     const [justAdded, setJustAdded] = useState(false);
     const favorited = isFavorite(id);
 
-    // Product images are always full URLs (Sanity CDN), so just pass through
-    const passthroughLoader = ({ src }) => src;
 
     const handleQuickAdd = (e) => {
         if (e) {
@@ -107,13 +105,11 @@ export default function ProductCard({
             >
                 <Link href={`/product/${slug}`} className="absolute inset-0 block">
                     <Image
-                        loader={passthroughLoader}
                         alt={title}
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                         src={image}
                         fill
                         sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                        unoptimized={image.startsWith('http')}
                     />
                 </Link>
 

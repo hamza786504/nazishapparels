@@ -4,6 +4,14 @@ import Link from 'next/link';
 import React from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '../store/authContext';
+import { LayoutDashboard, User, Package, Book, LogOut } from 'lucide-react';
+
+const iconMap = {
+    grid_view: LayoutDashboard,
+    person: User,
+    package_2: Package,
+    menu_book: Book,
+};
 
 /**
  * Reusable account sidebar.
@@ -58,6 +66,7 @@ export default function Sidebar({ userData, navItems, isMobile = false, activeNa
             <nav className="flex flex-col gap-2">
                 {navItems.map((item) => {
                     const active = isActive(item.id);
+                    const Icon = iconMap[item.icon];
                     return (
                         <Link
                             href={`/${item.id}`}
@@ -68,14 +77,7 @@ export default function Sidebar({ userData, navItems, isMobile = false, activeNa
                                     : 'text-on-surface-variant hover:bg-surface-container-low'
                             }`}
                         >
-                            <span
-                                className="material-symbols-outlined text-[20px]"
-                                style={{
-                                    fontVariationSettings: active ? "'FILL' 1" : "'FILL' 0",
-                                }}
-                            >
-                                {item.icon}
-                            </span>
+                            {Icon && <Icon className={`w-5 h-5 ${active ? 'fill-current' : ''}`} />}
                             <span className="font-label-md text-label-md uppercase tracking-widest">
                                 {item.label}
                             </span>
@@ -87,7 +89,7 @@ export default function Sidebar({ userData, navItems, isMobile = false, activeNa
                         className="flex items-center gap-4 py-3 px-4 text-error hover:bg-error-container transition-all duration-200 rounded w-full"
                         onClick={handleLogout}
                     >
-                        <span className="material-symbols-outlined text-[20px]">logout</span>
+                        <LogOut className="w-5 h-5" />
                         <span className="font-label-md text-label-md uppercase tracking-widest">
                             Logout
                         </span>

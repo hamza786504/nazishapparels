@@ -235,7 +235,7 @@ function SearchBox({ navItems }) {
   };
 
   return (
-    <div ref={wrapperRef} className="flex-1 hidden md:flex items-center relative">
+    <div ref={wrapperRef} className="flex-1 flex justify-center hidden md:flex items-center relative">
       <div className="flex items-center w-full bg-gray-50 border border-gray-200 rounded-lg hover:border-secondary focus-within:border-secondary focus-within:ring-1 focus-within:ring-secondary/30 transition-all px-2 max-w-[400px] mx-4">
         {/* Category Dropdown */}
         <CategoryDropdown

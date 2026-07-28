@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
+import { useState, useEffect, useRef } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../store/authContext';
 
@@ -101,10 +102,6 @@ export default function RegisterPage() {
                     background-color: #fcf9f8;
                     color: #1c1b1b;
                     -webkit-font-smoothing: antialiased;
-                }
-                .material-symbols-outlined {
-                    font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
-                    vertical-align: middle;
                 }
                 .text-shadow-subtle {
                     text-shadow: 0 2px 4px rgba(2, 60, 50, 0.05);
@@ -248,9 +245,7 @@ export default function RegisterPage() {
                                                 type="button"
                                                 aria-label={showPassword ? 'Hide password' : 'Show password'}
                                             >
-                                                <span className="material-symbols-outlined" id="eye_icon">
-                                                    {showPassword ? 'visibility_off' : 'visibility'}
-                                                </span>
+                                                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                             </button>
                                         </div>
                                     </div>
@@ -279,9 +274,7 @@ export default function RegisterPage() {
                                                 type="button"
                                                 aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
                                             >
-                                                <span className="material-symbols-outlined" id="eye_icon">
-                                                    {showConfirmPassword ? 'visibility_off' : 'visibility'}
-                                                </span>
+                                                {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                             </button>
                                         </div>
                                     </div>

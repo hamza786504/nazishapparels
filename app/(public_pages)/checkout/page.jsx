@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { FaWhatsapp } from 'react-icons/fa';
+import { CheckCircle, Loader, ChevronDown, Truck, Landmark, Upload, ArrowLeft, Lock } from 'lucide-react';
 import { useCart } from '../../store/cartContext';
 import { useAuth } from '../../store/authContext';
 
@@ -393,7 +394,7 @@ export default function CheckoutPage() {
             <div className="min-h-screen bg-background flex items-center justify-center px-6 py-16">
                 <div className="max-w-[600px] w-full bg-surface-container-low border border-secondary/10 p-10 md:p-14 flex flex-col items-center text-center gap-8 shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-500">
                     <div className="w-20 h-20 rounded-full bg-secondary/10 flex items-center justify-center">
-                        <span className="material-symbols-outlined text-4xl text-secondary">check_circle</span>
+                        <CheckCircle className="w-9 h-9 text-secondary" />
                     </div>
                     <div className="flex flex-col gap-2">
                         <h1 className="font-headline-md text-headline-md text-primary">Order Confirmed!</h1>
@@ -444,9 +445,6 @@ export default function CheckoutPage() {
     return (
         <div className="bg-background text-on-surface font-body-md selection:bg-secondary-fixed selection:text-on-secondary-fixed">
             <style jsx global>{`
-                .material-symbols-outlined {
-                    font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
-                }
                 body {
                     -webkit-font-smoothing: antialiased;
                     -moz-osx-font-smoothing: grayscale;
@@ -478,7 +476,7 @@ export default function CheckoutPage() {
                                     <h2 className="text-headline-sm font-headline-sm text-primary">Contact Information</h2>
                                     {isLoggedIn ? (
                                         <span className="flex items-center gap-2 text-label-sm font-label-sm text-secondary">
-                                            <span className="material-symbols-outlined text-[18px]">check_circle</span>
+                                            <CheckCircle className="w-[18px] h-[18px]" />
                                             Logged in as {customer.email}
                                         </span>
                                     ) : (
@@ -584,7 +582,7 @@ export default function CheckoutPage() {
                                     <div className="space-y-3">
                                         {!addressesLoaded ? (
                                             <p className="text-label-sm text-on-surface-variant flex items-center gap-2">
-                                                <span className="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
+                                                <Loader className="w-[18px] h-[18px] animate-spin" />
                                                 Loading saved addresses…
                                             </p>
                                         ) : savedAddresses.length > 0 ? (
@@ -720,7 +718,7 @@ export default function CheckoutPage() {
                                                 <option key={country} value={country}>{country}</option>
                                             ))}
                                         </select>
-                                        <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant">expand_more</span>
+                                        <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant" />
                                         {errors.country && <p className="text-error text-[11px] mt-1 px-1">{errors.country}</p>}
                                     </div>
                                     <div>
@@ -786,7 +784,7 @@ export default function CheckoutPage() {
                                 </div>
                                 {isFreeShipping && (
                                     <p className="text-body-sm text-primary flex items-center gap-1.5">
-                                        <span className="material-symbols-outlined text-base">local_shipping</span>
+                                        <Truck className="w-4 h-4" />
                                         Free shipping applied — your order exceeds Rs. {shippingConfig.freeShippingThreshold.toLocaleString()}!
                                     </p>
                                 )}
@@ -846,7 +844,7 @@ export default function CheckoutPage() {
                                 {formData.paymentMethod === 'bank' && shippingConfig.bankDeposit && (
                                     <div className="border border-secondary/20 bg-surface-container-low p-5 space-y-3">
                                         <p className="text-label-md font-bold text-primary flex items-center gap-2">
-                                            <span className="material-symbols-outlined text-base">account_balance</span>
+                                            <Landmark className="w-4 h-4" />
                                             Bank Transfer Details
                                         </p>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-body-md">
@@ -886,18 +884,18 @@ export default function CheckoutPage() {
                                                 <label className="flex items-center justify-center w-full h-32 border-2 border-dashed border-secondary/30 rounded cursor-pointer hover:border-secondary transition-colors bg-surface-container-lowest">
                                                     {receiptUrl ? (
                                                         <div className="flex flex-col items-center gap-2">
-                                                            <span className="material-symbols-outlined text-3xl text-secondary">check_circle</span>
+                                                            <CheckCircle className="w-8 h-8 text-secondary" />
                                                             <span className="text-label-sm text-secondary">Receipt uploaded</span>
                                                             <span className="text-label-sm text-on-surface-variant">Tap to replace</span>
                                                         </div>
                                                     ) : receiptUploading ? (
                                                         <div className="flex flex-col items-center gap-2">
-                                                            <span className="material-symbols-outlined animate-spin text-3xl text-secondary">progress_activity</span>
+                                                            <Loader className="w-8 h-8 animate-spin text-secondary" />
                                                             <span className="text-label-sm text-on-surface-variant">Uploading…</span>
                                                         </div>
                                                     ) : (
                                                         <div className="flex flex-col items-center gap-2">
-                                                            <span className="material-symbols-outlined text-3xl text-on-surface-variant">cloud_upload</span>
+                                                            <Upload className="w-8 h-8 text-on-surface-variant" />
                                                             <span className="text-label-sm text-on-surface-variant">Click to upload receipt screenshot</span>
                                                             <span className="text-label-sm text-on-surface-variant/60">PNG, JPG up to 5MB</span>
                                                         </div>
@@ -938,7 +936,7 @@ export default function CheckoutPage() {
 
                                                 {whatsappLink && whatsappShared && (
                                                     <p className="text-body-sm text-secondary flex items-center gap-1.5">
-                                                        <span className="material-symbols-outlined text-base">check_circle</span>
+                                                        <CheckCircle className="w-4 h-4" />
                                                         WhatsApp opened — send your screenshot, then come back and place your order.
                                                     </p>
                                                 )}
@@ -968,7 +966,7 @@ export default function CheckoutPage() {
                                     href="/cart"
                                     className="flex items-center gap-2 text-label-md font-label-md text-on-surface-variant hover:text-primary transition-colors group"
                                 >
-                                    <span className="material-symbols-outlined text-sm group-hover:-translate-x-1 transition-transform">arrow_back</span>
+                                    <span className="group-hover:-translate-x-1 transition-transform"><ArrowLeft className="w-3.5 h-3.5" /></span>
                                     Return to cart
                                 </Link>
                                 <button
@@ -978,7 +976,7 @@ export default function CheckoutPage() {
                                 >
                                     {isSubmitting ? (
                                         <>
-                                            <span className="material-symbols-outlined animate-spin text-lg">progress_activity</span>
+                                            <Loader className="w-[18px] h-[18px] animate-spin" />
                                             Placing Order...
                                         </>
                                     ) : (
@@ -1060,7 +1058,7 @@ export default function CheckoutPage() {
                             </div>
 
                             <p className="mt-8 text-label-sm font-label-sm text-on-surface-variant flex items-center gap-2">
-                                <span className="material-symbols-outlined text-base">lock</span>
+                                <Lock className="w-4 h-4" />
                                 Secure checkout. All data is encrypted.
                             </p>
                         </aside>

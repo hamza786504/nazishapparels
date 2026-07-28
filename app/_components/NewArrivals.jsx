@@ -81,7 +81,7 @@ export default function NewArrivals() {
                         ref={carouselRef}
                         className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-5 overflow-x-auto no-scrollbar carousel-container scroll-smooth"
                     >
-                        {products.map((product) => (
+                        {products.map((product, index) => (
                             <Link
                                 key={product.id}
                                 href={`/collection/${product.slug}`}
@@ -94,6 +94,8 @@ export default function NewArrivals() {
                                         alt={product.title}
                                         width={400}
                                         height={548}
+                                        priority={index < 2}
+                                        loading={index < 2 ? 'eager' : 'lazy'}
                                     />
                                     <div className="absolute inset-0 bg-gradient-to-t from-primary/60 via-transparent to-transparent opacity-80" />
                                     <div className="absolute bottom-6 left-6">

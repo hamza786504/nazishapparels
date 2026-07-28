@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { X } from 'lucide-react';
 
 // Product images are always full URLs (Sanity CDN), so just pass them through
 // next/image's loader unchanged (same approach as ProductCard.jsx).
@@ -102,7 +103,7 @@ export default function RecentPurchasePopup() {
                     aria-label="Dismiss notification"
                     className="absolute top-1.5 right-1.5 w-6 h-6 flex items-center justify-center rounded-full text-on-surface-variant/60 hover:text-on-surface hover:bg-surface-container-low transition-colors bg-transparent border-none cursor-pointer"
                 >
-                    <span className="material-symbols-outlined text-[16px]">close</span>
+                    <X className="w-4 h-4" />
                 </button>
 
                 <Link href={`/product/${product.slug || product._id}`} className="flex items-center gap-3 flex-1 min-w-0">

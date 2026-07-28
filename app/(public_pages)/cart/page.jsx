@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCart } from '../../store/cartContext';
+import { X, ArrowRight, ShieldCheck, Truck, ShoppingBag, ArrowLeft } from 'lucide-react';
 // Custom Hook for scroll header behavior
 const useScrollHeader = () => {
   const [isVisible, setIsVisible] = useState(true);
@@ -125,7 +126,7 @@ const CartItemCard = ({ item, onRemove, onQuantityChange, onSizeChange }) => {
           className="text-outline hover:text-error transition-colors p-1 bg-transparent border-none cursor-pointer flex-shrink-0"
           aria-label={`Remove ${item.title || item.name} from cart`}
         >
-          <span className="material-symbols-outlined text-[20px]">close</span>
+          <X className="w-5 h-5" />
         </button>
       </div>
 
@@ -154,7 +155,7 @@ const CartItemCard = ({ item, onRemove, onQuantityChange, onSizeChange }) => {
                 className="text-outline hover:text-error transition-colors p-1 bg-transparent border-none cursor-pointer flex-shrink-0"
                 aria-label={`Remove ${item.title || item.name} from cart`}
               >
-                <span className="material-symbols-outlined text-[20px]">close</span>
+                <X className="w-5 h-5" />
               </button>
             </div>
             
@@ -231,7 +232,7 @@ const OrderSummary = ({ subtotal, tax, total }) => {
       <div className="space-y-4">
         <Link href="/checkout" className="w-full bg-primary text-white py-4 font-label-md tracking-widest uppercase transition-all duration-300 hover:bg-primary-container hover:scale-[1.02] active:scale-95 flex items-center justify-center">
           PROCEED TO CHECKOUT
-          <span className="material-symbols-outlined ml-2 text-sm">arrow_forward</span>
+          <ArrowRight className="ml-2 w-3.5 h-3.5" />
         </Link>
         <p className="text-center text-[10px] text-outline-variant uppercase tracking-tighter leading-relaxed">
           Complimentary shipping on orders above PKR 10,000. All prices are inclusive of
@@ -240,11 +241,11 @@ const OrderSummary = ({ subtotal, tax, total }) => {
       </div>
       <div className="mt-8 pt-8 border-t border-secondary/10 space-y-4">
         <div className="flex items-center text-on-surface-variant font-label-sm">
-          <span className="material-symbols-outlined mr-3 text-secondary">verified_user</span>
+          <ShieldCheck className="mr-3 text-secondary" />
           SECURE PREMIUM CHECKOUT
         </div>
         <div className="flex items-center text-on-surface-variant font-label-sm">
-          <span className="material-symbols-outlined mr-3 text-secondary">local_shipping</span>
+          <Truck className="mr-3 text-secondary" />
           EXPRESS GLOBAL COURIER
         </div>
       </div>
@@ -350,9 +351,7 @@ function Cart() {
           <div className="lg:col-span-8 space-y-4">
             {cartItems.length === 0 ? (
               <div className="text-center py-12">
-                <span className="material-symbols-outlined text-6xl text-outline-variant mb-4">
-                  shopping_bag
-                </span>
+                <ShoppingBag className="w-16 h-16 text-outline-variant mb-4" />
                 <h2 className="font-headline-sm text-primary mb-2">Cart is empty</h2>
                 <p className="text-on-surface-variant mb-6">
                   Discover our latest Eastern luxury collections
@@ -380,9 +379,7 @@ function Cart() {
                     className="font-label-md text-primary flex items-center group hover:text-secondary transition-colors"
                     href="/collection/lawn"
                   >
-                    <span className="material-symbols-outlined mr-2 transition-transform group-hover:-translate-x-1">
-                      arrow_back
-                    </span>
+                    <ArrowLeft className="mr-2 transition-transform group-hover:-translate-x-1" />
                     CONTINUE SHOPPING
                   </Link>
                 </div>

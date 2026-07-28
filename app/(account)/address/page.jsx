@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../store/authContext';
+import { Plus, MapPinOff, Phone, Pencil, Trash2, X } from 'lucide-react';
 
 // Countries list
 const countries = ['Pakistan', 'United Arab Emirates', 'United Kingdom', 'United States'];
@@ -209,7 +210,7 @@ export default function AddressBookPage() {
                     onClick={toggleForm}
                     className="group flex items-center gap-2 bg-primary text-on-primary px-6 py-3 border border-secondary transition-all duration-300 hover:scale-105"
                 >
-                    <span className="material-symbols-outlined text-[20px]">add</span>
+                    <Plus className="w-5 h-5" />
                     <span className="font-label-md text-label-md uppercase tracking-widest">
                         Add New Address
                     </span>
@@ -219,9 +220,7 @@ export default function AddressBookPage() {
             {/* Address Grid */}
             {addresses.length === 0 ? (
                 <div className="text-center py-16">
-                    <span className="material-symbols-outlined text-6xl text-on-surface-variant/30 mb-4">
-                        location_off
-                    </span>
+                    <MapPinOff className="w-16 h-16 text-on-surface-variant/30 mb-4 block mx-auto" />
                     <p className="font-body-lg text-on-surface-variant mb-2">
                         No addresses saved yet
                     </p>
@@ -250,7 +249,7 @@ export default function AddressBookPage() {
                                 <p>{address.city}</p>
                                 <p>{[address.postalCode, address.country].filter(Boolean).join(', ')}</p>
                                 <p className="mt-4 flex items-center gap-2 text-primary">
-                                    <span className="material-symbols-outlined text-[18px]">call</span>
+                                    <Phone className="w-[18px] h-[18px]" />
                                     {address.phone}
                                 </p>
                             </div>
@@ -259,14 +258,14 @@ export default function AddressBookPage() {
                                     onClick={() => handleEdit(address)}
                                     className="flex items-center gap-1 text-label-md text-primary hover:text-secondary transition-colors"
                                 >
-                                    <span className="material-symbols-outlined text-[18px]">edit</span>
+                                    <Pencil className="w-[18px] h-[18px]" />
                                     Edit
                                 </button>
                                 <button
                                     onClick={() => handleDelete(address._key)}
                                     className="flex items-center gap-1 text-label-md text-error hover:opacity-80 transition-opacity"
                                 >
-                                    <span className="material-symbols-outlined text-[18px]">delete</span>
+                                    <Trash2 className="w-[18px] h-[18px]" />
                                     Delete
                                 </button>
                             </div>
@@ -292,9 +291,9 @@ export default function AddressBookPage() {
                             </h2>
                             <button
                                 onClick={toggleForm}
-                                className="material-symbols-outlined text-primary hover:rotate-90 transition-transform p-2"
+                                className="text-primary hover:rotate-90 transition-transform p-2"
                             >
-                                close
+                                <X className="w-6 h-6" />
                             </button>
                         </div>
 

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '../../store/authContext';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const ITEMS_PER_PAGE = 5;
 
@@ -219,7 +220,7 @@ export default function Orders() {
                                 : 'border-secondary text-secondary hover:bg-secondary hover:text-white'
                         }`}
                     >
-                        <span className="material-symbols-outlined text-[18px]">chevron_left</span>
+                        <ChevronLeft className="w-[18px] h-[18px]" />
                         <span className="hidden sm:inline text-label-sm font-label-sm">Previous</span>
                     </button>
 
@@ -258,7 +259,7 @@ export default function Orders() {
                         }`}
                     >
                         <span className="hidden sm:inline text-label-sm font-label-sm">Next</span>
-                        <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+                        <ChevronRight className="w-[18px] h-[18px]" />
                     </button>
                 </div>
             </div>

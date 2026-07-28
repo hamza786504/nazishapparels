@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { Phone, Mail, MessageCircle, Star } from 'lucide-react';
 
 const subjects = [
   'Order Assistance',
@@ -86,9 +87,6 @@ export default function ContactPage() {
   return (
     <div className="bg-surface text-on-surface font-body-md overflow-x-hidden">
       <style jsx global>{`
-        .material-symbols-outlined {
-          font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
-        }
         .hero-gradient {
           background: linear-gradient(
             180deg,
@@ -229,9 +227,7 @@ export default function ContactPage() {
                 </h3>
                 <div className="space-y-8">
                   <div className="flex items-start gap-5">
-                    <span className="material-symbols-outlined text-secondary text-3xl">
-                      phone_iphone
-                    </span>
+                    <Phone className="text-secondary w-8 h-8" />
                     <div>
                       <p className="font-label-md text-base text-primary">Telephone Inquiries</p>
                       <p className="text-on-surface-variant text-lg mt-1">+92 344 3413824</p>
@@ -241,7 +237,7 @@ export default function ContactPage() {
                     </div>
                   </div>
                   <div className="flex items-start gap-5">
-                    <span className="material-symbols-outlined text-secondary text-3xl">mail</span>
+                    <Mail className="text-secondary w-8 h-8" />
                     <div>
                       <p className="font-label-md text-base text-primary">Email Correspondence</p>
                       <p className="text-on-surface-variant text-lg mt-1">
@@ -250,9 +246,7 @@ export default function ContactPage() {
                     </div>
                   </div>
                   <div className="flex items-start gap-5">
-                    <span className="material-symbols-outlined text-secondary text-3xl">
-                      chat_bubble
-                    </span>
+                    <MessageCircle className="text-secondary w-8 h-8" />
                     <div>
                       <p className="font-label-md text-base text-primary">WhatsApp Concierge</p>
                       <p className="text-on-surface-variant text-lg mt-1">
@@ -337,12 +331,7 @@ export default function ContactPage() {
         {/* Bespoke CTA */}
         <section className="py-24 md:py-32 px-6 text-center scroll-reveal">
           <div className="max-w-3xl mx-auto">
-            <span
-              className="material-symbols-outlined text-secondary text-5xl mb-8"
-              style={{ fontVariationSettings: "'FILL' 1" }}
-            >
-              star
-            </span>
+            <Star className="text-secondary w-12 h-12 mb-8" fill="currentColor" />
             <h3 className="font-display-lg text-4xl md:text-5xl text-primary mb-6">
               Private Consultations
             </h3>

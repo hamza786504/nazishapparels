@@ -69,9 +69,6 @@ export default function LoginPage() {
         <div className="bg-background text-on-background min-h-screen flex flex-col font-body-md overflow-x-hidden">
             {/* Global Styles */}
             <style jsx global>{`
-                .material-symbols-outlined {
-                    font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
-                }
                 .form-underline:focus-within .underline-bar {
                     width: 100%;
                 }

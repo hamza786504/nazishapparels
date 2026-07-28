@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 
-export default function LazySection({ children, minHeight = '250px', rootMargin = '300px 0px' }) {
+export default function LazySection({ children, minHeight = '250px', rootMargin = '600px 0px' }) {
     const [isVisible, setIsVisible] = useState(false);
     const containerRef = useRef(null);
 

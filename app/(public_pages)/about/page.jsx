@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { Sparkles } from 'lucide-react';
 
 export default function AboutPage() {
   const [revealedElements, setRevealedElements] = useState(new Set());
@@ -85,9 +86,6 @@ export default function AboutPage() {
   return (
     <div className="bg-surface text-on-surface font-body-md overflow-x-hidden">
       <style jsx global>{`
-        .material-symbols-outlined {
-          font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-        }
         .reveal-animation {
           opacity: 0;
           transform: translateY(24px);
@@ -155,7 +153,7 @@ export default function AboutPage() {
                 every stitch we place pays tribute to the virtuosos of Eastern craftsmanship.
               </p>
               <div className="flex items-center gap-3 text-secondary font-label-md">
-                <span className="material-symbols-outlined">auto_awesome</span>
+                <Sparkles className="text-secondary" />
                 <span className="uppercase tracking-widest text-sm">Pure Fabrics & Hand‑Work</span>
               </div>
             </div>

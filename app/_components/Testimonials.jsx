@@ -1,5 +1,6 @@
 'use client'
 // components/Testimonials.jsx
+import { Star, ChevronLeft, ChevronRight } from 'lucide-react';
 const testimonials = [
     {
         id: 1,
@@ -45,11 +46,11 @@ export default function Testimonials() {
                                 className="flex-none w-[85%] md:w-[350px] lg:w-[400px] snap-center bg-surface-container-low p-10 flex flex-col items-center text-center space-y-6 border border-secondary/10 select-none"
                             >
                                 <div className="flex text-secondary">
-                                    <span className="material-symbols-outlined">star</span>
-                                    <span className="material-symbols-outlined">star</span>
-                                    <span className="material-symbols-outlined">star</span>
-                                    <span className="material-symbols-outlined">star</span>
-                                    <span className="material-symbols-outlined">star</span>
+                                    <Star className="w-4 h-4 fill-current text-yellow-400" />
+                                    <Star className="w-4 h-4 fill-current text-yellow-400" />
+                                    <Star className="w-4 h-4 fill-current text-yellow-400" />
+                                    <Star className="w-4 h-4 fill-current text-yellow-400" />
+                                    <Star className="w-4 h-4 fill-current text-yellow-400" />
                                 </div>
                                 <p className="text-body-lg font-headline-sm italic text-on-surface-variant leading-relaxed flex-grow">
                                     &quot;{t.quote}&quot;
@@ -74,7 +75,7 @@ export default function Testimonials() {
                                 if (el) el.scrollBy({ left: -374, behavior: 'smooth' });
                             }}
                         >
-                            <span className="material-symbols-outlined">chevron_left</span>
+                            <ChevronLeft className="w-5 h-5" />
                         </button>
                         <button
                             className="pointer-events-auto w-10 h-10 flex items-center justify-center bg-white shadow-md text-primary hover:bg-secondary hover:text-white transition-all rounded-full"
@@ -83,7 +84,7 @@ export default function Testimonials() {
                                 if (el) el.scrollBy({ left: 374, behavior: 'smooth' });
                             }}
                         >
-                            <span className="material-symbols-outlined">chevron_right</span>
+                            <ChevronRight className="w-5 h-5" />
                         </button>
                     </div>
                 </div>

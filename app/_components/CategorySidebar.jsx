@@ -1,116 +1,97 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { ChevronDown, ChevronRight } from 'lucide-react';
+import { useNavMenu } from '../store/navMenuContext';
 
-export default function CategorySidebar({ activeSlug, initialCollections = null }) {
+// ── Recursive sidebar item (supports nested children) ────────────────────────
+function SidebarItem({ item, depth = 0 }) {
     const pathname = usePathname();
-    const [collections, setCollections] = useState(initialCollections || []);
-    const [loading, setLoading] = useState(!initialCollections);
+    const hasChildren = item.children && item.children.length > 0;
 
-    const active = activeSlug || pathname.split('/').pop() || '';
+    // Active if exact match or starts with this URL (but not root '/')
+    const isActive = pathname === item.url || (item.url && item.url !== '/' && pathname.startsWith(item.url));
 
-    useEffect(() => {
-        if (initialCollections) return;
-        fetch('/api/collections')
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) {
-                    setCollections(data.collections || []);
-                }
-            })
-            .catch(console.error)
-            .finally(() => setLoading(false));
-    }, [initialCollections]);
+    const [open, setOpen] = useState(isActive || false);
 
-    // Top virtual collections
-    const topItems = [
-        { slug: 'new-arrivals', name: 'New Arrivals' },
-    ];
+    const indentClass = depth === 0 ? 'pl-5' : depth === 1 ? 'pl-8' : 'pl-11';
+    const textClass   = depth === 0 ? 'text-base font-medium' : 'text-[13.5px] font-normal';
+
+    if (hasChildren) {
+        return (
+            <div>
+                {/* Parent row — clicking toggles children */}
+                <button
+                    onClick={() => setOpen(o => !o)}
+                    className={`w-full flex items-center justify-between py-2 ${indentClass} pr-3 rounded-lg transition-colors text-left
+                        ${isActive ? 'text-black font-semibold' : 'text-gray-800 hover:text-black hover:bg-gray-50'} ${textClass}`}
+                >
+                    <span>{item.title}</span>
+                    {open
+                        ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                        : <ChevronRight className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                    }
+                </button>
+
+                {/* Children */}
+                {open && (
+                    <div className="border-l border-gray-100 ml-7">
+                        {item.children.map(child => (
+                            <SidebarItem key={child.id || child.title} item={child} depth={depth + 1} />
+                        ))}
+                    </div>
+                )}
+            </div>
+        );
+    }
 
     return (
-        <nav className="bg-white min-h-full ps-4 pt-4 py-2 text-sm font-sans sidebar-scroll">
+        <Link
+            href={item.url || '/'}
+            className={`flex items-center py-2 ${indentClass} pr-3 rounded-lg transition-colors
+                ${isActive
+                    ? 'font-bold text-black'
+                    : 'text-gray-800 hover:text-black hover:bg-gray-50'
+                } ${textClass}`}
+        >
+            <span>{item.title}</span>
+        </Link>
+    );
+}
+
+// ── Main sidebar ──────────────────────────────────────────────────────────────
+export default function CategorySidebar() {
+    let navItems = [];
+    try {
+        // useNavMenu is safe here — NavMenuProvider wraps the whole app in layout.jsx
+        // eslint-disable-next-line react-hooks/rules-of-hooks
+        navItems = useNavMenu();
+    } catch {
+        navItems = [];
+    }
+
+    return (
+        <nav className="bg-white min-h-full pt-4 py-2 text-sm font-sans sidebar-nav">
             <style jsx>{`
-                .sidebar-scroll::-webkit-scrollbar {
-                    width: 10px !important;
-                }
-
-                /* Track */
-                .sidebar-scroll::-webkit-scrollbar-track {
-                    background: #f1f1f1 !important;
-                    }
-                    
-                /* Handle */
-                .sidebar-scroll::-webkit-scrollbar-thumb {
-                    background: #888 !important;
-                    border-radius: 10px;
-                }
-
-                /* Handle on hover */
-                .sidebar-scroll::-webkit-scrollbar-thumb:hover {
-                    background: #555 !important;
-                }
-
-                .sidebar-scroll {
-                    max-height: calc(100vh - 100px);
-                    overflow-y: auto;
-                }
+                .sidebar-nav::-webkit-scrollbar { width: 4px; }
+                .sidebar-nav::-webkit-scrollbar-track { background: transparent; }
+                .sidebar-nav::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
+                .sidebar-nav::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
             `}</style>
 
-            {loading ? (
-                <div className="space-y-3 px-1">
-                    {[...Array(6)].map((_, i) => (
-                        <div key={i} className="h-6 bg-white animate-pulse rounded" />
+            {navItems.length === 0 ? (
+                /* Skeleton shown when no menu is configured */
+                <div className="space-y-3 px-5">
+                    {[...Array(5)].map((_, i) => (
+                        <div key={i} className="h-5 bg-gray-100 animate-pulse rounded" />
                     ))}
                 </div>
             ) : (
-                <div className="space-y-0">
-                    {/* Top items */}
-                    {topItems.map((item) => {
-                        const isActive = active === item.slug;
-                        return (
-                            <Link
-                                key={item.slug}
-                                href={`/collection/${item.slug}`}
-                                className={`flex items-center justify-between py-2 pl-5 pr-2.5 rounded-lg text-base font-medium transition-colors ${
-                                    isActive
-                                        ? 'font-bold text-black bg-white'
-                                        : 'text-gray-800'
-                                }`}
-                            >
-                                <span>{item.name}</span>
-                            </Link>
-                        );
-                    })}
-
-                    {/* Database Collections */}
-                    {collections.length > 0 ? (
-                        <div className="pt-0">
-                            <div className="space-y-0.5 mt-0">
-                                {collections.map((cat) => {
-                                    const isActive = active === cat.slug;
-                                    return (
-                                        <Link
-                                            key={cat._id || cat.slug}
-                                            href={`/collection/${cat.slug}`}
-                                            className={`flex items-center justify-between py-2 pl-5 pr-2.5 rounded-lg text-base font-medium transition-colors ${
-                                                isActive
-                                                    ? 'font-bold text-black bg-gray-100'
-                                                    : 'text-gray-800 '
-                                            }`}
-                                        >
-                                            <span className="capitalize">{cat.name}</span>
-                                        </Link>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    ) : (
-                        ''
-                    )}
-
-                
-
+                <div className="space-y-0.5 pr-2">
+                    {navItems.map(item => (
+                        <SidebarItem key={item.id || item.title} item={item} depth={0} />
+                    ))}
                 </div>
             )}
         </nav>

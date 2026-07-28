@@ -7,6 +7,7 @@ import { useAuth } from '@/app/store/authContext';
 import { accountNavItems } from '@/app/_components/accountNav';
 import { AuthGuard } from '@/app/_components/AuthGuard';
 import { useState } from 'react';
+import { Menu, X } from 'lucide-react';
 
 /**
  * Layout for the customer (account) area.
@@ -35,9 +36,6 @@ export default function AccountLayout({ children }) {
                         color: #1c1b1b;
                         -webkit-font-smoothing: antialiased;
                     }
-                    .material-symbols-outlined {
-                        font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
-                    }
                     .premium-border {
                         border-color: rgba(119, 90, 25, 0.15);
                     }
@@ -60,7 +58,7 @@ export default function AccountLayout({ children }) {
                         onClick={() => setIsMobileDrawerOpen(true)}
                         className="flex items-center gap-3 text-primary hover:text-secondary transition-colors"
                     >
-                        <span className="material-symbols-outlined text-[24px]">menu</span>
+                        <Menu className="w-6 h-6" />
                         <span className="font-label-md text-label-md uppercase tracking-widest">
                             Account Menu
                         </span>
@@ -90,9 +88,7 @@ export default function AccountLayout({ children }) {
                             className="p-2 hover:bg-surface-container rounded-full transition-colors"
                             aria-label="Close menu"
                         >
-                            <span className="material-symbols-outlined text-on-surface-variant">
-                                close
-                            </span>
+                            <X className="w-6 h-6 text-on-surface-variant" />
                         </button>
                     </div>
                     <div className="overflow-y-auto h-full pb-20">

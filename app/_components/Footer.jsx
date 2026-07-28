@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { FaFacebook, FaInstagram, FaTiktok, FaWhatsapp } from 'react-icons/fa';
 import Image from 'next/image';
 import { useSiteSettings } from '../store/siteSettingsContext';
+import { X, Send } from 'lucide-react';
 
 export default function Footer() {
     const [isOpen, setIsOpen] = useState(false);
@@ -163,7 +164,7 @@ export default function Footer() {
                             className="text-white/80 hover:text-white hover:bg-white/10 rounded-full w-8 h-8 flex items-center justify-center transition-colors cursor-pointer bg-transparent border-none outline-none"
                             aria-label="Close chat"
                         >
-                            <span className="material-symbols-outlined text-[20px]">close</span>
+                            <X className="w-5 h-5" />
                         </button>
                     </div>
 
@@ -192,7 +193,7 @@ export default function Footer() {
                             className="w-8 h-8 bg-[#25D366] text-white rounded-full flex items-center justify-center hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 transition-all cursor-pointer border-none outline-none"
                             aria-label="Send message"
                         >
-                            <span className="material-symbols-outlined text-[16px] text-white font-bold">send</span>
+                            <Send className="w-4 h-4 text-white font-bold" />
                         </button>
                     </form>
                 </div>
@@ -208,7 +209,7 @@ export default function Footer() {
                     )}
 
                     {isOpen ? (
-                        <span className="material-symbols-outlined text-[28px] text-white">close</span>
+                        <X className="w-7 h-7 text-white" />
                     ) : (
                         <FaWhatsapp className='text-[32px]' />
                     )}

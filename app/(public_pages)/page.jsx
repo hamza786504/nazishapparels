@@ -12,7 +12,7 @@ import ScrollAnimations from '../_components/ScrollAnimations';
 import CategorySidebar from '../_components/CategorySidebar';
 import LazySection from '../_components/LazySection';
 import { getShowcaseProducts } from '@/lib/getShowcaseProducts';
-import { publicClient } from '@/lib/sanityClientPublic';
+
 
 export const revalidate = 300;
 
@@ -23,19 +23,16 @@ export const metadata = {
 
 export default async function Home() {
     const initialProducts = await getShowcaseProducts('chiffon');
-    const collections = await publicClient.fetch(
-        `*[_type == "collection"] | order(name asc){slug, name, "productCount": count(*[_type == "product" && collectionId == ^._id])}`
-    );
 
     return (
         <main className="h-full overflow-hidden">
             <ScrollAnimations />
 
             {/* Flex container that takes full height */}
-            <div className="flex h-full max-w-container-max mx-auto">
+            <div className="flex h-full">
                 {/* Sidebar - scrollable */}
                 <aside className="hidden lg:block w-60 flex-shrink-0 border-r border-secondary/10 overflow-y-auto h-full">
-                    <CategorySidebar initialCollections={collections} />
+                    <CategorySidebar />
                 </aside>
                 
                 {/* Main content - scrollable */}

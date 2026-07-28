@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { X } from 'lucide-react';
 
 const SIZE_CHART = [
     { size: 'S', chest: '34-36', waist: '28-30', hip: '36-38', length: '40' },
@@ -39,7 +40,7 @@ export default function SizeChartModal({ isOpen, onClose }) {
                         className="text-primary hover:text-secondary transition-colors bg-transparent border-none cursor-pointer flex items-center justify-center"
                         aria-label="Close size chart"
                     >
-                        <span className="material-symbols-outlined">close</span>
+                        <X className="w-5 h-5" />
                     </button>
                 </div>
 

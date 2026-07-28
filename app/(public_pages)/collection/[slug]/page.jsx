@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import ProductCard from '../../../_components/ProductCard';
 import CategorySidebar from '../../../_components/CategorySidebar';
-import { SlidersHorizontal, ChevronRight, ChevronDown, X, Check } from 'lucide-react';
+import { SlidersHorizontal, ChevronRight, ChevronLeft, ChevronDown, X, Check } from 'lucide-react';
 
 const PAGE_SIZE = 20;
 
@@ -128,6 +128,26 @@ export default function CollectionPage() {
     // Ref to prevent duplicate loads
     const isLoadingRef = useRef(false);
     const loadMoreRef = useRef(false);
+
+    // Horizontal scroll arrow visibility
+    const [canScrollLeft, setCanScrollLeft] = useState(false);
+    const [canScrollRight, setCanScrollRight] = useState(false);
+
+    useEffect(() => {
+        const el = filtersScrollRef.current;
+        if (!el) return;
+        const check = () => {
+            setCanScrollLeft(el.scrollLeft > 4);
+            setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+        };
+        check();
+        el.addEventListener('scroll', check, { passive: true });
+        window.addEventListener('resize', check);
+        return () => {
+            el.removeEventListener('scroll', check);
+            window.removeEventListener('resize', check);
+        };
+    }, []);
 
     // Fetch filter metadata from database
     const loadFilters = useCallback(async (resolvedId) => {
@@ -312,7 +332,7 @@ export default function CollectionPage() {
     };
 
     return (
-        <div className="h-full overflow-hidden max-w-[1500px] mx-auto">
+        <div className="h-full overflow-hidden">
             {/* Flex container that takes full height */}
             <div className="flex h-full">
                 
@@ -336,10 +356,19 @@ export default function CollectionPage() {
 
                     {/* Horizontal Filter Bar - Sticky within scroll container */}
                     <div className="sticky top-0 bg-white z-40">
-                        <div className="relative flex items-center justify-between gap-3 border-y border-gray-100 py-3 mb-6">
+                        <div className="relative flex items-center gap-3 border-y border-gray-100 py-3 mb-6">
+                            {canScrollLeft && (
+                                <button
+                                    type="button"
+                                    onClick={() => scrollHorizontally(filtersScrollRef, -150)}
+                                    className="w-7 h-7 rounded-full bg-white shadow border border-gray-100 flex items-center justify-center text-gray-500 hover:text-black shrink-0"
+                                >
+                                    <ChevronLeft className="w-4 h-4" />
+                                </button>
+                            )}
                             <div 
                                 ref={filtersScrollRef}
-                                className="flex items-center gap-3 py-1 scroll-smooth pr-8 flex-1 overflow-x-auto no-scrollbar"
+                                className="flex items-center gap-3 py-1 scroll-smooth flex-1 overflow-x-auto no-scrollbar"
                             >
                                 {/* Filter Icon button */}
                                 <button
@@ -484,13 +513,15 @@ export default function CollectionPage() {
                                 )}
                             </div>
 
-                            <button
-                                type="button"
-                                onClick={() => scrollHorizontally(filtersScrollRef, 150)}
-                                className="w-7 h-7 rounded-full bg-white shadow border border-gray-100 flex items-center justify-center text-gray-500 hover:text-black shrink-0"
-                            >
-                                <ChevronRight className="w-4 h-4" />
-                            </button>
+                            {canScrollRight && (
+                                <button
+                                    type="button"
+                                    onClick={() => scrollHorizontally(filtersScrollRef, 150)}
+                                    className="w-7 h-7 rounded-full bg-white shadow border border-gray-100 flex items-center justify-center text-gray-500 hover:text-black shrink-0"
+                                >
+                                    <ChevronRight className="w-4 h-4" />
+                                </button>
+                            )}
                         </div>
 
                         {/* Active Filters Bar */}
@@ -536,7 +567,7 @@ export default function CollectionPage() {
 
                     {/* ── Product Grid ─────────────────────────────── */}
                     {loading ? (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5">
                             {[...Array(8)].map((_, i) => (
                                 <div key={i} className="animate-pulse space-y-3">
                                     <div className="bg-gray-200 aspect-[3/4] rounded-xl" />
@@ -554,7 +585,7 @@ export default function CollectionPage() {
                             </button>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-5">
                             {sortedProducts.map((product) => (
                                 <ProductCard
                                     key={product.id}

@@ -238,7 +238,7 @@ const MenuItemModal = ({ isOpen, onClose, onSave, editingItem, parentId, parentD
 
   return (
     <>
-      <div className="fixed inset-0 z-[999] bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="fixed inset-0 z-[999] bg-black/50 backdrop-blur-sm h-full" onClick={onClose} />
       <div className="fixed inset-0 z-[1000] flex items-center justify-center px-4 pointer-events-none">
         <div className="w-full max-w-[500px] pointer-events-auto">
           <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
@@ -262,7 +262,7 @@ const MenuItemModal = ({ isOpen, onClose, onSave, editingItem, parentId, parentD
                     ref={titleRef}
                     className="w-full bg-surface border border-outline-variant rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none placeholder:text-on-surface-variant/50 pr-10"
                     type="text"
-                    placeholder="Type to search products, collections, pages\u2026"
+                    placeholder="Type to search..."
                     value={title}
                     onChange={(e) => { setTitle(e.target.value); setSelectedResult(null); setUrl(''); }}
                     autoComplete="off"
@@ -327,7 +327,7 @@ const MenuItemModal = ({ isOpen, onClose, onSave, editingItem, parentId, parentD
                 <input
                   className="w-full bg-surface border border-outline-variant rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none font-mono placeholder:text-on-surface-variant/50"
                   type="text"
-                  placeholder="/collection/example  or  https://..."
+                  placeholder="https://..."
                   value={url}
                   onChange={(e) => { setUrl(e.target.value); setSelectedResult(null); }}
                 />

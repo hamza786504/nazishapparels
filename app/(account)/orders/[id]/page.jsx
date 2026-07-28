@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useAuth } from '../../../store/authContext';
+import { ArrowLeft, Loader, AlertCircle, CheckCircle, Clock, Truck } from 'lucide-react';
 
 const STATUS_COLORS = {
     Delivered: 'bg-surface-container-highest text-on-surface',
@@ -93,22 +94,18 @@ export default function OrderDetail() {
                     href="/orders"
                     className="flex items-center gap-1 text-primary hover:text-secondary transition-colors font-label-sm text-label-sm"
                 >
-                    <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+                    <ArrowLeft className="w-5 h-5" />
                     Back to Orders
                 </Link>
             </div>
 
             {loading ? (
                 <div className="flex items-center justify-center py-20">
-                    <span className="material-symbols-outlined animate-spin text-secondary text-4xl">
-                        progress_activity
-                    </span>
+                    <Loader className="animate-spin w-9 h-9 text-secondary" />
                 </div>
             ) : error || !order ? (
                 <div className="bg-error-container/20 border border-error/30 p-8 text-center">
-                    <span className="material-symbols-outlined text-4xl text-error mb-4 block">
-                        error
-                    </span>
+                    <AlertCircle className="w-9 h-9 text-error mb-4 block mx-auto" />
                     <h3 className="font-headline-sm text-headline-sm text-primary mb-2">
                         Order not found
                     </h3>
@@ -217,7 +214,7 @@ export default function OrderDetail() {
                                 </h3>
                                 <div className="space-y-4">
                                     <div className="flex items-start gap-3">
-                                        <span className="material-symbols-outlined text-primary">check_circle</span>
+                                        <CheckCircle className="w-6 h-6 text-primary" />
                                         <div>
                                             <p className="font-medium text-primary">Order placed</p>
                                             <p className="text-label-sm text-on-surface-variant">
@@ -226,15 +223,10 @@ export default function OrderDetail() {
                                         </div>
                                     </div>
                                     <div className="flex items-start gap-3">
-                                        <span
-                                            className={`material-symbols-outlined ${
-                                                order.paymentStatus === 'Paid' || order.paymentStatus === 'Partially Paid'
-                                                    ? 'text-primary'
-                                                    : 'text-on-surface-variant'
-                                            }`}
-                                        >
-                                            {order.paymentStatus === 'Paid' ? 'check_circle' : 'schedule'}
-                                        </span>
+                                        {order.paymentStatus === 'Paid'
+                                            ? <CheckCircle className="w-6 h-6 text-primary" />
+                                            : <Clock className="w-6 h-6 text-on-surface-variant" />
+                                        }
                                         <div>
                                             <p className="font-medium text-primary">
                                                 Payment {order.paymentStatus === 'Paid' ? 'received' : 'pending'}
@@ -246,13 +238,10 @@ export default function OrderDetail() {
                                         </div>
                                     </div>
                                     <div className="flex items-start gap-3">
-                                        <span
-                                            className={`material-symbols-outlined ${
-                                                order.fulfillmentStatus === 'Fulfilled' ? 'text-primary' : 'text-on-surface-variant'
-                                            }`}
-                                        >
-                                            {order.fulfillmentStatus === 'Fulfilled' ? 'check_circle' : 'local_shipping'}
-                                        </span>
+                                        {order.fulfillmentStatus === 'Fulfilled'
+                                            ? <CheckCircle className="w-6 h-6 text-primary" />
+                                            : <Truck className="w-6 h-6 text-on-surface-variant" />
+                                        }
                                         <div>
                                             <p className="font-medium text-primary">
                                                 {order.fulfillmentStatus === 'Fulfilled' ? 'Fulfilled' : 'Pending fulfillment'}
