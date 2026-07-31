@@ -11,6 +11,7 @@ import {
   MdTune,
   MdMenu,
   MdLocalShipping,
+  MdPolicy,
 } from 'react-icons/md';
 
 // Single source of truth for admin navigation.
@@ -33,6 +34,7 @@ export const adminNavItems = [
 // automatically, in order, after "Return to menu".
 export const adminSettingsNavItems = [
   { href: '/admin/settings/general', label: 'General', icon: MdTune },
+  { href: '/admin/settings/policy', label: 'Policies', icon: MdPolicy },
   { href: '/admin/settings/menu', label: 'Menus', icon: MdMenu },
   { href: '/admin/settings/shipping', label: 'Shipping', icon: MdLocalShipping },
 ];

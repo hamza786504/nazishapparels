@@ -23,6 +23,7 @@ export const siteSettings = defineType({
     }),
     defineField({ name: 'senderEmail', title: 'Sender email', type: 'string' }),
     defineField({ name: 'accountEmail', title: 'Account email', type: 'string' }),
+    defineField({ name: 'phoneNumber', title: 'Phone number', type: 'string' }),
     defineField({ name: 'timezone', title: 'Time zone', type: 'string' }),
     defineField({ name: 'unitSystem', title: 'Unit system', type: 'string' }),
     defineField({ name: 'orderPrefix', title: 'Order ID prefix', type: 'string' }),
@@ -70,6 +71,19 @@ export const siteSettings = defineType({
         layout: 'radio',
       },
       initialValue: 'both_at_least_one',
+    }),
+    defineField({
+      name: 'policies',
+      title: 'Store Policies',
+      type: 'object',
+      description: 'Store policies displayed on the storefront.',
+      fields: [
+        defineField({ name: 'privacyPolicy', title: 'Privacy Policy', type: 'text' }),
+        defineField({ name: 'shippingPolicy', title: 'Shipping Policy', type: 'text' }),
+        defineField({ name: 'contactInfoPolicy', title: 'Contact Information', type: 'text' }),
+        defineField({ name: 'refundPolicy', title: 'Refund Policy', type: 'text' }),
+        defineField({ name: 'termsOfService', title: 'Terms of Service', type: 'text' }),
+      ],
     }),
   ],
   preview: {

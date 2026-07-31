@@ -66,6 +66,7 @@ const EMPTY_FORM = {
   industry: 'Fashion',
   senderEmail: '',
   accountEmail: '',
+  phoneNumber: '',
   timezone: '(GMT+05:00) Pakistan Standard Time',
   unitSystem: 'Metric system (kg, cm, etc.)',
   orderPrefix: '#ZAR-',
@@ -195,6 +196,7 @@ const GeneralSettingsPage = () => {
       industry: formData.industry,
       senderEmail: formData.senderEmail,
       accountEmail: formData.accountEmail,
+      phoneNumber: formData.phoneNumber,
       timezone: formData.timezone,
       unitSystem: formData.unitSystem,
       orderPrefix: formData.orderPrefix,
@@ -449,6 +451,21 @@ const GeneralSettingsPage = () => {
                     {formErrors.accountEmail && (
                       <p className="text-red-500 text-xs mt-1">{formErrors.accountEmail}</p>
                     )}
+                  </div>
+                  <div>
+                    <label className="block font-label-md text-on-surface-variant mb-2">
+                      Phone number
+                    </label>
+                    <input
+                      name="phoneNumber"
+                      className="w-full px-3 py-2 text-body-md border border-[#C9CCCF] rounded focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition-all"
+                      type="tel"
+                      value={formData.phoneNumber}
+                      onChange={handleInputChange}
+                    />
+                    <p className="text-body-sm text-on-surface-variant mt-2 italic">
+                      This phone number is displayed on the storefront policies and contact pages.
+                    </p>
                   </div>
                 </div>
               </SettingsCard>

@@ -11,6 +11,7 @@ const EDITABLE_FIELDS = [
   'industry',
   'senderEmail',
   'accountEmail',
+  'phoneNumber',
   'timezone',
   'unitSystem',
   'orderPrefix',
@@ -25,6 +26,7 @@ const EDITABLE_FIELDS = [
   'typography',
   'theme',
   'shipping',
+  'policies',
 ];
 
 // GROQ projection that returns a stable, cacheable shape for the storefront.
@@ -43,6 +45,7 @@ const DEFAULT_SETTINGS = {
   industry: 'Fashion',
   senderEmail: 'hello@nazishapparels.com',
   accountEmail: 'info@nazishapparels.com',
+  phoneNumber: '',
   timezone: '(GMT+05:00) Pakistan Standard Time',
   unitSystem: 'Metric system (kg, cm, etc.)',
   orderPrefix: '#ZAR-',
@@ -66,6 +69,13 @@ const DEFAULT_SETTINGS = {
     shippingMethods: [
       { id: 'standard', name: 'Standard Shipping', description: '3–5 Business Days', charge: 250, isDefault: true },
     ],
+  },
+  policies: {
+    privacyPolicy: '',
+    shippingPolicy: '',
+    contactInfoPolicy: '',
+    refundPolicy: '',
+    termsOfService: '',
   },
 };
 
