@@ -94,7 +94,7 @@ export default function AdminLoginPage() {
                 onChange={handleChange}
                 required
                 className="w-full px-4 py-3 bg-surface-container border border-outline-variant rounded-lg text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
-                placeholder="admin@yourstore.com or admin"
+                placeholder="admin@gmail.com"
               />
             </div>
 

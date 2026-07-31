@@ -11,8 +11,11 @@ const STATIC_PAGES = [
   { label: 'Cart',        url: '/cart',          slug: 'cart'      },
   { label: 'Login',       url: '/login',         slug: 'login'     },
   { label: 'FAQ',         url: '/pages/faq',     slug: 'faq'       },
-  { label: 'Privacy Policy', url: '/pages/privacy', slug: 'privacy' },
-  { label: 'Terms',       url: '/pages/terms',   slug: 'terms'     },
+  { label: 'Privacy Policy', url: '/policies/privacy', slug: 'privacy' },
+  { label: 'Terms of Service', url: '/policies/terms', slug: 'terms' },
+  { label: 'Shipping Policy', url: '/policies/shipping', slug: 'shipping' },
+  { label: 'Refund Policy', url: '/policies/refund', slug: 'refund' },
+  { label: 'Contact Information', url: '/policies/contact', slug: 'contact' },
 ];
 
 // GET /api/menus/search?q=keyword
