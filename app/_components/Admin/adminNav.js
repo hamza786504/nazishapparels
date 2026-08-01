@@ -12,6 +12,7 @@ import {
   MdMenu,
   MdLocalShipping,
   MdPolicy,
+  MdCardGiftcard,
 } from 'react-icons/md';
 
 // Single source of truth for admin navigation.
@@ -24,6 +25,7 @@ export const adminNavItems = [
   { href: '/admin/customers', label: 'Customers', icon: MdGroup },
   { href: '/admin/reviews', label: 'Reviews', icon: MdRateReview },
   { href: '/admin/analytics', label: 'Analytics', icon: MdAnalytics },
+  { href: '/admin/coupons', label: 'Coupons', icon: MdCardGiftcard },
   { href: '/admin/notifications', label: 'Notifications', icon: MdNotifications },
   { href: '/admin/settings', label: 'Settings', icon: MdSettings, isSettings: true },
 ];

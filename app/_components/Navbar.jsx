@@ -367,7 +367,9 @@ export default function Navbar() {
 
   // Add scroll detection for mobile categories
   useEffect(() => {
-
+    const handleScroll = () => {
+      setLastScrollY(window.scrollY);
+    };
 
     let timeoutId;
     const throttledScroll = () => {

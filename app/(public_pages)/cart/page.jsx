@@ -55,13 +55,13 @@ const CartItemCard = ({ item, onRemove, onQuantityChange, onSizeChange }) => {
             sizes="96px"
           />
         </div>
-        
+
         {/* Product Info */}
         <div className="flex-grow min-w-0">
           <h3 className="font-headline-sm text-black truncate">{item.title || item.name}</h3>
           <p className="font-label-sm text-secondary">{item.category}</p>
         </div>
-        
+
         {/* Size/Color Selector */}
         <div className="w-32">
           {item.type === 'clothing' ? (
@@ -83,7 +83,7 @@ const CartItemCard = ({ item, onRemove, onQuantityChange, onSizeChange }) => {
             </div>
           )}
         </div>
-        
+
         {/* Quantity */}
         <div className="w-32">
           <QuantitySelector
@@ -91,14 +91,14 @@ const CartItemCard = ({ item, onRemove, onQuantityChange, onSizeChange }) => {
             onQuantityChange={(newQty) => onQuantityChange(item.id, newQty)}
           />
         </div>
-        
+
         {/* Price */}
         <div className="w-32 text-right">
           <span className="font-headline-sm text-secondary">
             PKR {item.price.toLocaleString()}
           </span>
         </div>
-        
+
         {/* Remove Button */}
         <button
           onClick={() => onRemove(item.id)}
@@ -122,7 +122,7 @@ const CartItemCard = ({ item, onRemove, onQuantityChange, onSizeChange }) => {
               sizes="80px"
             />
           </div>
-          
+
           <div className="flex-grow min-w-0">
             <div className="flex justify-between items-start">
               <div className="min-w-0 flex-grow">
@@ -137,7 +137,7 @@ const CartItemCard = ({ item, onRemove, onQuantityChange, onSizeChange }) => {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            
+
             <div className="mt-2 flex items-center gap-3">
               {item.type === 'clothing' ? (
                 <select
@@ -160,7 +160,7 @@ const CartItemCard = ({ item, onRemove, onQuantityChange, onSizeChange }) => {
             </div>
           </div>
         </div>
-        
+
         {/* Bottom Row: Quantity and Price */}
         <div className="flex items-center justify-between gap-3">
           <div className="w-28">
@@ -179,7 +179,7 @@ const CartItemCard = ({ item, onRemove, onQuantityChange, onSizeChange }) => {
 };
 
 // Order Summary Component
-const OrderSummary = ({ subtotal, tax, total }) => {
+const OrderSummary = ({ subtotal, tax, total, appliedCoupon, onRemoveCoupon }) => {
   return (
     <div className="bg-white p-4 md:p-8 border border-secondary/20 shadow-sm">
       <h2 className="font-headline-sm text-black mb-8 text-center uppercase tracking-wider">
@@ -190,6 +190,21 @@ const OrderSummary = ({ subtotal, tax, total }) => {
           <span className="text-on-surface-variant font-body-md">Subtotal</span>
           <span className="text-black text-base font-bold">PKR {subtotal.toLocaleString()}</span>
         </div>
+
+        {appliedCoupon && (
+          <div className="flex justify-between items-start">
+            <div className="flex flex-col">
+              <span className="text-green-600 font-body-md font-semibold flex items-center">
+                Discount ({appliedCoupon.code})
+              </span>
+              <button onClick={onRemoveCoupon} className="text-xs text-secondary underline text-left mt-1">Remove</button>
+            </div>
+            <span className="text-green-600 font-bold">
+              -PKR {appliedCoupon.discountAmount.toLocaleString()}
+            </span>
+          </div>
+        )}
+
         <div className="flex justify-between items-center">
           <span className="text-on-surface-variant font-body-md">Shipping Estimate</span>
           <span className="text-on-surface-variant italic font-body-md">
@@ -209,7 +224,7 @@ const OrderSummary = ({ subtotal, tax, total }) => {
         </div>
       </div>
       <div className="space-y-4">
-        <Link href="/checkout" className="w-full bg-primary text-white py-4 text-sm tracking-widest uppercase transition-all duration-300 hover:bg-primary-container hover:scale-[1.02] active:scale-95 flex items-center justify-center">
+        <Link href="/checkout" className="w-full bg-black text-white py-4 text-sm tracking-widest uppercase transition-all duration-300 hover:scale-[1.02] active:scale-95 flex items-center justify-center">
           PROCEED TO CHECKOUT
           <ArrowRight className="ml-2 w-3.5 h-3.5" />
         </Link>
@@ -233,12 +248,13 @@ const OrderSummary = ({ subtotal, tax, total }) => {
 };
 
 // Promo Code Section Component
-const PromoCodeSection = ({ promoCode, onApplyPromo }) => {
+const PromoCodeSection = ({ onApplyPromo, isApplying, error }) => {
   const [code, setCode] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onApplyPromo(code);
+    if (!code.trim()) return;
+    onApplyPromo(code.trim());
   };
 
   return (
@@ -260,29 +276,22 @@ const PromoCodeSection = ({ promoCode, onApplyPromo }) => {
         />
         <button
           type="submit"
-          className="bg-secondary text-white px-6 py-3 text-sm tracking-widest uppercase hover:bg-secondary-container transition-colors"
+          disabled={isApplying}
+          className="bg-secondary text-white px-6 py-3 text-sm tracking-widest uppercase hover:bg-secondary-container transition-colors disabled:opacity-50"
         >
-          APPLY
+          {isApplying ? 'APPLYING...' : 'APPLY'}
         </button>
       </form>
-      {promoCode.applied && (
-        <p className="text-secondary font-label-sm mt-2">
-          Code {promoCode.code} applied! Discount: PKR {promoCode.discount.toLocaleString()}
-        </p>
-      )}
+      {error && <p className="text-error font-label-sm mt-2">{error}</p>}
     </div>
   );
 };
 
 // Main Cart Component
 function Cart() {
-  const { cartItems, removeFromCart, updateQuantity, updateSize } = useCart();
-
-  const [promoCode, setPromoCode] = useState({
-    code: '',
-    applied: false,
-    discount: 0,
-  });
+  const { cartItems, appliedCoupon, applyCoupon, removeCoupon, removeFromCart, updateQuantity, updateSize } = useCart();
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+  const [couponError, setCouponError] = useState('');
 
   const handleRemoveItem = useCallback((id) => {
     removeFromCart(id);
@@ -296,45 +305,65 @@ function Cart() {
     updateSize(id, size);
   }, [updateSize]);
 
-  const handleApplyPromo = useCallback((code) => {
-    if (code.toUpperCase() === 'LUXE10') {
-      setPromoCode({ code, applied: true, discount: 2570 });
-    } else {
-      alert('Invalid promo code');
-    }
-  }, []);
-
   const subtotal = cartItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0
   );
+
+  let discountAmount = 0;
+  if (appliedCoupon) {
+    if (appliedCoupon.discountType === 'percentage') {
+      discountAmount = (subtotal * appliedCoupon.discountValue) / 100;
+    } else if (appliedCoupon.discountType === 'fixed_amount') {
+      discountAmount = appliedCoupon.discountValue;
+    }
+    // Cap discount at subtotal
+    if (discountAmount > subtotal) discountAmount = subtotal;
+    // Add discountAmount to context object for easier rendering
+    appliedCoupon.discountAmount = discountAmount;
+  }
+
+  const handleApplyPromo = async (code) => {
+    setIsApplyingCoupon(true);
+    setCouponError('');
+    try {
+      const res = await fetch('/api/cart/apply-coupon', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code })
+      });
+      const data = await res.json();
+      if (data.success && data.coupon) {
+        applyCoupon(data.coupon);
+      } else {
+        setCouponError(data.error || 'Invalid coupon.');
+      }
+    } catch (err) {
+      setCouponError('Network error while applying coupon.');
+    } finally {
+      setIsApplyingCoupon(false);
+    }
+  };
+
   const tax = 0;
-  const total = subtotal - promoCode.discount + tax;
+  const total = subtotal - discountAmount + tax;
 
   return (
     <>
-      <main className="max-w-container-max mx-auto p-2 min-h-screen">
-        {/* Title Section */}
-        <div className="text-center mb-stack-md">
-          <h1 className="font-headline-md text-display-lg text-black mb-2">
-            Cart
-          </h1>
-          <div className="luxury-line mt-6 max-w-xs mx-auto" />
-        </div>
-
+      <main className="max-w-container-max mx-auto p-2 overflowy-y-auto">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter items-start">
           {/* Items List */}
-          <div className="lg:col-span-8 space-y-4">
+          <div className={`${cartItems.length === 0 ? 'col-span-12' : 'col-span-8'} space-y-4`}>
             {cartItems.length === 0 ? (
               <div className="text-center py-12">
-                <ShoppingBag className="w-16 h-16 text-outline-variant mb-4" />
+                <ShoppingBag className="mx-auto w-16 h-16 text-outline-variant mb-4" />
                 <h2 className="font-headline-sm text-black mb-2">Cart is empty</h2>
                 <p className="text-on-surface-variant mb-6">
                   Discover our latest Eastern luxury collections
                 </p>
                 <Link
                   href="/new-arrivals"
-                  className="inline-block bg-primary text-white px-8 py-3 font-label-md tracking-widest uppercase hover:bg-primary-container transition-colors"
+                  className="inline-block bg-black text-white px-8 py-3 text-sm tracking-widest uppercase transition-colors"
                 >
                   Shop New Arrivals
                 </Link>
@@ -359,15 +388,28 @@ function Cart() {
                     CONTINUE SHOPPING
                   </Link>
                 </div>
+                <aside className="lg:col-span-4 sticky top-32">
+                  <OrderSummary
+                    subtotal={subtotal}
+                    tax={tax}
+                    total={total}
+                    appliedCoupon={appliedCoupon}
+                    onRemoveCoupon={() => {
+                      removeCoupon();
+                      setCouponError('');
+                    }}
+                  />
+                  {!appliedCoupon && (
+                    <PromoCodeSection
+                      onApplyPromo={handleApplyPromo}
+                      isApplying={isApplyingCoupon}
+                      error={couponError}
+                    />
+                  )}
+                </aside>
               </>
             )}
           </div>
-
-          {/* Order Summary Sidebar */}
-          <aside className="lg:col-span-4 sticky top-32">
-            <OrderSummary subtotal={subtotal} tax={tax} total={total} />
-            <PromoCodeSection promoCode={promoCode} onApplyPromo={handleApplyPromo} />
-          </aside>
         </div>
       </main>
     </>

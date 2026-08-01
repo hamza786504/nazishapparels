@@ -473,8 +473,19 @@ const OrderDetailPage = () => {
                 <div className="space-y-3 font-body-md text-body-md">
                   <div className="flex justify-between">
                     <span className="text-on-surface-variant">Subtotal</span>
-                    <span>{formatCurrency(order.total)}</span>
+                    {/* Reverse engineer subtotal by adding back discount if total was used for subtotal. Note order.total includes discount. 
+                        Actually we should just show the order.total + discount as subtotal if we didn't save subtotal, 
+                        or since order.total is the final amount, it's safer to re-calculate subtotal from items */}
+                    <span>{formatCurrency(lineItems.reduce((acc, i) => acc + (Number(i.price) * Number(i.quantity)), 0))}</span>
                   </div>
+                  
+                  {order.coupon && (
+                    <div className="flex justify-between text-green-600">
+                      <span>Discount ({order.coupon.code})</span>
+                      <span>-{formatCurrency(order.coupon.discountAmount)}</span>
+                    </div>
+                  )}
+
                   <div className="flex justify-between">
                     <span className="text-on-surface-variant">Shipping</span>
                     <span>{formatCurrency(order.shipping || 0)}</span>

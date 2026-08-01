@@ -145,7 +145,7 @@ export default function CartDrawer({ isOpen, onClose, cartItems = [], onUpdateQu
                             {cartItems.map((item) => (
                                 <div key={item.id} className="flex gap-3 group">
                                     {/* Smaller image */}
-                                    <div className="w-20 h-24 flex-shrink-0 overflow-hidden bg-surface-container rounded-sm">
+                                    <div className="w-16 h-16 flex-shrink-0 overflow-hidden bg-surface-container rounded-sm">
                                         <Image
                                             alt={item.title}
                                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
@@ -221,7 +221,7 @@ export default function CartDrawer({ isOpen, onClose, cartItems = [], onUpdateQu
                         <Link
                         href="/checkout" 
                             onClick={() => handleNavigationClick('/checkout')}
-                            className="w-full bg-primary text-white py-3 text-sm font-label-md tracking-widest border border-secondary hover:bg-primary-container transition-all flex items-center justify-center gap-2 group"
+                            className="w-full bg-black text-white py-3 text-sm font-label-md tracking-widest border border-secondary transition-all flex items-center justify-center gap-2 group"
                         >
                             CHECKOUT
                             <ArrowRight className="w-[18px] h-[18px] group-hover:translate-x-1 transition-transform" />

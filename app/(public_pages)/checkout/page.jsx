@@ -30,7 +30,7 @@ const countries = [
 ];
 
 export default function CheckoutPage() {
-    const { cartItems, clearCart } = useCart();
+    const { cartItems, clearCart, appliedCoupon, applyCoupon, removeCoupon } = useCart();
     const { customer, isAuthenticated } = useAuth();
     const [shippingConfig, setShippingConfig] = useState(DEFAULT_SHIPPING_CONFIG);
     const [accountType, setAccountType] = useState('new'); // 'new' or 'existing'
@@ -58,6 +58,10 @@ export default function CheckoutPage() {
     const [receiptUrl, setReceiptUrl] = useState('');
     const [receiptUploading, setReceiptUploading] = useState(false);
     const [whatsappShared, setWhatsappShared] = useState(false);
+
+    const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+    const [couponError, setCouponError] = useState('');
+    const [couponSuccess, setCouponSuccess] = useState('');
 
     // Derived receipt-submission flags. A single source of truth
     // (`shippingConfig.bankDepositReceiptMode`) drives everything:
@@ -199,7 +203,50 @@ export default function CheckoutPage() {
     const isFreeShipping = shippingConfig.freeShippingThreshold > 0 && subtotal >= shippingConfig.freeShippingThreshold;
     const baseShippingCost = selectedMethod?.charge || shippingConfig.standardCharge;
     const shippingCost = isFreeShipping ? 0 : baseShippingCost;
-    const total = subtotal + shippingCost;
+
+    let discountAmount = 0;
+    if (appliedCoupon) {
+        if (appliedCoupon.discountType === 'percentage') {
+            discountAmount = (subtotal * appliedCoupon.discountValue) / 100;
+        } else if (appliedCoupon.discountType === 'fixed_amount') {
+            discountAmount = appliedCoupon.discountValue;
+        }
+        if (discountAmount > subtotal) discountAmount = subtotal;
+    }
+
+    const total = subtotal - discountAmount + shippingCost;
+
+    const handleApplyCoupon = async () => {
+        if (!formData.discountCode.trim()) return;
+        setIsApplyingCoupon(true);
+        setCouponError('');
+        setCouponSuccess('');
+        try {
+            const res = await fetch('/api/cart/apply-coupon', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code: formData.discountCode.trim() })
+            });
+            const data = await res.json();
+            if (data.success && data.coupon) {
+                applyCoupon(data.coupon);
+                setCouponSuccess('Coupon applied!');
+                setFormData(prev => ({ ...prev, discountCode: '' }));
+            } else {
+                setCouponError(data.error || 'Invalid coupon code.');
+            }
+        } catch (err) {
+            setCouponError('Network error while applying coupon.');
+        } finally {
+            setIsApplyingCoupon(false);
+        }
+    };
+
+    const handleRemoveCoupon = () => {
+        removeCoupon();
+        setCouponSuccess('');
+        setCouponError('');
+    };
 
     // ── WhatsApp payment: build a wa.me deep link with the order summary ──
     // The store's WhatsApp number is configured by the admin in Shipping Settings.
@@ -342,17 +389,18 @@ export default function CheckoutPage() {
                 shipping: shippingCost,
                 paymentMethod: formData.paymentMethod,
                 total,
-                items: cartItems.reduce((acc, item) => acc + item.quantity, 0),
+                items: cartItems.map((item) => ({
+                    productId: item.productId,
+                    title: item.title,
+                    price: item.price,
+                    quantity: item.quantity,
+                    size: item.size,
+                    color: item.color,
+                })),
                 paymentStatus: 'Pending',
                 fulfillmentStatus: 'Unfulfilled',
                 channel: 'Online Store',
-                lineItems: cartItems.map((item) => ({
-                    title: item.title,
-                    size: item.size,
-                    color: item.color,
-                    quantity: item.quantity,
-                    price: item.price,
-                })),
+                appliedCouponCode: appliedCoupon ? appliedCoupon.code : null,
                 // Include password only for new (guest) account creation
                 ...(!isLoggedIn && accountType === 'new' && { password: formData.password }),
                 ...(receiptUrl && { receiptUrl }),
@@ -971,7 +1019,7 @@ export default function CheckoutPage() {
                                 <button
                                     type="submit"
                                     disabled={isSubmitting}
-                                    className="w-full md:w-auto bg-primary text-on-primary px-8 lg:px-16 py-4 md:py-5 font-label-md text-label-md uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all border border-secondary/20 shadow-lg shadow-primary/5 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                    className="w-full md:w-auto bg-black text-on-primary px-8 lg:px-16 py-4 md:py-5 font-label-md text-label-md uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all border border-secondary/20 shadow-lg shadow-primary/5 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                 >
                                     {isSubmitting ? (
                                         <>
@@ -1016,19 +1064,45 @@ export default function CheckoutPage() {
                             </div>
 
                             {/* Discount Code */}
-                            <div className="flex flex-col sm:flex-row gap-4 mb-8">
-                                <input
-                                    className="flex-grow bg-surface border-none border-b-2 border-outline-variant focus:border-secondary focus:ring-0 py-3 px-4 transition-all duration-300 text-sm"
-                                    placeholder="Discount code"
-                                    type="text"
-                                    name="discountCode"
-                                    value={formData.discountCode}
-                                    onChange={handleInputChange}
-                                />
-                                <button type="button" className="bg-surface-container-highest text-primary px-6 py-3 text-label-sm font-label-md uppercase tracking-wider hover:bg-secondary-container transition-colors">
-                                    Apply
-                                </button>
-                            </div>
+                            {!appliedCoupon && (
+                                <div className="mb-8">
+                                    <div className="flex flex-col sm:flex-row gap-4">
+                                        <input
+                                            className="flex-grow bg-surface border-none border-b-2 border-outline-variant focus:border-secondary focus:ring-0 py-3 px-4 transition-all duration-300 text-sm"
+                                            placeholder="Discount code"
+                                            type="text"
+                                            name="discountCode"
+                                            value={formData.discountCode}
+                                            onChange={handleInputChange}
+                                        />
+                                        <button 
+                                            type="button" 
+                                            onClick={handleApplyCoupon}
+                                            disabled={isApplyingCoupon}
+                                            className="bg-surface-container-highest text-primary px-6 py-3 text-label-sm font-label-md uppercase tracking-wider hover:bg-secondary-container transition-colors disabled:opacity-50"
+                                        >
+                                            {isApplyingCoupon ? 'Applying...' : 'Apply'}
+                                        </button>
+                                    </div>
+                                    {couponError && <p className="text-error text-sm mt-2">{couponError}</p>}
+                                </div>
+                            )}
+
+                            {appliedCoupon && (
+                                <div className="mb-8 p-4 bg-green-50 border border-green-200 flex justify-between items-center">
+                                    <div>
+                                        <p className="text-green-800 font-bold text-sm">Code {appliedCoupon.code} applied!</p>
+                                        <p className="text-green-700 text-xs">Discount: -{formatPrice(discountAmount)}</p>
+                                    </div>
+                                    <button 
+                                        type="button" 
+                                        onClick={handleRemoveCoupon}
+                                        className="text-xs text-secondary underline hover:text-primary transition-colors"
+                                    >
+                                        Remove
+                                    </button>
+                                </div>
+                            )}
 
                             {/* Totals */}
                             <div className="space-y-3 border-t border-secondary/10 pt-8">
@@ -1047,7 +1121,15 @@ export default function CheckoutPage() {
                                         <span className="text-body-md font-medium text-primary">{formatPrice(shippingCost)}</span>
                                     )}
                                 </div>
-                                <div className="flex justify-between border-t border-secondary/10 pt-4 mt-4">
+                                
+                                {appliedCoupon && (
+                                    <div className="flex justify-between items-center text-green-700 mt-2">
+                                        <span className="font-body-md text-sm">Discount ({appliedCoupon.code})</span>
+                                        <span className="font-headline-sm text-sm">-{formatPrice(discountAmount)}</span>
+                                    </div>
+                                )}
+
+                                <div className="flex justify-between items-center border-t border-secondary/10 pt-4 mt-4">
                                     <span className="text-base md:text-lg text-black font-bold">Total</span>
                                     <div className="text-right">
                                         <span className="text-label-sm font-label-sm text-on-surface-variant block">PKR</span>

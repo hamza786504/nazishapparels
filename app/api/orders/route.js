@@ -125,7 +125,43 @@ export async function POST(request) {
       body.date = new Date().toISOString();
     }
 
-    const order = await client.create({ _type: 'order', status: 'active', ...body });
+    let orderData = { _type: 'order', status: 'active', ...body };
+    let couponDoc = null;
+
+    if (body.appliedCouponCode) {
+      const code = body.appliedCouponCode.toUpperCase();
+      couponDoc = await client.fetch(`*[_type == "coupon" && code == $code][0]`, { code });
+      
+      if (couponDoc && couponDoc.isActive) {
+        if (!couponDoc.usageLimit || (couponDoc.usedCount || 0) < couponDoc.usageLimit) {
+          if (!couponDoc.expiryDate || new Date(couponDoc.expiryDate) >= new Date()) {
+            
+            // Calculate subtotal
+            const subtotal = (body.items || []).reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            let discountAmount = 0;
+            if (couponDoc.discountType === 'percentage') {
+              discountAmount = (subtotal * couponDoc.discountValue) / 100;
+            } else if (couponDoc.discountType === 'fixed_amount') {
+              discountAmount = couponDoc.discountValue;
+            }
+            if (discountAmount > subtotal) discountAmount = subtotal;
+
+            orderData.coupon = {
+              code: couponDoc.code,
+              discountType: couponDoc.discountType,
+              discountValue: couponDoc.discountValue,
+              discountAmount
+            };
+            orderData.total = subtotal - discountAmount + (body.tax || 0); // Override total for security
+            
+            // Increment coupon usage
+            await client.patch(couponDoc._id).inc({ usedCount: 1 }).commit();
+          }
+        }
+      }
+    }
+
+    const order = await client.create(orderData);
 
     // Handle customer account creation/login logic
     let authToken = null;

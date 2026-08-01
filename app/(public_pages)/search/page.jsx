@@ -140,11 +140,11 @@ function SearchPageInner() {
   const queryLabel = searchParams.get('q') || '';
 
   return (
-    <div className="min-h-screen bg-surface">
+    <div className="flex-1 min-w-0 overflow-y-auto bg-white">
       {/* ── Search hero strip ─────────────────────────────────────────────── */}
-      <section className="bg-surface-container border-b border-secondary/10 py-8 px-margin-mobile md:px-margin-desktop">
+      <section className="border-b border-secondary/10 py-8 px-margin-mobile md:px-margin-desktop">
         <div className="max-w-container-max mx-auto">
-          <h1 className="font-display-lg text-primary mb-4 text-2xl md:text-3xl">
+          <h1 className="font-display-lg text-primary mb-4 text-2xl">
             {queryLabel ? (
               <>Search results for <em className="not-italic font-bold">&ldquo;{queryLabel}&rdquo;</em></>
             ) : (
@@ -277,7 +277,7 @@ function SearchPageInner() {
 export default function SearchPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex-1 flex items-center justify-center">
         <div className="w-10 h-10 border-4 border-secondary border-t-transparent rounded-full animate-spin" />
       </div>
     }>

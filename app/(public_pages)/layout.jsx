@@ -4,6 +4,8 @@ import { SiteSettingsProvider } from '../store/siteSettingsContext';
 import { buildThemeCss, buildGoogleFontsHref } from '@/lib/theme';
 import LayoutWrapper from '../_components/LayoutWrapper';
 import RecentPurchasePopup from '../_components/RecentPurchasePopup';
+import ScrollAnimations from '../_components/ScrollAnimations';
+import CategorySidebar from '../_components/CategorySidebar';
 
 export const revalidate = 300;
 
@@ -25,10 +27,21 @@ export default async function PublicLayout({ children }) {
             )}
 
             {/* Main layout container - full viewport height */}
-            <div className="flex flex-col min-h-screen storefront-theme bg-white text-on-surface">
+            <div className="flex flex-col overflow-hidden h-screen storefront-theme bg-white text-on-surface">
                 <LayoutWrapper>
                     <RecentPurchasePopup />
-                    {children}
+                    <main className="h-full flex flex-col overflow-hidden">
+                        <ScrollAnimations />
+
+                        {/* Flex container that takes full height */}
+                        <div className="flex flex-1 overflow-hidden">
+                            {/* Sidebar - scrollable */}
+                            <aside className="hidden lg:block w-60 flex-shrink-0 border-r border-secondary/10 overflow-y-auto h-full">
+                                <CategorySidebar />
+                            </aside>
+                            {children}
+                        </div>
+                    </main>
                 </LayoutWrapper>
             </div>
         </SiteSettingsProvider>

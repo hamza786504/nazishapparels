@@ -25,42 +25,33 @@ export default async function Home() {
     const initialProducts = await getShowcaseProducts('chiffon');
 
     return (
-        <main className="h-full overflow-hidden">
-            <ScrollAnimations />
+        <>
+            {/* Main content - scrollable */}
+            <div className="flex-1 min-w-0 overflow-y-auto px-2 md:px-5 md:pt-5">
+                <div className="lg:rounded-3xl overflow-hidden relative w-full aspect-[21/9] sm:aspect-[24/9]">
+                    <Image
+                        src="/banner.png"
+                        alt="NazishApparels Featured Collection"
+                        fill
+                        priority
+                        sizes="(max-width: 768px) 100vw, 1200px"
+                        className="object-cover"
+                    />
+                </div>
 
-            {/* Flex container that takes full height */}
-            <div className="flex h-full">
-                {/* Sidebar - scrollable */}
-                <aside className="hidden lg:block w-60 flex-shrink-0 border-r border-secondary/10 overflow-y-auto h-full">
-                    <CategorySidebar />
-                </aside>
-                
-                {/* Main content - scrollable */}
-                <div className="flex-1 min-w-0 overflow-y-auto px-2 md:px-5 md:pt-5">
-                    <div className="lg:rounded-3xl overflow-hidden relative w-full aspect-[21/9] sm:aspect-[24/9]">
-                        <Image
-                            src="/banner.png"
-                            alt="NazishApparels Featured Collection"
-                            fill
-                            priority
-                            sizes="(max-width: 768px) 100vw, 1200px"
-                            className="object-cover"
-                        />
-                    </div>
+                <div className="px-0 md:px-3 lg:px-0 pb-8">
+                    <NewArrivals />
 
-                    <div className="px-0 md:px-3 lg:px-0 pb-8">
-                        <NewArrivals />
+                    <LazySection minHeight="200px">
+                        <HandcraftedCategories />
+                    </LazySection>
 
-                        <LazySection minHeight="200px">
-                            <HandcraftedCategories />
-                        </LazySection>
-
-                        <LazySection minHeight="400px">
-                            <FeaturedProductsSection initialProducts={initialProducts} />
-                        </LazySection>
-                    </div>
+                    <LazySection minHeight="400px">
+                        <FeaturedProductsSection initialProducts={initialProducts} />
+                    </LazySection>
                 </div>
             </div>
-        </main>
+        </>
+
     );
 }

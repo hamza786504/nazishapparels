@@ -11,7 +11,8 @@ const initialState = {
     // Start with a couple of valid items from our products.json to demonstrate functionality
     cartItems: [
         
-    ]
+    ],
+    appliedCoupon: null
 };
 
 // Reducer Actions
@@ -21,7 +22,10 @@ export const CART_ACTIONS = {
     UPDATE_QUANTITY: 'UPDATE_QUANTITY',
     UPDATE_SIZE: 'UPDATE_SIZE',
     CLEAR_CART: 'CLEAR_CART',
-    LOAD_CART: 'LOAD_CART'
+    LOAD_CART: 'LOAD_CART',
+    LOAD_COUPON: 'LOAD_COUPON',
+    APPLY_COUPON: 'APPLY_COUPON',
+    REMOVE_COUPON: 'REMOVE_COUPON'
 };
 
 // Cart Reducer
@@ -31,6 +35,12 @@ function cartReducer(state, action) {
             return {
                 ...state,
                 cartItems: action.payload || []
+            };
+        }
+        case CART_ACTIONS.LOAD_COUPON: {
+            return {
+                ...state,
+                appliedCoupon: action.payload
             };
         }
         case CART_ACTIONS.ADD_TO_CART: {
@@ -173,10 +183,32 @@ function cartReducer(state, action) {
         case CART_ACTIONS.CLEAR_CART: {
             if (typeof window !== 'undefined') {
                 localStorage.removeItem('nazishapparels_cart');
+                localStorage.removeItem('nazishapparels_coupon');
             }
             return {
                 ...state,
-                cartItems: []
+                cartItems: [],
+                appliedCoupon: null
+            };
+        }
+
+        case CART_ACTIONS.APPLY_COUPON: {
+            if (typeof window !== 'undefined') {
+                localStorage.setItem('nazishapparels_coupon', JSON.stringify(action.payload));
+            }
+            return {
+                ...state,
+                appliedCoupon: action.payload
+            };
+        }
+
+        case CART_ACTIONS.REMOVE_COUPON: {
+            if (typeof window !== 'undefined') {
+                localStorage.removeItem('nazishapparels_coupon');
+            }
+            return {
+                ...state,
+                appliedCoupon: null
             };
         }
 
@@ -201,6 +233,18 @@ export function CartProvider({ children }) {
                     }
                 } catch (e) {
                     console.error('Error loading cart from localStorage', e);
+                }
+            }
+            
+            const savedCoupon = localStorage.getItem('nazishapparels_coupon');
+            if (savedCoupon) {
+                try {
+                    const parsed = JSON.parse(savedCoupon);
+                    if (parsed) {
+                        dispatch({ type: CART_ACTIONS.LOAD_COUPON, payload: parsed });
+                    }
+                } catch (e) {
+                    console.error('Error loading coupon from localStorage', e);
                 }
             }
         }
@@ -241,15 +285,31 @@ export function CartProvider({ children }) {
         });
     };
 
+    const applyCoupon = (coupon) => {
+        dispatch({
+            type: CART_ACTIONS.APPLY_COUPON,
+            payload: coupon
+        });
+    };
+
+    const removeCoupon = () => {
+        dispatch({
+            type: CART_ACTIONS.REMOVE_COUPON
+        });
+    };
+
     return (
         <CartContext.Provider
             value={{
                 cartItems: state.cartItems,
+                appliedCoupon: state.appliedCoupon,
                 addToCart,
                 removeFromCart,
                 updateQuantity,
                 updateSize,
                 clearCart,
+                applyCoupon,
+                removeCoupon,
                 dispatch
             }}
         >

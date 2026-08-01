@@ -99,7 +99,7 @@ export default function CollectionPage() {
     const [offset, setOffset] = useState(0);
     const [hasMore, setHasMore] = useState(true);
     const [collectionId, setCollectionId] = useState(undefined);
-    
+
     // Track if initial load has been done
     const [initialLoadDone, setInitialLoadDone] = useState(false);
 
@@ -124,7 +124,7 @@ export default function CollectionPage() {
     const tagsScrollRef = useRef(null);
     const filtersScrollRef = useRef(null);
     const sentinelRef = useRef(null);
-    
+
     // Ref to prevent duplicate loads
     const isLoadingRef = useRef(false);
     const loadMoreRef = useRef(false);
@@ -169,7 +169,7 @@ export default function CollectionPage() {
     // Resolve Collection ID - only once
     useEffect(() => {
         if (!slug || collectionId !== undefined) return;
-        
+
         const normalizedSlug = slug.toLowerCase();
 
         if (normalizedSlug === 'new-arrivals' || normalizedSlug === 'all') {
@@ -193,7 +193,7 @@ export default function CollectionPage() {
         // Prevent multiple simultaneous loads
         if (isLoadingRef.current) return;
         isLoadingRef.current = true;
-        
+
         setLoading(true);
         setProducts([]);
         setOffset(0);
@@ -267,9 +267,9 @@ export default function CollectionPage() {
     useEffect(() => {
         const el = sentinelRef.current;
         if (!el || !hasMore) return;
-        
+
         const observer = new IntersectionObserver(
-            (entries) => { 
+            (entries) => {
                 if (entries[0].isIntersecting && !loadingMore && !loadMoreRef.current) {
                     loadMore();
                 }
@@ -332,297 +332,284 @@ export default function CollectionPage() {
     };
 
     return (
-        <div className="h-full overflow-hidden">
-            {/* Flex container that takes full height */}
-            <div className="flex h-full">
-                
-                {/* ── Left Category Sidebar - scrollable ────────────────────── */}
-                <aside className="hidden lg:block w-56 xl:w-64 flex-shrink-0 border-r border-gray-100 overflow-y-auto h-full">
-                    <CategorySidebar activeSlug={slug} />
-                </aside>
+        <>
+            {/* ── Right Content Area - scrollable ──────────────────────── */}
+            <main className="flex-1 min-w-0 overflow-y-auto px-2 md:px-6 pb-8">
 
-                {/* ── Right Content Area - scrollable ──────────────────────── */}
-                <main className="flex-1 min-w-0 overflow-y-auto px-3 md:px-6 pb-8">
-                    
-                    {/* Header */}
-                    <div className="mb-6 pt-4">
-                        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 capitalize tracking-tight">
-                            {collectionTitle}
-                        </h1>
-                        <p className="text-xs md:text-sm text-gray-500 font-medium mt-1">
-                            {total.toLocaleString()} Items
-                        </p>
-                    </div>
+                {/* Header */}
+                <div className="flex flex-row items-center justify-between md:flex-col md:justify-start md:items-start mb-0 md:mb-6 pt-1 md:pt-4">
+                    <h1 className="text-xl md:text-3xl font-bold text-gray-900 capitalize tracking-tight">
+                        {collectionTitle}
+                    </h1>
+                    <p className="text-xs md:text-sm text-gray-500 font-medium mt-1">
+                        {total.toLocaleString()} Items
+                    </p>
+                </div>
 
-                    {/* Horizontal Filter Bar - Sticky within scroll container */}
-                    <div className="sticky top-0 bg-white z-40">
-                        <div className="relative flex items-center gap-3 border-y border-gray-100 py-3 mb-6">
-                            {canScrollLeft && (
-                                <button
-                                    type="button"
-                                    onClick={() => scrollHorizontally(filtersScrollRef, -150)}
-                                    className="w-7 h-7 rounded-full bg-white shadow border border-gray-100 flex items-center justify-center text-gray-500 hover:text-black shrink-0"
-                                >
-                                    <ChevronLeft className="w-4 h-4" />
-                                </button>
-                            )}
-                            <div 
-                                ref={filtersScrollRef}
-                                className="flex items-center gap-3 py-1 scroll-smooth flex-1 overflow-x-auto no-scrollbar"
+                {/* Horizontal Filter Bar - Sticky within scroll container */}
+                <div className="sticky top-0 bg-white z-40">
+                    <div className="relative flex items-center gap-3 border-y border-gray-100 py mb-0 md:mb-6">
+                        {canScrollLeft && (
+                            <button
+                                type="button"
+                                onClick={() => scrollHorizontally(filtersScrollRef, -150)}
+                                className="w-7 h-7 rounded-full bg-white shadow border border-gray-100 flex items-center justify-center text-gray-500 hover:text-black shrink-0"
                             >
-                                {/* Filter Icon button */}
+                                <ChevronLeft className="w-4 h-4" />
+                            </button>
+                        )}
+                        <div
+                            ref={filtersScrollRef}
+                            className="flex items-center gap-3 py-1 scroll-smooth flex-1 overflow-x-auto no-scrollbar"
+                        >
+                            {/* Filter Icon button */}
+                            <button
+                                type="button"
+                                onClick={() => setMobileFilterOpen(!mobileFilterOpen)}
+                                className="flex items-center gap-1.5 px-3 py-2 border border-gray-200 rounded-lg text-xs font-semibold text-gray-700 hover:border-black shrink-0"
+                            >
+                                <SlidersHorizontal className="w-4 h-4" />
+                                <span>Filter</span>
+                                {activeFiltersCount > 0 && (
+                                    <span className="bg-black text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
+                                        {activeFiltersCount}
+                                    </span>
+                                )}
+                            </button>
+
+                            {/* Sort By Dropdown */}
+                            <div className="relative shrink-0">
                                 <button
                                     type="button"
-                                    onClick={() => setMobileFilterOpen(!mobileFilterOpen)}
-                                    className="flex items-center gap-1.5 px-3 py-2 border border-gray-200 rounded-lg text-xs font-semibold text-gray-700 hover:border-black shrink-0"
+                                    onClick={() => setActiveDropdown(activeDropdown === 'sort' ? null : 'sort')}
+                                    className="flex items-center gap-1.5 px-3.5 py-2 border border-gray-200 rounded-lg text-xs font-semibold text-gray-700 hover:border-black whitespace-nowrap"
                                 >
-                                    <SlidersHorizontal className="w-4 h-4" />
-                                    <span>Filter</span>
-                                    {activeFiltersCount > 0 && (
-                                        <span className="bg-black text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
-                                            {activeFiltersCount}
-                                        </span>
-                                    )}
+                                    <span>Sort By: <span className="text-black font-bold">{sortBy}</span></span>
+                                    <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
                                 </button>
+                                {activeDropdown === 'sort' && (
+                                    <div className="absolute left-0 mt-2 w-48 bg-white border border-gray-100 rounded-xl shadow-xl z-50 p-1">
+                                        {['Featured', 'Newest', 'Price: Low to High', 'Price: High to Low'].map((opt) => (
+                                            <button
+                                                key={opt}
+                                                onClick={() => { setSortBy(opt); setActiveDropdown(null); }}
+                                                className={`w-full text-left px-3 py-2 text-xs font-medium rounded-lg flex items-center justify-between ${sortBy === opt ? 'bg-gray-100 text-black font-bold' : 'text-gray-700 hover:bg-gray-50'}`}
+                                            >
+                                                <span>{opt}</span>
+                                                {sortBy === opt && <Check className="w-3.5 h-3.5 text-black" />}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
 
-                                {/* Sort By Dropdown */}
+                            {/* In-Stock Toggle Pill */}
+                            <button
+                                type="button"
+                                onClick={() => setInStockOnly(!inStockOnly)}
+                                className={`flex items-center gap-2 px-3.5 py-2 border rounded-lg text-xs font-semibold shrink-0 transition-colors whitespace-nowrap ${inStockOnly ? 'border-black bg-black text-white' : 'border-gray-200 text-gray-700 hover:border-black'
+                                    }`}
+                            >
+                                <span>In-stock</span>
+                                <span className={`w-3.5 h-3.5 rounded-full border transition-all ${inStockOnly ? 'bg-white border-white' : 'border-gray-400 bg-transparent'}`} />
+                            </button>
+
+                            {/* Type Dropdown */}
+                            {availableFabrics.length > 0 && (
                                 <div className="relative shrink-0">
                                     <button
                                         type="button"
-                                        onClick={() => setActiveDropdown(activeDropdown === 'sort' ? null : 'sort')}
-                                        className="flex items-center gap-1.5 px-3.5 py-2 border border-gray-200 rounded-lg text-xs font-semibold text-gray-700 hover:border-black whitespace-nowrap"
+                                        onClick={() => setActiveDropdown(activeDropdown === 'fabric' ? null : 'fabric')}
+                                        className={`flex items-center gap-1.5 px-3.5 py-2 border rounded-lg text-xs font-semibold whitespace-nowrap ${selectedFabrics.length > 0 ? 'border-black bg-black text-white' : 'border-gray-200 text-gray-700 hover:border-black'
+                                            }`}
                                     >
-                                        <span>Sort By: <span className="text-black font-bold">{sortBy}</span></span>
-                                        <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
+                                        <span>Type {selectedFabrics.length > 0 && `(${selectedFabrics.length})`}</span>
+                                        <ChevronDown className="w-3.5 h-3.5" />
                                     </button>
-                                    {activeDropdown === 'sort' && (
-                                        <div className="absolute left-0 mt-2 w-48 bg-white border border-gray-100 rounded-xl shadow-xl z-50 p-1">
-                                            {['Featured', 'Newest', 'Price: Low to High', 'Price: High to Low'].map((opt) => (
+                                    {activeDropdown === 'fabric' && (
+                                        <div className="absolute left-0 mt-2 w-52 bg-white border border-gray-100 rounded-xl shadow-xl z-50 p-3 space-y-2 max-h-60 overflow-y-auto">
+                                            {availableFabrics.map((f) => (
+                                                <label key={f} className="flex items-center gap-2 text-xs font-medium text-gray-700 cursor-pointer hover:text-black">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedFabrics.includes(f)}
+                                                        onChange={() => toggleFabric(f)}
+                                                        className="rounded border-gray-300 text-black focus:ring-black"
+                                                    />
+                                                    <span>{f}</span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Price Dropdown */}
+                            <div className="relative shrink-0">
+                                <button
+                                    type="button"
+                                    onClick={() => setActiveDropdown(activeDropdown === 'price' ? null : 'price')}
+                                    className={`flex items-center gap-1.5 px-3.5 py-2 border rounded-lg text-xs font-semibold whitespace-nowrap ${minActive || maxActive ? 'border-black bg-black text-white' : 'border-gray-200 text-gray-700 hover:border-black'
+                                        }`}
+                                >
+                                    <span>Price</span>
+                                    <ChevronDown className="w-3.5 h-3.5" />
+                                </button>
+                                {activeDropdown === 'price' && (
+                                    <div className="absolute left-0 mt-2 z-[999]">
+                                        <PriceRangeFilter
+                                            min={priceBounds.min}
+                                            max={priceBounds.max}
+                                            initialMin={minPriceVal}
+                                            initialMax={maxPriceVal}
+                                            onChange={(a, b) => { setMinPrice(a); setMaxPrice(b); }}
+                                            onClose={() => setActiveDropdown(null)}
+                                        />
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Size Dropdown */}
+                            {availableSizes.length > 0 && (
+                                <div className="relative shrink-0">
+                                    <button
+                                        type="button"
+                                        onClick={() => setActiveDropdown(activeDropdown === 'size' ? null : 'size')}
+                                        className={`flex items-center gap-1.5 px-3.5 py-2 border rounded-lg text-xs font-semibold whitespace-nowrap ${selectedSizes.length > 0 ? 'border-black bg-black text-white' : 'border-gray-200 text-gray-700 hover:border-black'
+                                            }`}
+                                    >
+                                        <span>Size {selectedSizes.length > 0 && `(${selectedSizes.length})`}</span>
+                                        <ChevronDown className="w-3.5 h-3.5" />
+                                    </button>
+                                    {activeDropdown === 'size' && (
+                                        <div className="absolute left-0 mt-2 w-52 bg-white border border-gray-100 rounded-xl shadow-xl z-50 p-3 flex flex-wrap gap-2">
+                                            {availableSizes.map((sz) => (
                                                 <button
-                                                    key={opt}
-                                                    onClick={() => { setSortBy(opt); setActiveDropdown(null); }}
-                                                    className={`w-full text-left px-3 py-2 text-xs font-medium rounded-lg flex items-center justify-between ${sortBy === opt ? 'bg-gray-100 text-black font-bold' : 'text-gray-700 hover:bg-gray-50'}`}
+                                                    key={sz}
+                                                    type="button"
+                                                    onClick={() => toggleSize(sz)}
+                                                    className={`px-3 py-1.5 border text-xs font-semibold rounded-md transition ${selectedSizes.includes(sz) ? 'bg-black text-white border-black' : 'border-gray-200 text-gray-700 hover:border-black'
+                                                        }`}
                                                 >
-                                                    <span>{opt}</span>
-                                                    {sortBy === opt && <Check className="w-3.5 h-3.5 text-black" />}
+                                                    {sz}
                                                 </button>
                                             ))}
                                         </div>
                                     )}
                                 </div>
-
-                                {/* In-Stock Toggle Pill */}
-                                <button
-                                    type="button"
-                                    onClick={() => setInStockOnly(!inStockOnly)}
-                                    className={`flex items-center gap-2 px-3.5 py-2 border rounded-lg text-xs font-semibold shrink-0 transition-colors whitespace-nowrap ${
-                                        inStockOnly ? 'border-black bg-black text-white' : 'border-gray-200 text-gray-700 hover:border-black'
-                                    }`}
-                                >
-                                    <span>In-stock</span>
-                                    <span className={`w-3.5 h-3.5 rounded-full border transition-all ${inStockOnly ? 'bg-white border-white' : 'border-gray-400 bg-transparent'}`} />
-                                </button>
-
-                                {/* Type Dropdown */}
-                                {availableFabrics.length > 0 && (
-                                    <div className="relative shrink-0">
-                                        <button
-                                            type="button"
-                                            onClick={() => setActiveDropdown(activeDropdown === 'fabric' ? null : 'fabric')}
-                                            className={`flex items-center gap-1.5 px-3.5 py-2 border rounded-lg text-xs font-semibold whitespace-nowrap ${
-                                                selectedFabrics.length > 0 ? 'border-black bg-black text-white' : 'border-gray-200 text-gray-700 hover:border-black'
-                                            }`}
-                                        >
-                                            <span>Type {selectedFabrics.length > 0 && `(${selectedFabrics.length})`}</span>
-                                            <ChevronDown className="w-3.5 h-3.5" />
-                                        </button>
-                                        {activeDropdown === 'fabric' && (
-                                            <div className="absolute left-0 mt-2 w-52 bg-white border border-gray-100 rounded-xl shadow-xl z-50 p-3 space-y-2 max-h-60 overflow-y-auto">
-                                                {availableFabrics.map((f) => (
-                                                    <label key={f} className="flex items-center gap-2 text-xs font-medium text-gray-700 cursor-pointer hover:text-black">
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={selectedFabrics.includes(f)}
-                                                            onChange={() => toggleFabric(f)}
-                                                            className="rounded border-gray-300 text-black focus:ring-black"
-                                                        />
-                                                        <span>{f}</span>
-                                                    </label>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-
-                                {/* Price Dropdown */}
-                                <div className="relative shrink-0">
-                                    <button
-                                        type="button"
-                                        onClick={() => setActiveDropdown(activeDropdown === 'price' ? null : 'price')}
-                                        className={`flex items-center gap-1.5 px-3.5 py-2 border rounded-lg text-xs font-semibold whitespace-nowrap ${
-                                            minActive || maxActive ? 'border-black bg-black text-white' : 'border-gray-200 text-gray-700 hover:border-black'
-                                        }`}
-                                    >
-                                        <span>Price</span>
-                                        <ChevronDown className="w-3.5 h-3.5" />
-                                    </button>
-                                    {activeDropdown === 'price' && (
-                                        <div className="absolute left-0 mt-2 z-[999]">
-                                            <PriceRangeFilter
-                                                min={priceBounds.min}
-                                                max={priceBounds.max}
-                                                initialMin={minPriceVal}
-                                                initialMax={maxPriceVal}
-                                                onChange={(a, b) => { setMinPrice(a); setMaxPrice(b); }}
-                                                onClose={() => setActiveDropdown(null)}
-                                            />
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Size Dropdown */}
-                                {availableSizes.length > 0 && (
-                                    <div className="relative shrink-0">
-                                        <button
-                                            type="button"
-                                            onClick={() => setActiveDropdown(activeDropdown === 'size' ? null : 'size')}
-                                            className={`flex items-center gap-1.5 px-3.5 py-2 border rounded-lg text-xs font-semibold whitespace-nowrap ${
-                                                selectedSizes.length > 0 ? 'border-black bg-black text-white' : 'border-gray-200 text-gray-700 hover:border-black'
-                                            }`}
-                                        >
-                                            <span>Size {selectedSizes.length > 0 && `(${selectedSizes.length})`}</span>
-                                            <ChevronDown className="w-3.5 h-3.5" />
-                                        </button>
-                                        {activeDropdown === 'size' && (
-                                            <div className="absolute left-0 mt-2 w-52 bg-white border border-gray-100 rounded-xl shadow-xl z-50 p-3 flex flex-wrap gap-2">
-                                                {availableSizes.map((sz) => (
-                                                    <button
-                                                        key={sz}
-                                                        type="button"
-                                                        onClick={() => toggleSize(sz)}
-                                                        className={`px-3 py-1.5 border text-xs font-semibold rounded-md transition ${
-                                                            selectedSizes.includes(sz) ? 'bg-black text-white border-black' : 'border-gray-200 text-gray-700 hover:border-black'
-                                                        }`}
-                                                    >
-                                                        {sz}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-
-                            {canScrollRight && (
-                                <button
-                                    type="button"
-                                    onClick={() => scrollHorizontally(filtersScrollRef, 150)}
-                                    className="w-7 h-7 rounded-full bg-white shadow border border-gray-100 flex items-center justify-center text-gray-500 hover:text-black shrink-0"
-                                >
-                                    <ChevronRight className="w-4 h-4" />
-                                </button>
                             )}
                         </div>
 
-                        {/* Active Filters Bar */}
-                        {activeFiltersCount > 0 && (
-                            <div className="mb-6 flex flex-wrap items-center gap-2 border-b border-gray-100 pb-3">
-                                <span className="text-xs text-gray-500 font-semibold mr-1">Active Filters:</span>
-                                {selectedTag && (
-                                    <span className="inline-flex items-center gap-1.5 bg-gray-100 text-black px-2.5 py-1 rounded-md text-xs font-semibold">
-                                        Tag: {selectedTag}
-                                        <button onClick={() => setSelectedTag(null)} className="hover:text-red-500"><X className="w-3 h-3" /></button>
-                                    </span>
-                                )}
-                                {selectedFabrics.map(f => (
-                                    <span key={f} className="inline-flex items-center gap-1.5 bg-gray-100 text-black px-2.5 py-1 rounded-md text-xs font-semibold">
-                                        {f}
-                                        <button onClick={() => toggleFabric(f)} className="hover:text-red-500"><X className="w-3 h-3" /></button>
-                                    </span>
-                                ))}
-                                {selectedSizes.map(s => (
-                                    <span key={s} className="inline-flex items-center gap-1.5 bg-gray-100 text-black px-2.5 py-1 rounded-md text-xs font-semibold">
-                                        Size: {s}
-                                        <button onClick={() => toggleSize(s)} className="hover:text-red-500"><X className="w-3 h-3" /></button>
-                                    </span>
-                                ))}
-                                {inStockOnly && (
-                                    <span className="inline-flex items-center gap-1.5 bg-gray-100 text-black px-2.5 py-1 rounded-md text-xs font-semibold">
-                                        In Stock
-                                        <button onClick={() => setInStockOnly(false)} className="hover:text-red-500"><X className="w-3 h-3" /></button>
-                                    </span>
-                                )}
-                                {(minActive || maxActive) && (
-                                    <span className="inline-flex items-center gap-1.5 bg-gray-100 text-black px-2.5 py-1 rounded-md text-xs font-semibold">
-                                        Price: PKR {minPriceVal.toLocaleString()} - PKR {maxPriceVal.toLocaleString()}
-                                        <button onClick={() => { setMinPrice(''); setMaxPrice(''); }} className="hover:text-red-500"><X className="w-3 h-3" /></button>
-                                    </span>
-                                )}
-                                <button onClick={resetFilters} className="text-xs text-red-600 hover:underline font-semibold ml-2">
-                                    Clear All
-                                </button>
-                            </div>
+                        {canScrollRight && (
+                            <button
+                                type="button"
+                                onClick={() => scrollHorizontally(filtersScrollRef, 150)}
+                                className="w-7 h-7 rounded-full bg-white shadow border border-gray-100 flex items-center justify-center text-gray-500 hover:text-black shrink-0"
+                            >
+                                <ChevronRight className="w-4 h-4" />
+                            </button>
                         )}
                     </div>
 
-                    {/* ── Product Grid ─────────────────────────────── */}
-                    {loading ? (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5">
-                            {[...Array(8)].map((_, i) => (
-                                <div key={i} className="animate-pulse space-y-3">
-                                    <div className="bg-gray-200 aspect-[3/4] rounded-xl" />
-                                    <div className="h-4 bg-gray-200 rounded w-2/3" />
-                                    <div className="h-4 bg-gray-200 rounded w-1/3" />
-                                </div>
+                    {/* Active Filters Bar */}
+                    {activeFiltersCount > 0 && (
+                        <div className="mb-6 flex flex-wrap items-center gap-2 border-b border-gray-100 pb-3">
+                            <span className="text-xs text-gray-500 font-semibold mr-1">Active Filters:</span>
+                            {selectedTag && (
+                                <span className="inline-flex items-center gap-1.5 bg-gray-100 text-black px-2.5 py-1 rounded-md text-xs font-semibold">
+                                    Tag: {selectedTag}
+                                    <button onClick={() => setSelectedTag(null)} className="hover:text-red-500"><X className="w-3 h-3" /></button>
+                                </span>
+                            )}
+                            {selectedFabrics.map(f => (
+                                <span key={f} className="inline-flex items-center gap-1.5 bg-gray-100 text-black px-2.5 py-1 rounded-md text-xs font-semibold">
+                                    {f}
+                                    <button onClick={() => toggleFabric(f)} className="hover:text-red-500"><X className="w-3 h-3" /></button>
+                                </span>
                             ))}
-                        </div>
-                    ) : sortedProducts.length === 0 ? (
-                        <div className="text-center py-20 bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
-                            <h3 className="text-lg font-bold text-gray-900 mb-1">No Products Found</h3>
-                            <p className="text-xs text-gray-500 mb-4">Try clearing your filters to see more results.</p>
-                            <button onClick={resetFilters} className="px-5 py-2 bg-black text-white rounded-lg text-xs font-semibold">
-                                Reset Filters
+                            {selectedSizes.map(s => (
+                                <span key={s} className="inline-flex items-center gap-1.5 bg-gray-100 text-black px-2.5 py-1 rounded-md text-xs font-semibold">
+                                    Size: {s}
+                                    <button onClick={() => toggleSize(s)} className="hover:text-red-500"><X className="w-3 h-3" /></button>
+                                </span>
+                            ))}
+                            {inStockOnly && (
+                                <span className="inline-flex items-center gap-1.5 bg-gray-100 text-black px-2.5 py-1 rounded-md text-xs font-semibold">
+                                    In Stock
+                                    <button onClick={() => setInStockOnly(false)} className="hover:text-red-500"><X className="w-3 h-3" /></button>
+                                </span>
+                            )}
+                            {(minActive || maxActive) && (
+                                <span className="inline-flex items-center gap-1.5 bg-gray-100 text-black px-2.5 py-1 rounded-md text-xs font-semibold">
+                                    Price: PKR {minPriceVal.toLocaleString()} - PKR {maxPriceVal.toLocaleString()}
+                                    <button onClick={() => { setMinPrice(''); setMaxPrice(''); }} className="hover:text-red-500"><X className="w-3 h-3" /></button>
+                                </span>
+                            )}
+                            <button onClick={resetFilters} className="text-xs text-red-600 hover:underline font-semibold ml-2">
+                                Clear All
                             </button>
                         </div>
-                    ) : (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-5">
-                            {sortedProducts.map((product) => (
-                                <ProductCard
-                                    key={product.id}
-                                    id={product.id}
-                                    slug={product.slug}
-                                    title={product.title}
-                                    price={product.price}
-                                    priceNumeric={product.priceNumeric}
-                                    compareAtPrice={product.compareAtPrice}
-                                    image={product.primaryImage}
-                                    type={product.type}
-                                    sizes={product.sizes}
-                                    colors={product.colors}
-                                    reviewAvg={product.reviewAvg}
-                                    reviewCount={product.reviewCount}
-                                />
-                            ))}
+                    )}
+                </div>
+
+                {/* ── Product Grid ─────────────────────────────── */}
+                {loading ? (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5">
+                        {[...Array(8)].map((_, i) => (
+                            <div key={i} className="animate-pulse space-y-3">
+                                <div className="bg-gray-200 aspect-[3/4] rounded-xl" />
+                                <div className="h-4 bg-gray-200 rounded w-2/3" />
+                                <div className="h-4 bg-gray-200 rounded w-1/3" />
+                            </div>
+                        ))}
+                    </div>
+                ) : sortedProducts.length === 0 ? (
+                    <div className="text-center py-20 bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
+                        <h3 className="text-lg font-bold text-gray-900 mb-1">No Products Found</h3>
+                        <p className="text-xs text-gray-500 mb-4">Try clearing your filters to see more results.</p>
+                        <button onClick={resetFilters} className="px-5 py-2 bg-black text-white rounded-lg text-xs font-semibold">
+                            Reset Filters
+                        </button>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-5">
+                        {sortedProducts.map((product) => (
+                            <ProductCard
+                                key={product.id}
+                                id={product.id}
+                                slug={product.slug}
+                                title={product.title}
+                                price={product.price}
+                                priceNumeric={product.priceNumeric}
+                                compareAtPrice={product.compareAtPrice}
+                                image={product.primaryImage}
+                                type={product.type}
+                                sizes={product.sizes}
+                                colors={product.colors}
+                                reviewAvg={product.reviewAvg}
+                                reviewCount={product.reviewCount}
+                            />
+                        ))}
+                    </div>
+                )}
+
+                {/* Infinite scroll sentinel */}
+                <div ref={sentinelRef} className="py-12 text-center">
+                    {loadingMore && (
+                        <div className="flex items-center justify-center gap-2 text-gray-500 text-xs">
+                            <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                            <span>Loading more items…</span>
                         </div>
                     )}
+                    {!hasMore && products.length > 0 && (
+                        <p className="text-xs text-gray-400 font-medium">
+                            Showing all {sortedProducts.length} items
+                        </p>
+                    )}
+                </div>
 
-                    {/* Infinite scroll sentinel */}
-                    <div ref={sentinelRef} className="py-12 text-center">
-                        {loadingMore && (
-                            <div className="flex items-center justify-center gap-2 text-gray-500 text-xs">
-                                <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                                <span>Loading more items…</span>
-                            </div>
-                        )}
-                        {!hasMore && products.length > 0 && (
-                            <p className="text-xs text-gray-400 font-medium">
-                                Showing all {sortedProducts.length} items
-                            </p>
-                        )}
-                    </div>
+            </main>
+        </>
 
-                </main>
-            </div>
-        </div>
     );
 }
