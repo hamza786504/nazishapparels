@@ -7,6 +7,7 @@ import { FavoritesProvider } from './store/favoritesContext';
 import { getHeaderMenuItems } from '@/lib/getHeaderMenu';
 import { getSiteSettings } from '..//lib/getSiteSettings';
 import { SiteSettingsProvider } from './store/siteSettingsContext';
+import WhatsAppFloatingButton from './_components/WhatsAppFloatingButton';
 
 const ebGaramond = EB_Garamond({
     subsets: ['latin'],
@@ -61,6 +62,7 @@ export default async function RootLayout({ children }) {
                             <FavoritesProvider>
                                 <NavMenuProvider items={headerNavItems}>
                                     {children}
+                                    <WhatsAppFloatingButton />
                                 </NavMenuProvider>
                             </FavoritesProvider>
                         </CartProvider>

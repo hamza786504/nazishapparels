@@ -436,7 +436,7 @@ export default function Navbar() {
       </div>
 
       <header className="relative bg-white w-full z-50 border-b border-gray-200">
-        <div className="flex flex-col max-w-container-max mx-auto px-2 md:px-5 py-2 md:py-1.5">
+        <div className="flex flex-col px-2 md:px-5 py-2 md:py-1.5">
 
           {/* Row 1: Logo & Right Actions */}
           <div className="flex justify-between items-center w-full gap-2">

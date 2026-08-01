@@ -268,7 +268,7 @@ export default function ProductPageClient({ initialProduct }) {
                             {product.collectionId?.name || product.productType || 'Shop'}
                         </Link>
                         <ChevronRight className="w-4 h-4" />
-                        <span className="text-primary truncate max-w-[150px] md:max-w-[300px]">{product.title}</span>
+                        <span className="text-black truncate max-w-[150px] md:max-w-[300px]">{product.title}</span>
                     </nav>
 
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
@@ -442,14 +442,14 @@ export default function ProductPageClient({ initialProduct }) {
                                     <div className="flex flex-col gap-1">
                                         {product.productType && <p className="text-label-md text-secondary uppercase tracking-[0.2em]">{product.productType}</p>}
 
-                                        <h1 className="text-lg sm:text-headline-lg text-primary leading-tight">{product.title}</h1>
+                                        <h1 className="text-xl font-[500] text-black leading-tight">{product.title}</h1>
                                     </div>
-                                    <div className="flex gap-2 relative">
+                                    <div className="flex gap-4 relative">
                                         <button
                                             type="button"
                                             onClick={handleShare}
                                             title="Share Product"
-                                            className="p-2 rounded-full border border-outline-variant hover:bg-surface-container-low transition-colors relative"
+                                            className="cursor-pointer transition-colors relative"
                                             aria-label="Share product"
                                         >
                                             <Share2 className="w-[18px] h-[18px]" />
@@ -463,14 +463,24 @@ export default function ProductPageClient({ initialProduct }) {
                                             type="button"
                                             onClick={handleFavoriteClick}
                                             title={favorited ? "Remove from wishlist" : "Add to wishlist"}
-                                            className={`p-2 rounded-full border transition-colors ${favorited ? 'border-red-200 bg-red-50 text-red-500' : 'border-outline-variant hover:bg-surface-container-low text-gray-700'}`}
+                                            className={`transition-colors ${favorited ? ' text-black' : ' cursor-pointer text-gray-700'}`}
                                             aria-label={favorited ? "Remove from wishlist" : "Add to wishlist"}
                                         >
-                                            <Heart className={`w-[18px] h-[18px] transition-colors ${favorited ? 'fill-red-500 text-red-500' : 'fill-none text-gray-700'}`} />
+                                            <Heart className={`w-[18px] h-[18px] transition-colors ${favorited ? 'fill-black text-black' : 'fill-none text-gray-700'}`} />
                                         </button>
                                     </div>
                                 </div>
-                                <p className="text-headline-sm text-primary">{product.price} PKR</p>
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <p className="text-lg font-bold text-black">{Number(product.price).toLocaleString()} PKR</p>
+                                    {Number(product.compareAtPrice) > Number(product.price) && (
+                                        <>
+                                            <p className="text-sm text-on-surface-variant line-through">{Number(product.compareAtPrice).toLocaleString()} PKR</p>
+                                            <span className="text-[11px] font-bold text-white bg-red-600 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                                Save {Math.round((1 - product.price / product.compareAtPrice) * 100)}%
+                                            </span>
+                                        </>
+                                    )}
+                                </div>
 
                                 {/* Star Rating & Reviews */}
                                 <div className="flex items-center gap-2 mt-1">
@@ -509,12 +519,12 @@ export default function ProductPageClient({ initialProduct }) {
                                 </div>
                             </div>
 
-                            <div className="flex flex-col gap-6">
+                            <div className="flex flex-col gap-3">
                                 {/* Color */}
                                 {product.colors && product.colors.length > 0 && (
                                     <div className="flex flex-col gap-3">
-                                        <span className="text-label-md text-primary uppercase">
-                                            Select Color: <span className="font-normal text-on-surface-variant">Default Color</span>
+                                        <span className="text-xs text-gray-900 uppercase">
+                                            Color
                                         </span>
                                         <div className="flex gap-4">
                                             {product.colors.map((color) => (
@@ -532,7 +542,7 @@ export default function ProductPageClient({ initialProduct }) {
                                 {/* Size - Updated to Pill/Capsule style */}
                                 <div className="flex flex-col gap-3">
                                     <div className="flex justify-between items-center">
-                                        <span className="text-label-md text-primary uppercase">Size</span>
+                                        <span className="text-xs text-gray-900 uppercase">Size</span>
                                         {/* Size Chart Uncommented */}
                                         <button
                                             type="button"
@@ -548,7 +558,7 @@ export default function ProductPageClient({ initialProduct }) {
                                                 key={size}
                                                 className={`px-6 py-2.5 text-label-md font-medium transition-all rounded-full border ${selectedSize === size
                                                     ? 'bg-black text-white border-black'
-                                                    : 'bg-transparent text-primary border-outline-variant hover:border-black hover:bg-surface-container-low'}`}
+                                                    : 'bg-transparent text-black border-outline-variant hover:border-black hover:bg-surface-container-low'}`}
                                                 onClick={() => setSelectedSize(size)}
                                             >
                                                 {size}
@@ -559,34 +569,34 @@ export default function ProductPageClient({ initialProduct }) {
 
                                 {/* Quantity Selector */}
                                 <div className="flex flex-col gap-3">
-                                    <span className="text-label-md text-primary uppercase">Quantity</span>
+                                    <span className="text-xs text-gray-900 uppercase">Quantity</span>
                                     <div className="flex items-center gap-0">
                                         <button
-                                            className="w-12 h-12 flex items-center justify-center border border-outline-variant hover:border-black hover:bg-surface-container-low transition-all disabled:opacity-40 disabled:cursor-not-allowed rounded-l-full"
+                                            className="w-10 h-10 flex items-center justify-center border border-outline-variant hover:border-black hover:bg-surface-container-low transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                                             onClick={decreaseQuantity}
                                             disabled={quantity <= 1}
                                             aria-label="Decrease quantity"
                                         >
-                                            <Minus className="w-[18px] h-[18px]" />
+                                            <Minus className="w-[14px] h-[14px]" />
                                         </button>
-                                        <div className="w-16 h-12 flex items-center justify-center border-t border-b border-outline-variant bg-transparent">
+                                        <div className="w-16 h-10 flex items-center justify-center border-t border-b border-outline-variant bg-transparent">
                                             <span className="text-body-md text-primary font-medium">{quantity}</span>
                                         </div>
                                         <button
-                                            className="w-12 h-12 flex items-center justify-center border border-outline-variant hover:border-black hover:bg-surface-container-low transition-all disabled:opacity-40 disabled:cursor-not-allowed rounded-r-full"
+                                            className="w-10 h-10 flex items-center justify-center border border-outline-variant hover:border-black hover:bg-surface-container-low transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                                             onClick={increaseQuantity}
                                             disabled={quantity >= 10}
                                             aria-label="Increase quantity"
                                         >
-                                            <Plus className="w-[18px] h-[18px]" />
+                                            <Plus className="w-[14px] h-[14px]" />
                                         </button>
                                     </div>
                                 </div>
 
                                 {/* CTA Buttons - Add to Bag & Buy Now */}
-                                <div className="flex flex-col gap-3 pt-4">
+                                <div className="flex flex-col gap-3 pt-1">
                                     <button
-                                        className={`cursor-pointer w-full py-4 text-white font-label-md uppercase tracking-widest transition-all duration-300 flex justify-center items-center gap-2 rounded-full border border-black ${bagAdded ? 'bg-gray-800' : 'bg-black hover:bg-gray-800'}`}
+                                        className={`cursor-pointer w-full py-4 text-white text-sm uppercase tracking-widest transition-all duration-300 flex justify-center items-center gap-2 rounded-full border border-black ${bagAdded ? 'bg-gray-800' : 'bg-black hover:bg-gray-800'}`}
                                         onClick={handleAddToBag}
                                         disabled={isAddingToBag}
                                     >
@@ -599,7 +609,7 @@ export default function ProductPageClient({ initialProduct }) {
                                         )}
                                     </button>
 
-                                    <button className="cursor-pointer w-full py-4 bg-white text-black font-label-md uppercase tracking-widest rounded-full border border-black hover:bg-gray-50 transition-all">
+                                    <button className="cursor-pointer w-full py-3.5 bg-white text-black text-sm uppercase tracking-widest rounded-full border border-black hover:bg-gray-50 transition-all">
                                         Buy Now
                                     </button>
 

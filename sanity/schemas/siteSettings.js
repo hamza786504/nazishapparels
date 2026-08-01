@@ -85,6 +85,25 @@ export const siteSettings = defineType({
         defineField({ name: 'termsOfService', title: 'Terms of Service', type: 'text' }),
       ],
     }),
+    defineField({
+      name: 'adapters',
+      title: 'Adapters',
+      type: 'object',
+      description: 'Configuration for third-party integrations (e.g., WhatsApp).',
+      fields: [
+        defineField({
+          name: 'whatsapp',
+          title: 'WhatsApp Adapter',
+          type: 'object',
+          fields: [
+            defineField({ name: 'enabled', title: 'Enabled', type: 'boolean' }),
+            defineField({ name: 'phoneNumber', title: 'Phone Number', type: 'string' }),
+            defineField({ name: 'position', title: 'Position', type: 'string', options: { list: ['bottom-right', 'bottom-left'] } }),
+            defineField({ name: 'presets', title: 'Preset Messages', type: 'array', of: [{ type: 'string' }] }),
+          ],
+        }),
+      ],
+    }),
   ],
   preview: {
     prepare: () => ({ title: 'Site Settings' }),

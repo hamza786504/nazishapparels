@@ -27,6 +27,7 @@ const EDITABLE_FIELDS = [
   'theme',
   'shipping',
   'policies',
+  'adapters',
 ];
 
 // GROQ projection that returns a stable, cacheable shape for the storefront.
@@ -76,6 +77,14 @@ const DEFAULT_SETTINGS = {
     contactInfoPolicy: '',
     refundPolicy: '',
     termsOfService: '',
+  },
+  adapters: {
+    whatsapp: {
+      enabled: false,
+      phoneNumber: '',
+      position: 'bottom-right',
+      presets: [],
+    },
   },
 };
 

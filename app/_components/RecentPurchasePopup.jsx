@@ -117,7 +117,7 @@ export default function RecentPurchasePopup() {
                         className="w-12 h-12 rounded-lg object-cover flex-shrink-0 bg-surface-container-low"
                     />
                     <div className="min-w-0">
-                        <p className="text-[13px] leading-snug text-primary">
+                        <p className="text-[13px] leading-snug text-black">
                             <span className="font-semibold">{buyer.name}</span> from {buyer.city} purchased{' '}
                             {quantity > 1 ? `${quantity}x ` : ''}
                             <span className="font-semibold line-clamp-1">{product.title}</span>

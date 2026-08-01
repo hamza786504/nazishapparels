@@ -71,13 +71,13 @@ export default function HandcraftedCategories() {
                 </div>
             </div>
 
-            <div className="overflow-x-auto touch-pan-x no-scrollbar ">
+            <div className="overflow-x-auto no-scrollbar ">
                 <div className="relative group">
                     {/* 2-row grid with horizontal scroll */}
                     {/* don't need full width */}
                     <div
                         id="category-carousel"
-                        className="grid md:grid-rows-1 grid-rows-2 grid-flow-col inline-grid gap-4 w-auto overflow-x-auto no-scrollbar pb-4 scroll-smooth carousel-container touch-pan-x"
+                        className="grid md:grid-rows-1 grid-rows-2 grid-flow-col inline-grid gap-4 w-auto overflow-x-auto no-scrollbar pb-4 scroll-smooth carousel-container"
                     >
                         {categories.map((cat) => (
                             <Link

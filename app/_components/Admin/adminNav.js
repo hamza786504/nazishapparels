@@ -13,6 +13,7 @@ import {
   MdLocalShipping,
   MdPolicy,
   MdCardGiftcard,
+  MdIntegrationInstructions,
 } from 'react-icons/md';
 
 // Single source of truth for admin navigation.
@@ -39,6 +40,7 @@ export const adminSettingsNavItems = [
   { href: '/admin/settings/policy', label: 'Policies', icon: MdPolicy },
   { href: '/admin/settings/menu', label: 'Menus', icon: MdMenu },
   { href: '/admin/settings/shipping', label: 'Shipping', icon: MdLocalShipping },
+  { href: '/admin/settings/adapters', label: 'Adapters', icon: MdIntegrationInstructions },
 ];
 
 // Where "Settings" drops the admin on first open (and the default tab).
