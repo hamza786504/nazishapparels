@@ -1,55 +1,23 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import Navbar from '../_components/Navbar';
 import MobileBottomNav from '../_components/MobileBottomNav';
+import useHideOnScroll from '../_components/useHideOnScroll';
 import RecentPurchasePopup from '../_components/RecentPurchasePopup';
 
 export default function LayoutWrapper({ children }) {
     const bottomNavRef = useRef(null);
-    const lastScrollYRef = useRef(0);
-    const tickingRef = useRef(false);
+    const bottomSpacerRef = useRef(null);
+    const bottomNavHidden = useHideOnScroll();
 
+    // Slide the fixed bottom nav away and collapse its spacer when hidden,
+    // so the flex-1 content reclaims the reserved space
     useEffect(() => {
-        const onScroll = () => {
-            if (tickingRef.current) return;
-            tickingRef.current = true;
-
-            requestAnimationFrame(() => {
-                const y = Math.max(0, window.scrollY);
-                const prev = lastScrollYRef.current;
-                const mobile = window.innerWidth < 768;
-
-                if (mobile && bottomNavRef.current) {
-                    if (y <= 20) {
-                        // Back at top — show bottom nav
-                        bottomNavRef.current.style.transform = 'translateY(0)';
-                        lastScrollYRef.current = y;
-                    } else if (Math.abs(y - prev) > 20) {
-                        // Only trigger if scrolled more than 20px
-                        if (y > prev) {
-                            // Scrolling down — hide bottom nav
-                            bottomNavRef.current.style.transform = 'translateY(100%)';
-                        } else {
-                            // Scrolling up — show bottom nav
-                            bottomNavRef.current.style.transform = 'translateY(0)';
-                        }
-                        // Only update the reference point when a large enough scroll happens
-                        lastScrollYRef.current = y;
-                    }
-                } else if (!mobile && bottomNavRef.current) {
-                    bottomNavRef.current.style.transform = 'translateY(0)';
-                    lastScrollYRef.current = y;
-                }
-
-                tickingRef.current = false;
-            });
-        };
-
-        window.addEventListener('scroll', onScroll, { passive: true });
-        // Set initial state
-        onScroll();
-        return () => window.removeEventListener('scroll', onScroll);
-    }, []);
+        const nav = bottomNavRef.current;
+        if (nav) nav.style.transform = bottomNavHidden ? 'translateY(100%)' : 'translateY(0)';
+        const spacer = bottomSpacerRef.current;
+        if (spacer) spacer.style.height = bottomNavHidden ? '0px' : '65px';
+    }, [bottomNavHidden]);
 
     return (
         <>
@@ -73,7 +41,11 @@ export default function LayoutWrapper({ children }) {
             </div>
 
             {/* Bottom spacer so content isn't hidden behind the bottom nav */}
-            <div className="h-[65px] md:hidden" />
+            <div
+                ref={bottomSpacerRef}
+                className="md:hidden"
+                style={{ height: '65px', transition: 'height 0.3s ease-in-out' }}
+            />
         </>
     );
 }

@@ -10,6 +10,7 @@ import { useAuth } from '../store/authContext';
 import { useNavMenu } from '../store/navMenuContext';
 import { useSiteSettings } from '../store/siteSettingsContext';
 import { useFavorites } from '../store/favoritesContext';
+import useHideOnScroll from './useHideOnScroll';
 import { usePathname } from 'next/navigation';
 import {
   Menu,
@@ -363,29 +364,39 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef(null);
-  const [lastScrollY, setLastScrollY] = useState(0);
+  const topNavRef = useRef(null);
+  const navHidden = useHideOnScroll();
+  const [navHeight, setNavHeight] = useState(null);
 
-  // Add scroll detection for mobile categories
+  // Track the top nav's natural height so it can be collapsed to reclaim space
   useEffect(() => {
-    const handleScroll = () => {
-      setLastScrollY(window.scrollY);
-    };
-
-    let timeoutId;
-    const throttledScroll = () => {
-      if (timeoutId) return;
-      timeoutId = setTimeout(() => {
-        handleScroll();
-        timeoutId = null;
-      }, 100);
-    };
-
-    window.addEventListener('scroll', throttledScroll, { passive: true });
+    const el = topNavRef.current;
+    if (!el) return;
+    const update = () => setNavHeight(el.scrollHeight);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    window.addEventListener('resize', update);
     return () => {
-      window.removeEventListener('scroll', throttledScroll);
-      if (timeoutId) clearTimeout(timeoutId);
+      ro.disconnect();
+      window.removeEventListener('resize', update);
     };
-  }, [lastScrollY]);
+  }, []);
+
+  // On mobile, collapse the top nav when hidden so the flex-1 content expands
+  useEffect(() => {
+    const el = topNavRef.current;
+    if (!el || navHeight == null) return;
+    if (navHidden) {
+      el.style.height = '0px';
+      el.style.opacity = '0';
+      el.style.overflow = 'hidden';
+    } else {
+      el.style.height = `${navHeight}px`;
+      el.style.opacity = '1';
+      el.style.overflow = 'visible';
+    }
+  }, [navHidden, navHeight]);
 
   // Close mobile drawer when scrolling
   useEffect(() => {
@@ -430,18 +441,23 @@ export default function Navbar() {
         onRemoveItem={removeFromCart}
       />
 
-      {/* 1. Announcement Bar */}
-      <div className="w-full bg-[#111111] text-white text-[11px] sm:text-[13px] font-medium py-2 text-center px-4 tracking-wide">
-        Get Free Delivery on 10,000PKR above Shopping
-      </div>
+      <div 
+        ref={topNavRef}
+        className="sticky top-0 z-[100] w-full bg-white flex flex-col transition-all duration-300 ease-in-out"
+        style={{ height: 'auto' }}
+      >
+        {/* 1. Announcement Bar */}
+        <div className="w-full bg-[#111111] text-white text-[11px] sm:text-[13px] font-medium py-2 text-center px-4 tracking-wide">
+          Get Free Delivery on 10,000PKR above Shopping
+        </div>
 
-      <header className="relative bg-white w-full z-50 border-b border-gray-200">
-        <div className="flex flex-col px-2 md:px-5 py-2 md:py-1.5">
+        <header className="relative bg-white w-full z-50 border-b border-gray-200">
+          <div className="flex flex-col px-2 md:px-5 py-2 md:py-1.5">
 
-          {/* Row 1: Logo & Right Actions */}
-          <div className="flex justify-between items-center w-full gap-2">
+            {/* Row 1: Logo & Right Actions */}
+            <div className="flex justify-between items-center w-full gap-2">
 
-            {/* Brand Logo */}
+              {/* Brand Logo */}
             <div className="flex-shrink-0 flex items-center">
               <Link href="/" className="block">
                 <Image src={logoSrc} width="160" height="90" alt={storeName} className="h-14 w-auto object-contain" />
@@ -529,6 +545,7 @@ export default function Navbar() {
           </div>
         </div>
       </header >
+      </div>
 
       {/* ── Mobile Drawer Overlay ──────────────────────────────────────────── */}
       {
