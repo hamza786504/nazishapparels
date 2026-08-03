@@ -121,6 +121,13 @@ export default function CollectionPage() {
     const [activeDropdown, setActiveDropdown] = useState(null);
     const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
+    // Dropdown anchor positions (position:fixed coords)
+    const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 });
+    const sortBtnRef = useRef(null);
+    const fabricBtnRef = useRef(null);
+    const priceBtnRef = useRef(null);
+    const sizeBtnRef = useRef(null);
+
     const tagsScrollRef = useRef(null);
     const filtersScrollRef = useRef(null);
     const sentinelRef = useRef(null);
@@ -148,6 +155,36 @@ export default function CollectionPage() {
             window.removeEventListener('resize', check);
         };
     }, []);
+
+    // Helper: open a dropdown and record the button's screen position
+    const openDropdown = (name, btnRef) => {
+        if (activeDropdown === name) {
+            setActiveDropdown(null);
+            return;
+        }
+        if (btnRef?.current) {
+            const rect = btnRef.current.getBoundingClientRect();
+            setDropdownPos({ top: rect.bottom + 6, left: rect.left });
+        }
+        setActiveDropdown(name);
+    };
+
+    // Close dropdown on outside click
+    useEffect(() => {
+        if (!activeDropdown) return;
+        const handler = (e) => {
+            const refs = [sortBtnRef, fabricBtnRef, priceBtnRef, sizeBtnRef];
+            if (refs.every(r => !r.current?.contains(e.target))) {
+                // check if click is inside a dropdown panel
+                const panel = document.getElementById('filter-dropdown-panel');
+                if (!panel || !panel.contains(e.target)) {
+                    setActiveDropdown(null);
+                }
+            }
+        };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, [activeDropdown]);
 
     // Fetch filter metadata from database
     const loadFilters = useCallback(async (resolvedId) => {
@@ -378,29 +415,16 @@ export default function CollectionPage() {
                             </button>
 
                             {/* Sort By Dropdown */}
-                            <div className="relative shrink-0">
+                            <div className="shrink-0">
                                 <button
+                                    ref={sortBtnRef}
                                     type="button"
-                                    onClick={() => setActiveDropdown(activeDropdown === 'sort' ? null : 'sort')}
+                                    onClick={() => openDropdown('sort', sortBtnRef)}
                                     className="flex items-center gap-1.5 px-3.5 py-2 border border-gray-200 rounded-lg text-xs font-semibold text-gray-700 hover:border-black whitespace-nowrap"
                                 >
                                     <span>Sort By: <span className="text-black font-bold">{sortBy}</span></span>
                                     <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
                                 </button>
-                                {activeDropdown === 'sort' && (
-                                    <div className="absolute left-0 mt-2 w-48 bg-white border border-gray-100 rounded-xl shadow-xl z-50 p-1">
-                                        {['Featured', 'Newest', 'Price: Low to High', 'Price: High to Low'].map((opt) => (
-                                            <button
-                                                key={opt}
-                                                onClick={() => { setSortBy(opt); setActiveDropdown(null); }}
-                                                className={`w-full text-left px-3 py-2 text-xs font-medium rounded-lg flex items-center justify-between ${sortBy === opt ? 'bg-gray-100 text-black font-bold' : 'text-gray-700 hover:bg-gray-50'}`}
-                                            >
-                                                <span>{opt}</span>
-                                                {sortBy === opt && <Check className="w-3.5 h-3.5 text-black" />}
-                                            </button>
-                                        ))}
-                                    </div>
-                                )}
                             </div>
 
                             {/* In-Stock Toggle Pill */}
@@ -416,86 +440,47 @@ export default function CollectionPage() {
 
                             {/* Type Dropdown */}
                             {availableFabrics.length > 0 && (
-                                <div className="relative shrink-0">
+                                <div className="shrink-0">
                                     <button
+                                        ref={fabricBtnRef}
                                         type="button"
-                                        onClick={() => setActiveDropdown(activeDropdown === 'fabric' ? null : 'fabric')}
+                                        onClick={() => openDropdown('fabric', fabricBtnRef)}
                                         className={`flex items-center gap-1.5 px-3.5 py-2 border rounded-lg text-xs font-semibold whitespace-nowrap ${selectedFabrics.length > 0 ? 'border-black bg-black text-white' : 'border-gray-200 text-gray-700 hover:border-black'
                                             }`}
                                     >
                                         <span>Type {selectedFabrics.length > 0 && `(${selectedFabrics.length})`}</span>
                                         <ChevronDown className="w-3.5 h-3.5" />
                                     </button>
-                                    {activeDropdown === 'fabric' && (
-                                        <div className="absolute left-0 mt-2 w-52 bg-white border border-gray-100 rounded-xl shadow-xl z-50 p-3 space-y-2 max-h-60 overflow-y-auto">
-                                            {availableFabrics.map((f) => (
-                                                <label key={f} className="flex items-center gap-2 text-xs font-medium text-gray-700 cursor-pointer hover:text-black">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={selectedFabrics.includes(f)}
-                                                        onChange={() => toggleFabric(f)}
-                                                        className="rounded border-gray-300 text-black focus:ring-black"
-                                                    />
-                                                    <span>{f}</span>
-                                                </label>
-                                            ))}
-                                        </div>
-                                    )}
                                 </div>
                             )}
 
                             {/* Price Dropdown */}
-                            <div className="relative shrink-0">
+                            <div className="shrink-0">
                                 <button
+                                    ref={priceBtnRef}
                                     type="button"
-                                    onClick={() => setActiveDropdown(activeDropdown === 'price' ? null : 'price')}
+                                    onClick={() => openDropdown('price', priceBtnRef)}
                                     className={`flex items-center gap-1.5 px-3.5 py-2 border rounded-lg text-xs font-semibold whitespace-nowrap ${minActive || maxActive ? 'border-black bg-black text-white' : 'border-gray-200 text-gray-700 hover:border-black'
                                         }`}
                                 >
                                     <span>Price</span>
                                     <ChevronDown className="w-3.5 h-3.5" />
                                 </button>
-                                {activeDropdown === 'price' && (
-                                    <div className="absolute left-0 mt-2 z-[999]">
-                                        <PriceRangeFilter
-                                            min={priceBounds.min}
-                                            max={priceBounds.max}
-                                            initialMin={minPriceVal}
-                                            initialMax={maxPriceVal}
-                                            onChange={(a, b) => { setMinPrice(a); setMaxPrice(b); }}
-                                            onClose={() => setActiveDropdown(null)}
-                                        />
-                                    </div>
-                                )}
                             </div>
 
                             {/* Size Dropdown */}
                             {availableSizes.length > 0 && (
-                                <div className="relative shrink-0">
+                                <div className="shrink-0">
                                     <button
+                                        ref={sizeBtnRef}
                                         type="button"
-                                        onClick={() => setActiveDropdown(activeDropdown === 'size' ? null : 'size')}
+                                        onClick={() => openDropdown('size', sizeBtnRef)}
                                         className={`flex items-center gap-1.5 px-3.5 py-2 border rounded-lg text-xs font-semibold whitespace-nowrap ${selectedSizes.length > 0 ? 'border-black bg-black text-white' : 'border-gray-200 text-gray-700 hover:border-black'
                                             }`}
                                     >
                                         <span>Size {selectedSizes.length > 0 && `(${selectedSizes.length})`}</span>
                                         <ChevronDown className="w-3.5 h-3.5" />
                                     </button>
-                                    {activeDropdown === 'size' && (
-                                        <div className="absolute left-0 mt-2 w-52 bg-white border border-gray-100 rounded-xl shadow-xl z-50 p-3 flex flex-wrap gap-2">
-                                            {availableSizes.map((sz) => (
-                                                <button
-                                                    key={sz}
-                                                    type="button"
-                                                    onClick={() => toggleSize(sz)}
-                                                    className={`px-3 py-1.5 border text-xs font-semibold rounded-md transition ${selectedSizes.includes(sz) ? 'bg-black text-white border-black' : 'border-gray-200 text-gray-700 hover:border-black'
-                                                        }`}
-                                                >
-                                                    {sz}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    )}
                                 </div>
                             )}
                         </div>
@@ -609,6 +594,79 @@ export default function CollectionPage() {
                 </div>
 
             </main>
+
+            {/* ── Fixed-position Dropdown Panels ─────────────────────────────────
+                Rendered outside the overflow-x-auto scroll container so they
+                are never clipped. Position is calculated from the trigger
+                button's getBoundingClientRect() each time a dropdown opens.
+            ─────────────────────────────────────────────────────────────────── */}
+            {activeDropdown && (
+                <div
+                    id="filter-dropdown-panel"
+                    style={{ position: 'fixed', top: dropdownPos.top, left: dropdownPos.left, zIndex: 9999 }}
+                >
+                    {/* Sort By Panel */}
+                    {activeDropdown === 'sort' && (
+                        <div className="w-48 bg-white border border-gray-100 rounded-xl shadow-2xl p-1">
+                            {['Featured', 'Newest', 'Price: Low to High', 'Price: High to Low'].map((opt) => (
+                                <button
+                                    key={opt}
+                                    onClick={() => { setSortBy(opt); setActiveDropdown(null); }}
+                                    className={`w-full text-left px-3 py-2 text-xs font-medium rounded-lg flex items-center justify-between ${sortBy === opt ? 'bg-gray-100 text-black font-bold' : 'text-gray-700 hover:bg-gray-50'}`}
+                                >
+                                    <span>{opt}</span>
+                                    {sortBy === opt && <Check className="w-3.5 h-3.5 text-black" />}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Type / Fabric Panel */}
+                    {activeDropdown === 'fabric' && (
+                        <div className="w-52 bg-white border border-gray-100 rounded-xl shadow-2xl p-3 space-y-2 max-h-60 overflow-y-auto">
+                            {availableFabrics.map((f) => (
+                                <label key={f} className="flex items-center gap-2 text-xs font-medium text-gray-700 cursor-pointer hover:text-black">
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedFabrics.includes(f)}
+                                        onChange={() => toggleFabric(f)}
+                                        className="rounded border-gray-300 text-black focus:ring-black"
+                                    />
+                                    <span>{f}</span>
+                                </label>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Price Panel */}
+                    {activeDropdown === 'price' && (
+                        <PriceRangeFilter
+                            min={priceBounds.min}
+                            max={priceBounds.max}
+                            initialMin={minPriceVal}
+                            initialMax={maxPriceVal}
+                            onChange={(a, b) => { setMinPrice(a); setMaxPrice(b); }}
+                            onClose={() => setActiveDropdown(null)}
+                        />
+                    )}
+
+                    {/* Size Panel */}
+                    {activeDropdown === 'size' && (
+                        <div className="w-52 bg-white border border-gray-100 rounded-xl shadow-2xl p-3 flex flex-wrap gap-2">
+                            {availableSizes.map((sz) => (
+                                <button
+                                    key={sz}
+                                    type="button"
+                                    onClick={() => toggleSize(sz)}
+                                    className={`px-3 py-1.5 border text-xs font-semibold rounded-md transition ${selectedSizes.includes(sz) ? 'bg-black text-white border-black' : 'border-gray-200 text-gray-700 hover:border-black'}`}
+                                >
+                                    {sz}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
         </>
 
     );

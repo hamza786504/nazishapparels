@@ -145,7 +145,7 @@ function EmptyWishlist() {
             </p>
             <Link
                 href="/"
-                className="inline-flex items-center gap-2 bg-primary text-white px-8 py-3 font-medium uppercase tracking-widest text-sm hover:bg-primary/90 transition-colors"
+                className="inline-flex items-center gap-2 bg-black text-white px-8 py-3 font-medium uppercase tracking-widest text-sm transition-colors"
             >
                 Start Shopping
                 <ArrowRight className="w-4 h-4" />
@@ -176,8 +176,8 @@ export default function FavoritesPage() {
 
     return (
         <>
-            <main className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-                <div className="max-w-3xl mx-auto">
+            <main className="min-h-screen py-8 px-4 sm:px-6 lg:px-8 flex-1">
+                <div className="w-full">
 
                     {/* Page Header */}
                     <div className="flex items-center justify-between mb-8">

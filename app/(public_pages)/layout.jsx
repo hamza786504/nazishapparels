@@ -6,6 +6,7 @@ import LayoutWrapper from '../_components/LayoutWrapper';
 import RecentPurchasePopup from '../_components/RecentPurchasePopup';
 import ScrollAnimations from '../_components/ScrollAnimations';
 import CategorySidebar from '../_components/CategorySidebar';
+import WhatsAppFloatingButton from '../_components/WhatsAppFloatingButton';
 
 export const revalidate = 300;
 
@@ -40,6 +41,7 @@ export default async function PublicLayout({ children }) {
                                 <CategorySidebar />
                             </aside>
                             {children}
+                            <WhatsAppFloatingButton />
                         </div>
                     </main>
                 </LayoutWrapper>

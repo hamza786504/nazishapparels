@@ -8,6 +8,7 @@ import { accountNavItems } from '@/app/_components/accountNav';
 import { AuthGuard } from '@/app/_components/AuthGuard';
 import { useState } from 'react';
 import { Menu, X } from 'lucide-react';
+import WhatsAppFloatingButton from '../_components/WhatsAppFloatingButton';
 
 /**
  * Layout for the customer (account) area.
@@ -108,6 +109,7 @@ export default function AccountLayout({ children }) {
                         <div className="md:col-span-9 space-y-stack-md">{children}</div>
                     </div>
                 </main>
+                <WhatsAppFloatingButton />
 
                 <Footer />
             </div>

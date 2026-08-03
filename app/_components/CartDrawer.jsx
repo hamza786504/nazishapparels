@@ -53,7 +53,11 @@ export default function CartDrawer({ isOpen, onClose, cartItems = [], onUpdateQu
     };
 
     const handleQuantityChange = (itemId, newQuantity) => {
-        if (newQuantity < 1) return;
+        if (newQuantity < 1) {
+            // Remove the item when quantity reaches zero
+            if (onRemoveItem) onRemoveItem(itemId);
+            return;
+        }
         if (onUpdateQuantity) {
             onUpdateQuantity(itemId, newQuantity);
         }
@@ -78,7 +82,7 @@ export default function CartDrawer({ isOpen, onClose, cartItems = [], onUpdateQu
     if (!isVisible) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] storefront-theme font-sans">
+        <div className="fixed inset-0 z-[100000] storefront-theme font-sans">
             {/* Overlay */}
             <div
                 className={`absolute inset-0 transition-all duration-500 ${
@@ -93,7 +97,7 @@ export default function CartDrawer({ isOpen, onClose, cartItems = [], onUpdateQu
 
             {/* Drawer Panel - Reduced width */}
             <div
-                className={`absolute right-0 top-0 h-full w-full sm:w-[400px] bg-surface flex flex-col shadow-2xl border-l border-secondary/20 transition-transform duration-500 ease-in-out ${
+                className={`absolute right-0 top-0 h-full w-full sm:w-[400px] bg-white flex flex-col shadow-2xl border-l border-secondary/20 transition-transform duration-500 ease-in-out ${
                     isAnimating ? 'translate-x-0' : 'translate-x-full'
                 }`}
             >
@@ -157,7 +161,7 @@ export default function CartDrawer({ isOpen, onClose, cartItems = [], onUpdateQu
                                     <div className="flex flex-col justify-between flex-grow min-w-0">
                                         <div>
                                             <div className="flex justify-between items-start gap-2">
-                                                <h3 className="text-sm font-medium leading-snug line-clamp-2 text-primary">
+                                                <h3 className="text-sm font-medium leading-snug line-clamp-2 text-black">
                                                     {item.title}
                                                 </h3>
                                                 <button
@@ -169,15 +173,15 @@ export default function CartDrawer({ isOpen, onClose, cartItems = [], onUpdateQu
                                                 </button>
                                             </div>
                                             <p className="text-[11px] text-on-surface-variant/70 mt-0.5">
-                                                {item.size}
+                                                Size: {item.size}
                                             </p>
                                         </div>
                                         <div className="flex justify-between items-end mt-1">
                                             <div className="flex items-center border border-secondary/20 rounded-sm">
                                                 <button
-                                                    className="w-7 h-7 flex items-center justify-center text-secondary hover:text-primary hover:bg-surface-container transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                                    className="w-7 h-7 flex items-center justify-center text-secondary hover:text-primary hover:bg-surface-container transition-colors"
                                                     onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
-                                                    disabled={item.quantity <= 1}
+                                                    aria-label="Decrease quantity"
                                                 >
                                                     <Minus className="w-4 h-4" />
                                                 </button>
@@ -189,7 +193,7 @@ export default function CartDrawer({ isOpen, onClose, cartItems = [], onUpdateQu
                                                     <Plus className="w-4 h-4" />
                                                 </button>
                                             </div>
-                                            <p className="text-sm font-headline-sm text-primary">
+                                            <p className="text-sm font-headline-sm text-black">
                                                 {formatPrice(item.price * item.quantity)}
                                             </p>
                                         </div>
@@ -207,12 +211,12 @@ export default function CartDrawer({ isOpen, onClose, cartItems = [], onUpdateQu
 
                 {/* Compact Footer */}
                 {cartItems.length > 0 && (
-                    <div className="px-5 py-4 bg-surface-container-low border-t border-secondary/20 space-y-3">
+                    <div className="px-5 py-4 bg-white border-t border-secondary/20 space-y-3">
                         <div className="flex justify-between items-baseline">
                             <span className="text-xs uppercase tracking-widest text-on-surface-variant">
                                 Subtotal
                             </span>
-                            <span className="text-lg font-headline-sm font-bold text-primary">
+                            <span className="text-lg font-headline-sm font-bold text-black">
                                 {formatPrice(calculateSubtotal())}
                             </span>
                         </div>
