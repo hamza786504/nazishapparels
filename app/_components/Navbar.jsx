@@ -466,7 +466,7 @@ export default function Navbar() {
               {/* Brand Logo */}
               <div className="flex-shrink-0 flex items-center">
                 <Link href="/" className="block">
-                  <Image src={logoSrc} width="160" height="90" alt={storeName} className="h-14 w-auto object-contain" />
+                  <Image src={logoSrc} width="160" height="60" alt={storeName} className="h-12 w-auto object-contain" />
                 </Link>
               </div>
 

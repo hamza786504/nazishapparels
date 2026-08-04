@@ -47,7 +47,7 @@ function FavoriteItem({ item, onRemove }) {
     return (
         <div className="group flex gap-4 p-4 bg-white border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all duration-300 rounded-sm">
             {/* Product image */}
-            <Link href={`/product/${item.slug}`} className="relative flex-shrink-0 w-28 h-36 sm:w-32 sm:h-40 overflow-hidden bg-gray-50 rounded-sm">
+            <Link href={`/product/${item.slug}`} className="relative flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 overflow-hidden bg-gray-50 rounded-sm">
                 {item.image ? (
                     <Image
                         src={item.image}
@@ -111,7 +111,7 @@ function FavoriteItem({ item, onRemove }) {
                         className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs sm:text-sm font-medium uppercase tracking-wider transition-all duration-300 border ${
                             added
                                 ? 'bg-green-600 text-white border-green-600'
-                                : 'bg-primary text-white border-primary hover:bg-primary/90'
+                                : 'bg-black text-white border-black hover:bg-black/90'
                         }`}
                     >
                         <ShoppingBag className="w-3.5 h-3.5" />
