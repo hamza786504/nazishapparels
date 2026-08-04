@@ -320,7 +320,7 @@ function MobileHorizontalCategories({ navItems }) {
   const pathname = usePathname();
   return (
     <div className="md:hidden w-full overflow-x-auto whitespace-nowrap scrollbar-hide pt-3 px-0 flex items-center gap-6 no-scrollbar">
-     
+
       {/* Dynamic Nav Links */}
       {navItems.map((item) => {
         const isActive = pathname === item.url || (pathname.startsWith(item.url) && item.url !== '/');
@@ -355,8 +355,20 @@ export default function Navbar() {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef(null);
   const topNavRef = useRef(null);
+  const catRowRef = useRef(null);
   const navHidden = useHideOnScroll();
   const [navHeight, setNavHeight] = useState(null);
+  // True only when the page is scrolled back to the very top
+  const [atTop, setAtTop] = useState(true);
+
+  // Track whether the user is truly at the top of the page
+  useEffect(() => {
+    const onScroll = () => {
+      setAtTop(window.scrollY <= 15);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   // Track the top nav's natural height so it can be collapsed to reclaim space
   useEffect(() => {
@@ -387,6 +399,23 @@ export default function Navbar() {
       el.style.overflow = 'visible';
     }
   }, [navHidden, navHeight]);
+
+  // Category row: only show when user is back at the very top
+  useEffect(() => {
+    const cat = catRowRef.current;
+    if (!cat) return;
+    if (atTop) {
+      cat.style.maxHeight = '60px';
+      cat.style.opacity = '1';
+      cat.style.paddingTop = '';
+      cat.style.paddingBottom = '';
+    } else {
+      cat.style.maxHeight = '0px';
+      cat.style.opacity = '0';
+      cat.style.paddingTop = '0';
+      cat.style.paddingBottom = '0';
+    }
+  }, [atTop]);
 
   // Close mobile drawer when scrolling
   useEffect(() => {
@@ -431,7 +460,7 @@ export default function Navbar() {
         onRemoveItem={removeFromCart}
       />
 
-      <div 
+      <div
         ref={topNavRef}
         className="sticky top-0 z-[100] w-full bg-white flex flex-col transition-all duration-300 ease-in-out"
         style={{ height: 'auto' }}
@@ -448,94 +477,96 @@ export default function Navbar() {
             <div className="flex justify-between items-center w-full gap-2">
 
               {/* Brand Logo */}
-            <div className="flex-shrink-0 flex items-center">
-              <Link href="/" className="block">
-                <Image src={logoSrc} width="160" height="90" alt={storeName} className="h-14 w-auto object-contain" />
-              </Link>
-            </div>
-
-            {/* Desktop Search Bar (Visible MD+) */}
-            <SearchBox navItems={navItems} />
-
-            {/* Actions (User, Cart, Hamburger) */}
-            <div className="flex items-center gap-3 sm:gap-4 ml-auto">
-
-
-              {/* User account */}
-              <div className="relative block" ref={userMenuRef}>
-                
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!isAuthenticated) router.push('/login');
-                    else setUserMenuOpen((open) => !open);
-                  }}
-                  className="text-gray-800 hover:text-secondary transition-colors duration-300 active:scale-95 flex items-center justify-center p-1"
-                >
-                  <User className="w-5 h-5" />
-                </button>
-
-                {isAuthenticated && userMenuOpen && (
-                  <div role="menu" className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 shadow-xl z-50 rounded-sm py-2">
-                    <div className="px-4 py-2 border-b border-gray-100 mb-1">
-                      <p className="text-sm font-medium text-gray-800 truncate">{customer?.name || 'My Account'}</p>
-                      <p className="text-[11px] text-gray-500 truncate">{customer?.email}</p>
-                    </div>
-                    <Link href="/dashboard" onClick={() => setUserMenuOpen(false)} className="block px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-secondary">Dashboard</Link>
-                    <Link href="/profile" onClick={() => setUserMenuOpen(false)} className="block px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-secondary">Profile</Link>
-                    <button type="button" onClick={handleLogout} className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50">Logout</button>
-                  </div>
-                )}
+              <div className="flex-shrink-0 flex items-center">
+                <Link href="/" className="block">
+                  <Image src={logoSrc} width="160" height="90" alt={storeName} className="h-14 w-auto object-contain" />
+                </Link>
               </div>
 
-              {/* Favorites / Wishlist */}
-              <Link
-                href="/favorites"
-                aria-label="Wishlist"
-                className="relative text-gray-800 hover:text-red-500 transition-colors duration-300 flex items-center justify-center p-1"
-              >
-                <Heart className="w-5 h-5" strokeWidth={1.5} />
-                {favoritesCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold">
-                    {favoritesCount > 9 ? '9+' : favoritesCount}
+              {/* Desktop Search Bar (Visible MD+) */}
+              <SearchBox navItems={navItems} />
+
+              {/* Actions (User, Cart, Hamburger) */}
+              <div className="flex items-center gap-3 sm:gap-4 ml-auto">
+
+
+                {/* User account */}
+                <div className="relative block" ref={userMenuRef}>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!isAuthenticated) router.push('/login');
+                      else setUserMenuOpen((open) => !open);
+                    }}
+                    className="text-gray-800 hover:text-secondary transition-colors duration-300 active:scale-95 flex items-center justify-center p-1"
+                  >
+                    <User className="w-5 h-5" />
+                  </button>
+
+                  {isAuthenticated && userMenuOpen && (
+                    <div role="menu" className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 shadow-xl z-50 rounded-sm py-2">
+                      <div className="px-4 py-2 border-b border-gray-100 mb-1">
+                        <p className="text-sm font-medium text-gray-800 truncate">{customer?.name || 'My Account'}</p>
+                        <p className="text-[11px] text-gray-500 truncate">{customer?.email}</p>
+                      </div>
+                      <Link href="/dashboard" onClick={() => setUserMenuOpen(false)} className="block px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-secondary">Dashboard</Link>
+                      <Link href="/profile" onClick={() => setUserMenuOpen(false)} className="block px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-secondary">Profile</Link>
+                      <button type="button" onClick={handleLogout} className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50">Logout</button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Favorites / Wishlist */}
+                <Link
+                  href="/favorites"
+                  aria-label="Wishlist"
+                  className="relative text-gray-800 hover:text-red-500 transition-colors duration-300 flex items-center justify-center p-1"
+                >
+                  <Heart className="w-5 h-5" strokeWidth={1.5} />
+                  {favoritesCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold">
+                      {favoritesCount > 9 ? '9+' : favoritesCount}
+                    </span>
+                  )}
+                </Link>
+
+                {/* Cart Button */}
+                <button
+                  onClick={() => setIsCartOpen(true)}
+                  className="text-gray-800 hover:text-secondary transition-colors duration-300 active:scale-95 relative flex items-center justify-center p-1"
+                >
+                  <ShoppingBag className="w-5 h-5" strokeWidth={1.5} />
+                  <span className="absolute -top-1 -right-1 bg-secondary text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full">
+                    {cartCount}
                   </span>
-                )}
-              </Link>
+                </button>
 
-              {/* Cart Button */}
-              <button
-                onClick={() => setIsCartOpen(true)}
-                className="text-gray-800 hover:text-secondary transition-colors duration-300 active:scale-95 relative flex items-center justify-center p-1"
-              >
-                <ShoppingBag className="w-5 h-5" strokeWidth={1.5} />
-                <span className="absolute -top-1 -right-1 bg-secondary text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full">
-                  {cartCount}
-                </span>
-              </button>
+                {/* Hamburger — Mobile */}
+                <button
+                  onClick={() => setMenuOpen(!menuOpen)}
+                  className="md:hidden text-gray-800 hover:text-secondary focus:outline-none flex items-center justify-center p-1"
+                >
+                  {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                </button>
+              </div>
+            </div>
 
-              {/* Hamburger — Mobile */}
-              <button
-                onClick={() => setMenuOpen(!menuOpen)}
-                className="md:hidden text-gray-800 hover:text-secondary focus:outline-none flex items-center justify-center p-1"
-              >
-                {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-              </button>
+            {/* Row 2: Mobile Search Bar (Only visible < md) */}
+            <div className="md:hidden block w-full mt-1">
+              <MobileSearchBar />
+            </div>
+
+            {/* Row 3: Mobile Horizontal Categories — stays hidden until back at top */}
+            <div
+              ref={catRowRef}
+              className="md:hidden w-full overflow-x-auto whitespace-nowrap scrollbar-hide pt-0 px-0 flex items-center gap-6 no-scrollbar"
+              style={{ maxHeight: '60px', opacity: 1, overflow: 'hidden', transition: 'max-height 0.3s ease-in-out, opacity 0.3s ease-in-out, padding 0.3s ease-in-out' }}
+            >
+              <MobileHorizontalCategories navItems={navItems} />
             </div>
           </div>
-
-          {/* Row 2: Mobile Search Bar (Only visible < md) */}
-          <div className="md:hidden block w-full mt-1">
-            <MobileSearchBar />
-          </div>
-
-          {/* Row 3: Mobile Horizontal Categories (Only visible < md) */}
-          <div
-            className={`md:hidden w-full overflow-x-auto whitespace-nowrap scrollbar-hide pt-0 px-0 flex items-center gap-6 no-scrollbar transition-all duration-300 ease-in-out`}
-          >
-            <MobileHorizontalCategories navItems={navItems} />
-          </div>
-        </div>
-      </header >
+        </header >
       </div>
 
       {/* ── Mobile Drawer Overlay ──────────────────────────────────────────── */}
