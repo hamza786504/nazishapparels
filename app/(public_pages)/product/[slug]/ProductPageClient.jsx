@@ -116,6 +116,31 @@ export default function ProductPageClient({ initialProduct }) {
         setActiveThumb(newIndex);
     };
 
+    // Swipe / drag between images on touch screens
+    const touchStartX = useRef(null);
+    const touchStartY = useRef(null);
+
+    const handleTouchStart = (e) => {
+        touchStartX.current = e.touches[0].clientX;
+        touchStartY.current = e.touches[0].clientY;
+    };
+
+    const handleTouchEnd = (e) => {
+        if (touchStartX.current === null) return;
+        const deltaX = e.changedTouches[0].clientX - touchStartX.current;
+        const deltaY = e.changedTouches[0].clientY - touchStartY.current;
+        touchStartX.current = null;
+        touchStartY.current = null;
+
+        // Too small to be a swipe
+        if (Math.abs(deltaX) < 40) return;
+        // Vertical scroll should keep scrolling the page, not change the image
+        if (Math.abs(deltaY) > Math.abs(deltaX)) return;
+
+        if (deltaX < 0) handleNextImage();   // drag left  → next image
+        else handlePrevImage();              // drag right → previous image
+    };
+
     // Updated to handle both numbers (specs) and strings (review form)
     const toggleAccordion = (target) => {
         setAccordionOpen(accordionOpen === target ? null : target);
@@ -377,7 +402,11 @@ export default function ProductPageClient({ initialProduct }) {
                         {/* Image Gallery Section */}
                         <div className="lg:col-span-7 flex flex-col gap-4">
                             <div className="flex flex-col md:flex-row-reverse gap-4">
-                                <div className="flex-1 relative max-h-[550px] aspect-[3/4] overflow-hidden group image-zoom">
+                                <div
+                                    className="flex-1 relative max-h-[550px] aspect-[3/4] overflow-hidden group image-zoom"
+                                    onTouchStart={handleTouchStart}
+                                    onTouchEnd={handleTouchEnd}
+                                >
                                     {images.map((img, idx) => (
                                         <div
                                             key={idx}

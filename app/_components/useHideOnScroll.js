@@ -4,12 +4,11 @@ import { usePathname } from 'next/navigation';
 
 /**
  * Returns `{ hidden, atTop }` for mobile header/navs:
- *   `hidden` – `true` when header/navs should be hidden:
+ *   `hidden` – `true` when header/navs should be slid out of view:
  *       – Scrolling DOWN → hide
  *       – Scrolling UP   → show
  *       – At the very top → always show
  *   `atTop`  – `true` only when the user is scrolled back to the very top.
- * Always returns `hidden: false` on desktop (>= 768px).
  */
 export default function useHideOnScroll() {
     const [hidden, setHidden] = useState(false);
@@ -26,7 +25,7 @@ export default function useHideOnScroll() {
 
         // ── Scroll handler ─────────────────────────────────────────────────────
         const onScroll = (e) => {
-            // Skip on desktop
+            // Only relevant on mobile
             if (window.innerWidth >= 768) return;
             // One RAF at a time
             if (s.ticking) return;
@@ -62,7 +61,7 @@ export default function useHideOnScroll() {
                     if (target.nodeType === 1) { // Ensure it's an Element
                         const style = window.getComputedStyle(target);
                         const oy = style.overflowY;
-                        
+
                         // We only care about containers that *can* scroll vertically
                         if ((oy === 'auto' || oy === 'scroll') && target.clientHeight > 200) {
                             y = target.scrollTop;
@@ -81,9 +80,9 @@ export default function useHideOnScroll() {
                     const clampedY = Math.max(0, y);
                     const clampedX = Math.max(0, x);
                     const tracked = trackingMap.current.get(scrollElement) || { lastY: 0, lastX: 0, lastCH: ch, lastSH: sh };
-                    
+
                     // If the container's height changed, this scroll event is likely a synthetic
-                    // layout adjustment caused by the navbars themselves showing/hiding.
+                    // layout adjustment caused by the header/padding showing/hiding.
                     // We MUST ignore this event to prevent infinite jitter loops.
                     if (tracked.lastCH !== ch || tracked.lastSH !== sh) {
                         trackingMap.current.set(scrollElement, { lastY: clampedY, lastX: clampedX, lastCH: ch, lastSH: sh });
@@ -139,7 +138,7 @@ export default function useHideOnScroll() {
         };
     }, [pathname]);
 
-    // Always show navs when navigating to a new page.
+    // Reset to the top whenever navigating to a new page.
     // Adjust state during render (React-documented pattern) instead of in an effect.
     const [prevPathname, setPrevPathname] = useState(pathname);
     if (prevPathname !== pathname) {

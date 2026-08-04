@@ -357,15 +357,26 @@ export default function Navbar() {
   const topNavRef = useRef(null);
   const catRowRef = useRef(null);
   const { hidden: navHidden, atTop } = useHideOnScroll();
-  const [navHeight, setNavHeight] = useState(null);
   // `atTop` is derived from the real scroll container in useHideOnScroll and is
   // true only when the user is scrolled back to the very top.
 
-  // Track the top nav's natural height so it can be collapsed to reclaim space
+  // Slide the fixed header out of view while scrolling down, back in on scroll up
   useEffect(() => {
     const el = topNavRef.current;
     if (!el) return;
-    const update = () => setNavHeight(el.scrollHeight);
+    el.style.transform = navHidden ? 'translateY(-100%)' : 'translateY(0)';
+  }, [navHidden]);
+
+  // Publish the header's current height as a CSS var so the layout can reserve
+  // exactly that space below the fixed mobile header when at the top.
+  useEffect(() => {
+    const el = topNavRef.current;
+    if (!el) return;
+    const root = document.documentElement;
+    const update = () => {
+      const isMobile = window.innerWidth < 768;
+      root.style.setProperty('--mobile-header-h', isMobile && atTop ? `${el.offsetHeight}px` : '0px');
+    };
     update();
     const ro = new ResizeObserver(update);
     ro.observe(el);
@@ -374,22 +385,7 @@ export default function Navbar() {
       ro.disconnect();
       window.removeEventListener('resize', update);
     };
-  }, []);
-
-  // On mobile, collapse the top nav when hidden so the flex-1 content expands
-  useEffect(() => {
-    const el = topNavRef.current;
-    if (!el || navHeight == null) return;
-    if (navHidden) {
-      el.style.height = '0px';
-      el.style.opacity = '0';
-      el.style.overflow = 'hidden';
-    } else {
-      el.style.height = `${navHeight}px`;
-      el.style.opacity = '1';
-      el.style.overflow = 'visible';
-    }
-  }, [navHidden, navHeight]);
+  }, [atTop]);
 
   // Category row: only show when user is back at the very top
   useEffect(() => {
@@ -453,7 +449,7 @@ export default function Navbar() {
 
       <div
         ref={topNavRef}
-        className="sticky top-0 z-[100] w-full bg-white flex flex-col transition-all duration-300 ease-in-out"
+        className="fixed top-0 inset-x-0 z-[100] w-full bg-white flex flex-col transition-all duration-300 ease-in-out md:sticky md:top-0 md:inset-x-auto"
         style={{ height: 'auto' }}
       >
         {/* 1. Announcement Bar */}
