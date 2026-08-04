@@ -7,6 +7,7 @@ import { FavoritesProvider } from './store/favoritesContext';
 import { getHeaderMenuItems } from '@/lib/getHeaderMenu';
 import { getSiteSettings } from '..//lib/getSiteSettings';
 import { SiteSettingsProvider } from './store/siteSettingsContext';
+import NextTopLoader from 'nextjs-toploader';
 
 const ebGaramond = EB_Garamond({
     subsets: ['latin'],
@@ -55,6 +56,7 @@ export default async function RootLayout({ children }) {
 
             </head>
             <body className="bg-surface text-on-surface selection:bg-secondary-container selection:text-on-secondary-container">
+                <NextTopLoader color="#000000" showSpinner={false} height={3} />
                 <SiteSettingsProvider  settings={settings}>
                     <AuthProvider>
                         <CartProvider>

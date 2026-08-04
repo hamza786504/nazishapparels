@@ -399,21 +399,7 @@ export default function CollectionPage() {
                             ref={filtersScrollRef}
                             className="flex items-center gap-3 py-1 scroll-smooth flex-1 overflow-x-auto no-scrollbar"
                         >
-                            {/* Filter Icon button */}
-                            <button
-                                type="button"
-                                onClick={() => setMobileFilterOpen(!mobileFilterOpen)}
-                                className="flex items-center gap-1.5 px-3 py-2 border border-gray-200 rounded-lg text-xs font-semibold text-gray-700 hover:border-black shrink-0"
-                            >
-                                <SlidersHorizontal className="w-4 h-4" />
-                                <span>Filter</span>
-                                {activeFiltersCount > 0 && (
-                                    <span className="bg-black text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
-                                        {activeFiltersCount}
-                                    </span>
-                                )}
-                            </button>
-
+                           
                             {/* Sort By Dropdown */}
                             <div className="shrink-0">
                                 <button

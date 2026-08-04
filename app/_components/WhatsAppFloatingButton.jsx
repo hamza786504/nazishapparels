@@ -39,8 +39,8 @@ export default function WhatsAppFloatingButton() {
   }, [isOpen]);
 
   const positionClass = whatsappSettings.position === 'bottom-left'
-    ? 'left-4 bottom-16'
-    : 'right-4 bottom-16';
+    ? 'left-4 md:bottom-2 bottom-16'
+    : 'right-4 md:bottom-2 bottom-16';
 
   const presets = whatsappSettings.presets || [];
   

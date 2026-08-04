@@ -320,17 +320,7 @@ function MobileHorizontalCategories({ navItems }) {
   const pathname = usePathname();
   return (
     <div className="md:hidden w-full overflow-x-auto whitespace-nowrap scrollbar-hide pt-3 px-0 flex items-center gap-6 no-scrollbar">
-      {/* "All" Link */}
-      <Link
-        href="/search"
-        className={`text-[15px] transition-colors pb-1 border-b-2 ${pathname === '/search'
-          ? 'text-gray-900 border-black font-medium'
-          : 'text-gray-600 border-transparent hover:text-secondary'
-          }`}
-      >
-        All
-      </Link>
-
+     
       {/* Dynamic Nav Links */}
       {navItems.map((item) => {
         const isActive = pathname === item.url || (pathname.startsWith(item.url) && item.url !== '/');
@@ -472,7 +462,8 @@ export default function Navbar() {
 
 
               {/* User account */}
-              <div className="relative hidden sm:block" ref={userMenuRef}>
+              <div className="relative block" ref={userMenuRef}>
+                
                 <button
                   type="button"
                   onClick={() => {
@@ -550,12 +541,12 @@ export default function Navbar() {
       {/* ── Mobile Drawer Overlay ──────────────────────────────────────────── */}
       {
         menuOpen && (
-          <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity duration-300 md:hidden" onClick={() => setMenuOpen(false)} />
+          <div className="z-[999] fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 md:hidden" onClick={() => setMenuOpen(false)} />
         )
       }
 
       {/* ── Mobile Drawer ─────────────────────────────────────────────────── */}
-      <div className={`fixed top-0 left-0 bottom-0 z-50 w-[80%] max-w-[360px] bg-white shadow-2xl p-6 transition-transform duration-300 ease-in-out transform md:hidden ${menuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <div className={`z-[1000] fixed top-0 left-0 bottom-0 w-[80%] max-w-[360px] bg-white shadow-2xl p-6 transition-transform duration-300 ease-in-out transform md:hidden ${menuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex items-center justify-between border-b border-gray-200 pb-4 mb-4">
           <Link href="/" onClick={() => setMenuOpen(false)}>
             <Image src={logoSrc} width={140} height={80} alt={storeName} className="h-12 w-auto object-contain" />

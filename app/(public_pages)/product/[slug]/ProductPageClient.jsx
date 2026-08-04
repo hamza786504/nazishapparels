@@ -254,87 +254,8 @@ export default function ProductPageClient({ initialProduct }) {
         }
     };
 
-    return (
-        <>
-            {/* ── Right Content Area - scrollable ──────────── */}
-            <main className="flex-1 min-w-0 overflow-y-auto pb-8">
-                <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-2">
-
-                    {/* Breadcrumbs */}
-                    <nav className="flex items-center gap-2 text-label-sm text-on-surface-variant mb-2 overflow-hidden whitespace-nowrap">
-                        <Link href="/" className="hover:text-primary transition-colors">Home</Link>
-                        <ChevronRight className="w-4 h-4" />
-                        <Link href={`/collection/${product.collectionId?.slug || 'all'}`} className="hover:text-primary transition-colors truncate max-w-[150px]">
-                            {product.collectionId?.name || product.productType || 'Shop'}
-                        </Link>
-                        <ChevronRight className="w-4 h-4" />
-                        <span className="text-black truncate max-w-[150px] md:max-w-[300px]">{product.title}</span>
-                    </nav>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
-
-                        {/* Image Gallery Section */}
-                        <div className="lg:col-span-7 flex flex-col gap-4">
-                            <div className="flex flex-col md:flex-row-reverse gap-4">
-                                <div className="flex-1 relative max-h-[550px] aspect-[3/4] overflow-hidden group image-zoom">
-                                    {images.map((img, idx) => (
-                                        <div
-                                            key={idx}
-                                            className={`absolute inset-0 transition-opacity duration-300 ${activeThumb === idx ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-                                        >
-                                            <Image
-                                                height={580}
-                                                width={720}
-                                                src={img}
-                                                alt={`Product view ${idx + 1}`}
-                                                className="w-full h-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-105"
-                                                priority={idx === 0}
-                                            />
-                                        </div>
-                                    ))}
-
-                                    {/* Carousel Navigation Arrows */}
-                                    {images.length > 1 && (
-                                        <>
-                                            <button
-                                                onClick={handlePrevImage}
-                                                className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-white/80 backdrop-blur-sm text-gray-800 p-2 rounded-full shadow-md hover:bg-white transition-colors"
-                                                aria-label="Previous image"
-                                            >
-                                                <ChevronLeft className="w-[18px] h-[18px]" />
-                                            </button>
-                                            <button
-                                                onClick={handleNextImage}
-                                                className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-white/80 backdrop-blur-sm text-gray-800 p-2 rounded-full shadow-md hover:bg-white transition-colors"
-                                                aria-label="Next image"
-                                            >
-                                                <ChevronRight className="w-[18px] h-[18px]" />
-                                            </button>
-                                        </>
-                                    )}
-
-                                    <div className="absolute top-4 right-4 bg-surface/80 backdrop-blur-sm px-3 py-1 rounded-full">
-                                        <span className="text-label-sm text-primary uppercase tracking-widest">New Arrival</span>
-                                    </div>
-                                </div>
-                                <div className="flex md:flex-col gap-4 overflow-x-auto no-scrollbar md:w-20 shrink-0">
-                                    {images.map((thumb, idx) => (
-                                        thumb && (
-                                            <button
-                                                key={idx}
-                                                className={`aspect-[3/4] w-20 md:w-full shrink-0 overflow-hidden bg-surface-container transition-all border-2 ${activeThumb === idx ? 'border-black' : 'border-transparent hover:border-gray-300'}`}
-                                                onClick={() => handleThumbClick(thumb, idx)}
-                                            >
-                                                <Image height={100} width={100} src={thumb} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover" />
-                                            </button>
-                                        )
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Reviews Section (Updated to match screenshot) */}
-                            <section className="mt-stack-lg border-t border-secondary/30 pt-stack-md">
-                                <div className="flex flex-col gap-6">
+        const reviewsContent = (
+        <div className="flex flex-col gap-6">
 
 
                                     {/* Write a Review Toggle Button */}
@@ -432,6 +353,89 @@ export default function ProductPageClient({ initialProduct }) {
                                         </div>
                                     )}
                                 </div>
+    );
+
+    return (
+        <>
+            {/* ── Right Content Area - scrollable ──────────── */}
+            <main className="flex-1 min-w-0 overflow-y-auto pb-8">
+                <div className="max-w-container-max mx-auto px-2 md:px-margin-desktop py-2">
+
+                    {/* Breadcrumbs */}
+                    <nav className="flex items-center gap-2 text-label-sm text-on-surface-variant mb-2 overflow-hidden whitespace-nowrap">
+                        <Link href="/" className="hover:text-primary transition-colors">Home</Link>
+                        <ChevronRight className="w-4 h-4" />
+                        <Link href={`/collection/${product.collectionId?.slug || 'all'}`} className="hover:text-primary transition-colors truncate max-w-[150px]">
+                            {product.collectionId?.name || product.productType || 'Shop'}
+                        </Link>
+                        <ChevronRight className="w-4 h-4" />
+                        <span className="text-black truncate max-w-[150px] md:max-w-[300px]">{product.title}</span>
+                    </nav>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+
+                        {/* Image Gallery Section */}
+                        <div className="lg:col-span-7 flex flex-col gap-4">
+                            <div className="flex flex-col md:flex-row-reverse gap-4">
+                                <div className="flex-1 relative max-h-[550px] aspect-[3/4] overflow-hidden group image-zoom">
+                                    {images.map((img, idx) => (
+                                        <div
+                                            key={idx}
+                                            className={`absolute inset-0 transition-opacity duration-300 ${activeThumb === idx ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                                        >
+                                            <Image
+                                                height={580}
+                                                width={720}
+                                                src={img}
+                                                alt={`Product view ${idx + 1}`}
+                                                className="w-full h-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-105"
+                                                priority={idx === 0}
+                                            />
+                                        </div>
+                                    ))}
+
+                                    {/* Carousel Navigation Arrows */}
+                                    {images.length > 1 && (
+                                        <>
+                                            <button
+                                                onClick={handlePrevImage}
+                                                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 backdrop-blur-sm text-gray-800 p-2  shadow-md hover:bg-white transition-colors"
+                                                aria-label="Previous image"
+                                            >
+                                                <ChevronLeft className="w-[18px] h-[18px]" />
+                                            </button>
+                                            <button
+                                                onClick={handleNextImage}
+                                                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 backdrop-blur-sm text-gray-800 p-2  shadow-md hover:bg-white transition-colors"
+                                                aria-label="Next image"
+                                            >
+                                                <ChevronRight className="w-[18px] h-[18px]" />
+                                            </button>
+                                        </>
+                                    )}
+
+                                    <div className="absolute top-0 right-0 bg-surface/80 backdrop-blur-sm px-3 py-1">
+                                        <span className="text-label-sm text-black uppercase tracking-widest">New Arrival</span>
+                                    </div>
+                                </div>
+                                <div className="flex md:flex-col gap-4 overflow-x-auto no-scrollbar md:w-20 shrink-0">
+                                    {images.map((thumb, idx) => (
+                                        thumb && (
+                                            <button
+                                                key={idx}
+                                                className={`aspect-[3/4] w-20 md:w-full shrink-0 overflow-hidden bg-surface-container transition-all border-2 ${activeThumb === idx ? 'border-black' : 'border-transparent hover:border-gray-300'}`}
+                                                onClick={() => handleThumbClick(thumb, idx)}
+                                            >
+                                                <Image height={100} width={100} src={thumb} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover" />
+                                            </button>
+                                        )
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Reviews Section (Updated to match screenshot) */}
+                            <section className="mt-0 border-t border-secondary/30 pt-3 hidden lg:block">
+                                {reviewsContent}
                             </section>
                         </div>
 
@@ -653,15 +657,20 @@ export default function ProductPageClient({ initialProduct }) {
 
 
 
+                    {/* Reviews Section (Mobile) */}
+                    <section className="mt-8 border-t border-secondary/30 pt-4 block lg:hidden">
+                        {reviewsContent}
+                    </section>
+
                     {/* Related Products */}
                     {relatedProducts.length > 0 && (
                         <section className="mt-stack-lg border-t border-secondary/30 pt-stack-md">
-                            <div className="flex justify-between items-end mb-10">
+                            <div className="flex justify-between items-end mb-4">
                                 <div>
-                                    <h2 className="font-headline-md text-headline-md text-primary">Complete the Look</h2>
+                                    <h2 className="font-headline-md text-headline-md text-black">Complete the Look</h2>
                                     <p className="text-body-md text-on-surface-variant">Elevate your ensemble with these essentials.</p>
                                 </div>
-                                <Link className="text-label-md text-secondary border-b border-secondary pb-1 hidden md:block" href={`/collection/${product.collectionId?.slug || 'all'}`}>View Collection</Link>
+                                <Link className="text-label-md text-black border-b border-secondary pb-1 hidden md:block" href={`/collection/${product.collectionId?.slug || 'all'}`}>View Collection</Link>
                             </div>
                             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5 gap-y-6">
                                 {relatedProducts.map((item) => (
