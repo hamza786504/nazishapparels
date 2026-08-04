@@ -164,7 +164,13 @@ export default function CollectionPage() {
         }
         if (btnRef?.current) {
             const rect = btnRef.current.getBoundingClientRect();
-            setDropdownPos({ top: rect.bottom + 6, left: rect.left });
+            // Panel widths must stay aligned with the fixed panel widths below.
+            const PANEL_WIDTHS = { sort: 192, fabric: 208, price: 288, size: 208 };
+            const panelWidth = PANEL_WIDTHS[name] || 208;
+            const gap = 8;
+            const maxLeft = Math.max(gap, window.innerWidth - panelWidth - gap);
+            const left = Math.min(Math.max(rect.left, gap), maxLeft);
+            setDropdownPos({ top: rect.bottom + 6, left });
         }
         setActiveDropdown(name);
     };
@@ -535,7 +541,7 @@ export default function CollectionPage() {
                         ))}
                     </div>
                 ) : sortedProducts.length === 0 ? (
-                    <div className="text-center py-20 bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
+                    <div className="text-center py-20  rounded-2xl border border-dashed border-gray-200">
                         <h3 className="text-lg font-bold text-gray-900 mb-1">No Products Found</h3>
                         <p className="text-xs text-gray-500 mb-4">Try clearing your filters to see more results.</p>
                         <button onClick={resetFilters} className="px-5 py-2 bg-black text-white rounded-lg text-xs font-semibold">

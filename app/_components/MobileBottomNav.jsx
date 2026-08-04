@@ -42,7 +42,7 @@ export default function MobileBottomNav() {
 
   return (
     <nav className="bg-white border-t border-gray-200 shadow-lg">
-      <div className="flex items-center justify-around h-[65px] px-2 max-w-screen-xl mx-auto">
+      <div className="flex items-center justify-around h-[45px] px-2 max-w-screen-xl mx-auto">
         {navItems.map((item) => {
           const isActive = pathname === item.href || 
             (item.href !== '/' && pathname?.startsWith(item.href));

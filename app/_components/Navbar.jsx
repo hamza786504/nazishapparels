@@ -301,7 +301,7 @@ function MobileSearchBar() {
   };
 
   return (
-    <div className="flex items-center bg-[#F5F5F5] rounded-lg px-4 py-2.5 gap-3 mt-2 transition-colors focus-within:bg-white focus-within:ring-1 focus-within:ring-secondary">
+    <div className="flex items-center bg-[#F5F5F5] rounded-lg px-4 py-2.5 gap-3 mt-0 transition-colors focus-within:bg-white focus-within:ring-1 focus-within:ring-secondary">
       <Search className="w-5 h-5 text-gray-700 flex-shrink-0" strokeWidth={2} />
       <input
         type="text"
@@ -319,7 +319,7 @@ function MobileSearchBar() {
 function MobileHorizontalCategories({ navItems }) {
   const pathname = usePathname();
   return (
-    <div className="md:hidden w-full overflow-x-auto whitespace-nowrap scrollbar-hide pt-3 px-0 flex items-center gap-6 no-scrollbar">
+    <div className="md:hidden w-full overflow-x-auto whitespace-nowrap scrollbar-hide pt-1 px-0 flex items-center gap-6 no-scrollbar">
 
       {/* Dynamic Nav Links */}
       {navItems.map((item) => {
@@ -458,7 +458,7 @@ export default function Navbar() {
         </div>
 
         <header className="relative bg-white w-full z-50 border-b border-gray-200">
-          <div className="flex flex-col px-2 md:px-5 py-2 md:py-1.5">
+          <div className="flex flex-col px-2 md:px-5 pb-0 py-1.5">
 
             {/* Row 1: Logo & Right Actions */}
             <div className="flex justify-between items-center w-full gap-2">
