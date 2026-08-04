@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useState } from 'react';
 import productsData from '../data/products.json';
 
 // Create context
@@ -220,6 +220,7 @@ function cartReducer(state, action) {
 // Context Provider
 export function CartProvider({ children }) {
     const [state, dispatch] = useReducer(cartReducer, initialState);
+    const [isCartHydrated, setIsCartHydrated] = useState(false);
 
     // Hydrate cart from localStorage on mount
     useEffect(() => {
@@ -248,6 +249,7 @@ export function CartProvider({ children }) {
                 }
             }
         }
+        setIsCartHydrated(true);
     }, []);
 
     // Helper functions to dispatch actions (Redux actions creators)
@@ -303,6 +305,7 @@ export function CartProvider({ children }) {
             value={{
                 cartItems: state.cartItems,
                 appliedCoupon: state.appliedCoupon,
+                isCartHydrated,
                 addToCart,
                 removeFromCart,
                 updateQuantity,
