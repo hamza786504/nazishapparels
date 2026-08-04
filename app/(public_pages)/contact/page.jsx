@@ -44,7 +44,16 @@ export default function ContactPage() {
     setIsSubmitting(true);
     setSubmitStatus(null);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Request failed');
+      }
+
       setIsSubmitting(false);
       setSubmitStatus('success');
       setTimeout(() => {
