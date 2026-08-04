@@ -3,14 +3,17 @@ import { useState, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 
 /**
- * Returns `true` when mobile header/navs should be hidden:
- *   – Scrolling DOWN → hide
- *   – Scrolling UP   → show
- *   – At the very top → always show
- * Always returns false on desktop (>= 768px).
+ * Returns `{ hidden, atTop }` for mobile header/navs:
+ *   `hidden` – `true` when header/navs should be hidden:
+ *       – Scrolling DOWN → hide
+ *       – Scrolling UP   → show
+ *       – At the very top → always show
+ *   `atTop`  – `true` only when the user is scrolled back to the very top.
+ * Always returns `hidden: false` on desktop (>= 768px).
  */
 export default function useHideOnScroll() {
     const [hidden, setHidden] = useState(false);
+    const [atTop, setAtTop] = useState(true);
     const pathname = usePathname();
     const state = useRef({ ticking: false, prevWidth: 0 });
     // WeakMap stores: target -> { lastY, lastX, lastCH, lastSH }
@@ -101,7 +104,9 @@ export default function useHideOnScroll() {
                     if (clampedY <= 15) {
                         // Near the very top → always visible
                         setHidden(false);
+                        setAtTop(true);
                     } else {
+                        setAtTop(false);
                         if (deltaY > 4) {
                             setHidden(true);       // scrolling down → hide
                         } else if (deltaY < -4) {
@@ -119,7 +124,10 @@ export default function useHideOnScroll() {
             const wasMobile = s.prevWidth < 768;
             const isMobile = w < 768;
             s.prevWidth = w;
-            if (wasMobile !== isMobile) setHidden(false);
+            if (wasMobile !== isMobile) {
+                setHidden(false);
+                setAtTop(true);
+            }
         };
 
         window.addEventListener('scroll', onScroll, { passive: true, capture: true });
@@ -131,10 +139,14 @@ export default function useHideOnScroll() {
         };
     }, [pathname]);
 
-    // Always show navs when navigating to a new page
-    useEffect(() => {
+    // Always show navs when navigating to a new page.
+    // Adjust state during render (React-documented pattern) instead of in an effect.
+    const [prevPathname, setPrevPathname] = useState(pathname);
+    if (prevPathname !== pathname) {
+        setPrevPathname(pathname);
         setHidden(false);
-    }, [pathname]);
+        setAtTop(true);
+    }
 
-    return hidden;
+    return { hidden, atTop };
 }

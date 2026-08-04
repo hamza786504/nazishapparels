@@ -8,7 +8,7 @@ import RecentPurchasePopup from '../_components/RecentPurchasePopup';
 export default function LayoutWrapper({ children }) {
     const bottomNavRef = useRef(null);
     const bottomSpacerRef = useRef(null);
-    const bottomNavHidden = useHideOnScroll();
+    const { hidden: bottomNavHidden } = useHideOnScroll();
 
     // Slide the fixed bottom nav away and collapse its spacer when hidden,
     // so the flex-1 content reclaims the reserved space

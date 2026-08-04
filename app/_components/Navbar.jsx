@@ -356,19 +356,10 @@ export default function Navbar() {
   const userMenuRef = useRef(null);
   const topNavRef = useRef(null);
   const catRowRef = useRef(null);
-  const navHidden = useHideOnScroll();
+  const { hidden: navHidden, atTop } = useHideOnScroll();
   const [navHeight, setNavHeight] = useState(null);
-  // True only when the page is scrolled back to the very top
-  const [atTop, setAtTop] = useState(true);
-
-  // Track whether the user is truly at the top of the page
-  useEffect(() => {
-    const onScroll = () => {
-      setAtTop(window.scrollY <= 15);
-    };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+  // `atTop` is derived from the real scroll container in useHideOnScroll and is
+  // true only when the user is scrolled back to the very top.
 
   // Track the top nav's natural height so it can be collapsed to reclaim space
   useEffect(() => {
