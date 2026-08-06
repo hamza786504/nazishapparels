@@ -600,7 +600,7 @@ export default function CheckoutPage() {
                                                                 key={addr._key}
                                                                 className={`flex items-start gap-3 text-left p-4 border cursor-pointer transition-all duration-200 ${
                                                                     selected
-                                                                        ? 'border-secondary bg-black'
+                                                                        ? 'border-secondary bg-white'
                                                                         : 'border-black hover:border-black'
                                                                 }`}
                                                             >
@@ -614,7 +614,7 @@ export default function CheckoutPage() {
                                                                 />
                                                                 <span className="flex-1 min-w-0">
                                                                     <span className="flex items-center justify-between mb-1">
-                                                                        <span className="font-label-sm font-label-sm text-black uppercase tracking-wider truncate">
+                                                                        <span className="text-sm text-black capitalize tracking-wider truncate">
                                                                             {`${addr.firstName || ''} ${addr.lastName || ''}`.trim() || 'Address'}
                                                                         </span>
                                                                         {addr.isDefault && (
