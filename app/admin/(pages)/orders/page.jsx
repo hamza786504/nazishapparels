@@ -476,7 +476,9 @@ const OrdersPage = () => {
                           </p>
                         </td>
                         <td className="p-2 text-right">
-                          <p className="font-body-md text-body-md text-on-surface">{order.items}</p>
+                          <p className="font-body-md text-body-md text-on-surface">
+                            {Array.isArray(order.items) ? order.items.length : order.items}
+                          </p>
                         </td>
                         <td className="p-2 text-center">
                           <div className="flex items-center justify-center gap-2">

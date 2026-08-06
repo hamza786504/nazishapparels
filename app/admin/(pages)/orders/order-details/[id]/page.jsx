@@ -111,7 +111,7 @@ const OrderDetailPage = () => {
     );
   }
 
-  const lineItems = order.lineItems || [];
+  const lineItems = order.lineItems || order.items || [];
   const customer = order.customer || {};
   const isPaid = order.paymentStatus === 'Paid' || order.paymentStatus === 'Partially Paid';
   const isFulfilled = (order.fulfillmentStatus) === 'Fulfilled';
@@ -402,7 +402,7 @@ const OrderDetailPage = () => {
                   <div>
                     <p className="font-bold">{customer.name || '—'}</p>
                     <p className="text-body-sm text-on-surface-variant">
-                      {order.items} item(s) · {formatCurrency(order.total)}
+                      {lineItems.reduce((acc, i) => acc + (Number(i.quantity) || 0), 0)} item(s) · {formatCurrency(order.total)}
                     </p>
                   </div>
                 </div>

@@ -77,7 +77,7 @@ export default function OrderDetail() {
         };
     }, [isAuthenticated, id, customer?.email]);
 
-    const lineItems = order?.lineItems || [];
+    const lineItems = order?.lineItems || order?.items || [];
     const orderCustomer = order?.customer || {};
     const shippingLines = [
         orderCustomer.name || order?.email,
