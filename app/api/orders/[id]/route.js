@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import client from '@/lib/sanityClient';
+import { sendEmail, buildOrderCancellationEmail } from '@/lib/email';
 
 const ORDER_PROJECTION = `{
   ...,
@@ -35,6 +36,24 @@ export async function PUT(request, { params }) {
 
     await client.patch(id).set(body).commit();
     const order = await client.fetch(`*[_type == "order" && _id == $id][0]${ORDER_PROJECTION}`, { id });
+
+    // Best-effort cancellation email — a mail failure must never break the update.
+    if (body.fulfillmentStatus === 'Cancelled') {
+      try {
+        const recipient = order.email || order.customer?.email;
+        if (recipient) {
+          const { html, text } = buildOrderCancellationEmail({ order });
+          await sendEmail({
+            to: recipient.toLowerCase(),
+            subject: `Your ${process.env.STORE_NAME || 'NazishApparels'} order ${order.orderId} has been cancelled`,
+            html,
+            text,
+          });
+        }
+      } catch (mailErr) {
+        console.error('Order cancellation email failed:', mailErr);
+      }
+    }
 
     return NextResponse.json({ success: true, order }, { status: 200 });
   } catch (error) {
