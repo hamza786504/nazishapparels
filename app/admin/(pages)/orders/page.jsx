@@ -23,7 +23,7 @@ import {
 } from 'react-icons/md';
 import Link from 'next/link';
 const PAYMENT_STATUSES = ['All', 'Paid', 'Partially Paid', 'Pending', 'Refunded'];
-const FULFILLMENT_STATUSES = ['All', 'Fulfilled', 'Unfulfilled', 'Pending', 'Returned'];
+const FULFILLMENT_STATUSES = ['All', 'Fulfilled', 'Delivered', 'Unfulfilled', 'Pending', 'Cancelled', 'Returned'];
 const LIMIT = 10;
 
 const OrdersPage = () => {
@@ -176,6 +176,8 @@ const OrdersPage = () => {
       Refunded: 'bg-error-container/20 text-error',
       Unfulfilled: 'bg-tertiary-container/20 text-tertiary',
       Fulfilled: 'bg-primary-container/20 text-primary-container',
+      Delivered: 'bg-primary-container/20 text-primary-container',
+      Cancelled: 'bg-error-container/20 text-error',
       Returned: 'bg-error-container/20 text-error',
     };
     return styles[status] || 'bg-surface-container-high text-on-surface-variant';

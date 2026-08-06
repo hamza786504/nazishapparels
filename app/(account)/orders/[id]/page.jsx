@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useAuth } from '../../../store/authContext';
-import { ArrowLeft, Loader, AlertCircle, CheckCircle, Clock, Truck } from 'lucide-react';
+import { ArrowLeft, Loader, AlertCircle, CheckCircle, Clock, Truck, XCircle } from 'lucide-react';
 
 const STATUS_COLORS = {
     Delivered: 'bg-surface-container-highest text-on-surface',
@@ -44,6 +44,7 @@ export default function OrderDetail() {
     const [order, setOrder] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [cancelling, setCancelling] = useState(false);
 
     useEffect(() => {
         if (!isAuthenticated || !id) return;
@@ -86,6 +87,36 @@ export default function OrderDetail() {
         [order?.city, order?.postalCode].filter(Boolean).join(', '),
         order?.country,
     ].filter(Boolean);
+
+    const canCancel =
+        !cancelling &&
+        order &&
+        order.fulfillmentStatus !== 'Cancelled' &&
+        order.fulfillmentStatus !== 'Fulfilled' &&
+        order.fulfillmentStatus !== 'Delivered' &&
+        order.status !== 'cancelled';
+
+    const handleCancelOrder = async () => {
+        if (!order) return;
+        if (!window.confirm('Are you sure you want to cancel this order?')) return;
+        setCancelling(true);
+        try {
+            const res = await fetch(`/api/orders/${order._id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fulfillmentStatus: 'Cancelled' }),
+            });
+            const data = await res.json();
+            if (!res.ok || !data.success) {
+                throw new Error(data.message || data.error || 'Failed to cancel order.');
+            }
+            setOrder({ ...order, fulfillmentStatus: 'Cancelled' });
+        } catch (err) {
+            alert(err.message);
+        } finally {
+            setCancelling(false);
+        }
+    };
 
     return (
         <div className="space-y-stack-md">
@@ -131,13 +162,25 @@ export default function OrderDetail() {
                                     {order.channel || 'Online Store'}
                                 </p>
                             </div>
-                            <span
-                                className={`inline-flex items-center px-3 py-1 rounded-full text-label-sm font-label-sm ${getStatusColor(
-                                    order.fulfillmentStatus || order.status
-                                )}`}
-                            >
-                                {order.fulfillmentStatus || order.status || 'Processing'}
-                            </span>
+                            <div className="flex items-center gap-3">
+                                <span
+                                    className={`inline-flex items-center px-3 py-1 rounded-full text-label-sm font-label-sm ${getStatusColor(
+                                        order.fulfillmentStatus || order.status
+                                    )}`}
+                                >
+                                    {order.fulfillmentStatus || order.status || 'Processing'}
+                                </span>
+                                {canCancel && (
+                                    <button
+                                        onClick={handleCancelOrder}
+                                        disabled={cancelling}
+                                        className="inline-flex items-center gap-2 border border-error text-error px-4 py-1.5 font-label-md text-label-md font-bold hover:bg-error-container/10 transition-colors rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        <XCircle className="w-4 h-4" />
+                                        {cancelling ? 'Cancelling…' : 'Cancel Order'}
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     </section>
 
@@ -222,6 +265,17 @@ export default function OrderDetail() {
                                             </p>
                                         </div>
                                     </div>
+                                    {order.fulfillmentStatus === 'Cancelled' && (
+                                        <div className="flex items-start gap-3">
+                                            <XCircle className="w-6 h-6 text-error" />
+                                            <div>
+                                                <p className="font-medium text-error">Order cancelled</p>
+                                                <p className="text-label-sm text-on-surface-variant">
+                                                    This order was cancelled and will not be fulfilled.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )}
                                     <div className="flex items-start gap-3">
                                         {order.paymentStatus === 'Paid'
                                             ? <CheckCircle className="w-6 h-6 text-primary" />
@@ -237,20 +291,32 @@ export default function OrderDetail() {
                                             </p>
                                         </div>
                                     </div>
+                                    {order.fulfillmentStatus !== 'Cancelled' && (
                                     <div className="flex items-start gap-3">
-                                        {order.fulfillmentStatus === 'Fulfilled'
+                                        {(order.fulfillmentStatus === 'Fulfilled' || order.fulfillmentStatus === 'Delivered')
                                             ? <CheckCircle className="w-6 h-6 text-primary" />
                                             : <Truck className="w-6 h-6 text-on-surface-variant" />
                                         }
                                         <div>
                                             <p className="font-medium text-primary">
-                                                {order.fulfillmentStatus === 'Fulfilled' ? 'Fulfilled' : 'Pending fulfillment'}
+                                                {order.fulfillmentStatus === 'Delivered'
+                                                    ? 'Delivered'
+                                                    : order.fulfillmentStatus === 'Fulfilled'
+                                                    ? 'Fulfilled'
+                                                    : 'Pending fulfillment'}
                                             </p>
                                             <p className="text-label-sm text-on-surface-variant">
                                                 {order.shippingMethod || 'Standard Shipping'}
                                             </p>
+                                            {order.trackingNumber && (
+                                                <p className="text-label-sm text-secondary mt-1">
+                                                    {order.trackingCarrier ? `${order.trackingCarrier}: ` : 'Tracking: '}
+                                                    {order.trackingNumber}
+                                                </p>
+                                            )}
                                         </div>
                                     </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -295,6 +361,28 @@ export default function OrderDetail() {
                                     )}
                                 </div>
                             </div>
+
+                            {/* Tracking */}
+                            {order.trackingNumber && (
+                                <div className="border premium-border bg-white p-stack-sm">
+                                    <h3 className="font-headline-sm text-headline-sm text-primary mb-4">
+                                        Tracking
+                                    </h3>
+                                    <div className="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+                                        {order.trackingCarrier && (
+                                            <p className="font-medium text-primary">{order.trackingCarrier}</p>
+                                        )}
+                                        <p>{order.trackingNumber}</p>
+                                        <p className="mt-2 text-label-sm">
+                                            {order.fulfillmentStatus === 'Delivered'
+                                                ? 'Delivered'
+                                                : order.fulfillmentStatus === 'Fulfilled'
+                                                ? 'Shipped'
+                                                : 'In transit'}
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Customer */}
                             <div className="border premium-border bg-white p-stack-sm">
