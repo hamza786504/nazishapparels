@@ -7,6 +7,7 @@ import {
   signCustomerToken,
   sessionCookie,
 } from '@/lib/customerAuth';
+import { sendEmail, buildOrderEmail } from '@/lib/email';
 
 // Persist the order's shipping address into the linked customer's address book
 // (the `addresses` array), de-duplicating against existing entries. This is what
@@ -299,6 +300,31 @@ export async function POST(request) {
     // automatically logged in and can access their dashboard/profile/address.
     if (authToken) {
       response.headers.set('Set-Cookie', sessionCookie(authToken));
+    }
+
+    // Best-effort order confirmation email to the customer — a mail failure
+    // must never break order placement.
+    try {
+      const recipient = body.email || body.customer?.email;
+      if (recipient) {
+        const { html, text } = buildOrderEmail({
+          order: {
+            orderId: order.orderId,
+            total: order.total,
+            paymentMethod: order.paymentMethod,
+            shippingMethodName: body.shippingMethodName,
+            items: order.items || body.items || [],
+          },
+        });
+        await sendEmail({
+          to: recipient.toLowerCase(),
+          subject: `Your ${process.env.STORE_NAME || 'NazishApparels'} order ${order.orderId} is confirmed`,
+          html,
+          text,
+        });
+      }
+    } catch (mailErr) {
+      console.error('Order confirmation email failed:', mailErr);
     }
 
     return response;

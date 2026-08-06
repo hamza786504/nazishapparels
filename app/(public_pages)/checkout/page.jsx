@@ -32,7 +32,8 @@ const countries = [
 
 export default function CheckoutPage() {
     const { cartItems, clearCart, appliedCoupon, applyCoupon, removeCoupon } = useCart();
-    const { customer, isAuthenticated } = useAuth();
+    const { customer, isAuthenticated, refresh } = useAuth();
+    const router = useRouter();
     const [shippingConfig, setShippingConfig] = useState(DEFAULT_SHIPPING_CONFIG);
     const [accountType, setAccountType] = useState('new'); // 'new' or 'existing'
     const [formData, setFormData] = useState({
@@ -54,7 +55,6 @@ export default function CheckoutPage() {
     });
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [orderSuccess, setOrderSuccess] = useState(null); // holds placed order details
     const [receiptFile, setReceiptFile] = useState(null);
     const [receiptUrl, setReceiptUrl] = useState('');
     const [receiptUploading, setReceiptUploading] = useState(false);
@@ -418,18 +418,25 @@ export default function CheckoutPage() {
                 throw new Error(data.error || 'Failed to place order.');
             }
 
-            // Clear cart and show success overlay
+            // Clear cart, refresh auth (the orders API sets the session cookie for
+            // newly created accounts) and go to the thank-you page.
             clearCart();
-            setOrderSuccess({
-                orderId: data.order.orderId,
-                total,
-                name: `${formData.firstName} ${formData.lastName}`,
-                email: formData.email,
-                address: [formData.address, formData.apartment, formData.city, formData.country]
-                    .filter(Boolean)
-                    .join(', '),
-                shippingMethod: selectedMethod?.name || 'Standard Shipping',
-            });
+            await refresh();
+            sessionStorage.setItem(
+                'lastOrder',
+                JSON.stringify({
+                    orderId: data.order.orderId,
+                    orderRef: data.order._id,
+                    total,
+                    name: `${formData.firstName} ${formData.lastName}`.trim(),
+                    email: formData.email,
+                    address: [formData.address, formData.apartment, formData.city, formData.country]
+                        .filter(Boolean)
+                        .join(', '),
+                    shippingMethod: selectedMethod?.name || 'Standard Shipping',
+                })
+            );
+            router.replace('/order-confirmation');
         } catch (err) {
             setErrors({ submit: err.message });
         } finally {
@@ -437,62 +444,9 @@ export default function CheckoutPage() {
         }
     };
 
-    // ── Success Overlay ──────────────────────────────────────────────────────────
-    if (orderSuccess) {
-        return (
-            <div className="min-h-screen bg-background flex items-center justify-center px-6 py-16">
-                <div className="max-w-[600px] w-full bg-surface-container-low border border-secondary/10 p-10 md:p-14 flex flex-col items-center text-center gap-8 shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <div className="w-20 h-20 rounded-full bg-secondary/10 flex items-center justify-center">
-                        <CheckCircle className="w-9 h-9 text-secondary" />
-                    </div>
-                    <div className="flex flex-col gap-2">
-                        <h1 className="font-headline-md text-headline-md text-primary">Order Confirmed!</h1>
-                        <p className="text-body-md text-on-surface-variant">
-                            Thank you, <span className="text-primary font-medium">{orderSuccess.name}</span>. Your order has been placed successfully.
-                        </p>
-                    </div>
-
-                    <div className="w-full bg-surface border border-secondary/10 p-6 flex flex-col gap-4 text-left">
-                        <div className="flex justify-between items-center border-b border-secondary/10 pb-4">
-                            <span className="text-label-md text-on-surface-variant uppercase tracking-wider">Order ID</span>
-                            <span className="font-label-md font-bold text-primary">{orderSuccess.orderId}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                            <span className="text-label-md text-on-surface-variant uppercase tracking-wider">Total</span>
-                            <span className="font-headline-sm text-secondary">{formatPrice(orderSuccess.total)}</span>
-                        </div>
-                        <div className="flex justify-between items-start">
-                            <span className="text-label-md text-on-surface-variant uppercase tracking-wider">Ship To</span>
-                            <span className="text-body-md text-primary text-right max-w-[60%]">{orderSuccess.address}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                            <span className="text-label-md text-on-surface-variant uppercase tracking-wider">Shipping</span>
-                            <span className="text-body-md text-primary capitalize">{orderSuccess.shippingMethod}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                            <span className="text-label-md text-on-surface-variant uppercase tracking-wider">Confirmation sent to</span>
-                            <span className="text-body-md text-primary">{orderSuccess.email}</span>
-                        </div>
-                    </div>
-
-                    <p className="text-label-sm text-on-surface-variant">
-                        Our team will contact you shortly to confirm delivery details.
-                    </p>
-
-                    <Link
-                        href="/"
-                        className="w-full bg-primary text-on-primary py-5 font-label-md text-label-md uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all border border-secondary/20 text-center"
-                    >
-                        Continue Shopping
-                    </Link>
-                </div>
-            </div>
-        );
-    }
-
     // ── Checkout Form ────────────────────────────────────────────────────────────
     return (
-        <div className="bg-background text-on-surface font-body-md selection:bg-secondary-fixed selection:text-on-secondary-fixed">
+        <div className="bg-white text-on-surface font-body-md selection:bg-secondary-fixed selection:text-on-secondary-fixed flex-1 min-w-0 overflow-x-hidden overflow-y-auto">
             <style jsx global>{`
                 body {
                     -webkit-font-smoothing: antialiased;
@@ -504,11 +458,11 @@ export default function CheckoutPage() {
                 .field-error { border-color: rgb(var(--error, 186 26 26)) !important; }
             `}</style>
 
-            <main className="max-w-container-max mx-auto px-2 md:px-margin-desktop py-stack-md md:py-stack-lg min-h-[calc(100vh-100px)]">
+            <main className="max-w-container-max mx-auto px-2 md:px-margin-desktop py-stack-md md:py-stack-lg">
                 <form onSubmit={handleSubmit} noValidate>
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-24 items-start">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
                         {/* Left Panel */}
-                        <div className="lg:col-span-7 space-y-12 order-2 lg:order-1 mt-8 lg:mt-0">
+                        <div className="lg:col-span-7 space-y-12 order-2 lg:order-1 mt-8 lg:mt-0 min-w-0">
 
                             {/* Cart error */}
                             {errors.cart && (
@@ -646,8 +600,8 @@ export default function CheckoutPage() {
                                                                 key={addr._key}
                                                                 className={`flex items-start gap-3 text-left p-4 border cursor-pointer transition-all duration-200 ${
                                                                     selected
-                                                                        ? 'border-secondary bg-secondary/5'
-                                                                        : 'border-secondary/20 hover:border-secondary/60'
+                                                                        ? 'border-secondary bg-black'
+                                                                        : 'border-black hover:border-black'
                                                                 }`}
                                                             >
                                                                 <input
@@ -660,7 +614,7 @@ export default function CheckoutPage() {
                                                                 />
                                                                 <span className="flex-1 min-w-0">
                                                                     <span className="flex items-center justify-between mb-1">
-                                                                        <span className="font-label-sm font-label-sm text-primary uppercase tracking-wider truncate">
+                                                                        <span className="font-label-sm font-label-sm text-black uppercase tracking-wider truncate">
                                                                             {`${addr.firstName || ''} ${addr.lastName || ''}`.trim() || 'Address'}
                                                                         </span>
                                                                         {addr.isDefault && (
@@ -812,16 +766,16 @@ export default function CheckoutPage() {
                                                 onChange={handleInputChange}
                                             />
                                             <div className="flex-1 min-w-0">
-                                                <span className="text-body-md font-label-md text-primary block truncate">{method.name}</span>
+                                                <span className="text-body-md font-label-md text-black block truncate">{method.name}</span>
                                                 {method.description && (
                                                     <span className="text-body-sm text-on-surface-variant truncate block">{method.description}</span>
                                                 )}
                                             </div>
-                                            <span className="text-label-md font-label-md text-primary whitespace-nowrap flex-shrink-0">
+                                            <span className="text-label-md font-label-md text-black whitespace-nowrap flex-shrink-0">
                                                 {isFreeShipping ? (
                                                     <>
                                                         <span className="line-through text-on-surface-variant mr-1">{formatPrice(method.charge)}</span>
-                                                        <span className="text-primary font-bold">FREE</span>
+                                                        <span className="text-black font-bold">FREE</span>
                                                     </>
                                                 ) : (
                                                     formatPrice(method.charge)
@@ -831,7 +785,7 @@ export default function CheckoutPage() {
                                     ))}
                                 </div>
                                 {isFreeShipping && (
-                                    <p className="text-body-sm text-primary flex items-center gap-1.5">
+                                    <p className="text-body-sm text-black flex items-center gap-1.5">
                                         <Truck className="w-4 h-4 flex-shrink-0" />
                                         Free shipping applied — your order exceeds Rs. {shippingConfig.freeShippingThreshold.toLocaleString()}!
                                     </p>
@@ -857,7 +811,7 @@ export default function CheckoutPage() {
                                                 onChange={handleInputChange}
                                             />
                                             <div className="min-w-0">
-                                                <span className="text-body-md font-label-md text-primary block">Cash on Delivery (COD)</span>
+                                                <span className="text-body-md font-label-md text-black block">Cash on Delivery (COD)</span>
                                                 <span className="text-body-sm text-on-surface-variant block truncate">Pay in cash when your order arrives</span>
                                             </div>
                                         </label>
@@ -875,7 +829,7 @@ export default function CheckoutPage() {
                                                 onChange={handleInputChange}
                                             />
                                             <div className="min-w-0">
-                                                <span className="text-body-md font-label-md text-primary block">Bank Deposit</span>
+                                                <span className="text-body-md font-label-md text-black block">Bank Deposit</span>
                                                 <span className="text-body-sm text-on-surface-variant block truncate">Transfer to our bank account before delivery</span>
                                             </div>
                                         </label>
@@ -891,7 +845,7 @@ export default function CheckoutPage() {
                                     submission option gated by shippingConfig.bankDepositReceiptMode. */}
                                 {formData.paymentMethod === 'bank' && shippingConfig.bankDeposit && (
                                     <div className="border border-secondary/20 bg-surface-container-low p-4 md:p-5 space-y-3">
-                                        <p className="text-label-md font-bold text-primary flex items-center gap-2">
+                                        <p className="text-label-md font-bold text-black flex items-center gap-2">
                                             <Landmark className="w-4 h-4" />
                                             Bank Transfer Details
                                         </p>
@@ -928,7 +882,7 @@ export default function CheckoutPage() {
                                         {/* Upload receipt option — shown for upload_only / both_at_least_one */}
                                         {receiptUploadEnabled && (
                                             <div className="border-t border-secondary/10 pt-4">
-                                                <p className="text-label-md font-bold text-primary mb-3">Upload Payment Receipt</p>
+                                                <p className="text-label-md font-bold text-black mb-3">Upload Payment Receipt</p>
                                                 <label className="flex items-center justify-center w-full h-32 border-2 border-dashed border-secondary/30 rounded cursor-pointer hover:border-secondary transition-colors bg-surface-container-lowest text-center px-4">
                                                     {receiptUrl ? (
                                                         <div className="flex flex-col items-center gap-2">
@@ -956,7 +910,7 @@ export default function CheckoutPage() {
                                         {/* WhatsApp share option — shown for whatsapp_only / both_at_least_one */}
                                         {whatsappReceiptEnabled && (
                                             <div className="border-t border-secondary/10 pt-4 space-y-4">
-                                                <p className="text-label-md font-bold text-primary flex items-center gap-2">
+                                                <p className="text-label-md font-bold text-black flex items-center gap-2">
                                                     <FaWhatsapp className="text-[#25D366] text-lg" />
                                                     Share Receipt on WhatsApp
                                                 </p>
@@ -1012,7 +966,7 @@ export default function CheckoutPage() {
                             <div className="flex flex-col-reverse md:flex-row justify-between items-center pt-8 gap-6">
                                 <Link
                                     href="/cart"
-                                    className="flex items-center gap-2 text-label-md font-label-md text-on-surface-variant hover:text-primary transition-colors group py-2"
+                                    className="flex items-center gap-2 text-label-md font-label-md text-on-surface-variant hover:text-black transition-colors group py-2"
                                 >
                                     <span className="group-hover:-translate-x-1 transition-transform"><ArrowLeft className="w-3.5 h-3.5" /></span>
                                     Return to cart
@@ -1035,27 +989,27 @@ export default function CheckoutPage() {
                         </div>
 
                         {/* Right Panel: Order Summary */}
-                        <aside className="lg:col-span-5 bg-surface-container-low p-5 sm:p-8 md:p-10 lg:sticky top-32 border border-secondary/5 order-1 lg:order-2">
+                        <aside className="lg:col-span-5 bg-surface-container-low p-5 sm:p-8 lg:sticky top-0 border border-secondary/5 order-1 lg:order-2 min-w-0">
                             <h3 className="text-base md:text-lg text-black font-bold mb-6 md:mb-8">Order Summary</h3>
 
                             {/* Product List */}
-                            <div className="order-summary space-y-4 md:space-y-6 max-h-[300px] md:max-h-[400px] overflow-y-auto pr-0 md:pr-4 mb-6 md:mb-8">
+                            <div className="order-summary space-y-4 md:space-y-6 max-h-[300px] md:max-h-[400px] overflow-y-auto pt-3 -mt-3 pr-0 md:pr-4 mb-6 md:mb-8">
                                 {cartItems.map((item) => (
-                                    <div key={item.id} className="flex gap-3 md:gap-6 group">
-                                        <div className="relative w-16 h-20 md:w-20 md:h-24 bg-surface-container flex-shrink-0">
-                                            <Image className="object-cover" alt={item.title || ''} src={item.image} fill sizes="(max-width: 768px) 64px, 80px" />
-                                            <span className="absolute -top-1 -right-1 md:-top-2 md:-right-2 w-5 h-5 md:w-6 md:h-6 bg-secondary text-on-secondary text-[10px] flex items-center justify-center rounded-full font-bold">
+                                    <div key={item.id} className="flex gap-3 group">
+                                        <div className="relative w-16 h-20 flex-shrink-0">
+                                            <Image className="object-cover" alt={item.title || ''} src={item.image} fill sizes="(max-width: 768px) 44px, 60px" />
+                                            <span className="absolute -top-1 -right-1 md:-top-2 md:-right-2 w-5 h-5 md:w-6 md:h-6 bg-black text-on-secondary text-[10px] flex items-center justify-center rounded-full font-bold">
                                                 {item.quantity}
                                             </span>
                                         </div>
                                         <div className="flex flex-col justify-center flex-grow min-w-0">
-                                            <h4 className="text-body-sm md:text-body-md font-bold text-primary group-hover:text-secondary transition-colors truncate">{item.title}</h4>
+                                            <h4 className="text-body-sm md:text-body-md font-bold text-black group-hover:text-secondary transition-colors truncate">{item.title}</h4>
                                             <p className="text-[10px] md:text-label-sm font-label-sm text-on-surface-variant truncate">
                                                 Size: {item.size} {item.color && item.color !== 'Default' ? `/ Color: ${item.color}` : ''}
                                             </p>
                                         </div>
                                         <div className="flex flex-col justify-center items-end flex-shrink-0">
-                                            <p className="text-body-sm md:text-body-md font-headline-md text-primary">{formatPrice(item.price * item.quantity)}</p>
+                                            <p className="text-body-sm md:text-body-md font-headline-md text-black">{formatPrice(item.price * item.quantity)}</p>
                                         </div>
                                     </div>
                                 ))}
@@ -1080,7 +1034,7 @@ export default function CheckoutPage() {
                                             type="button" 
                                             onClick={handleApplyCoupon}
                                             disabled={isApplyingCoupon}
-                                            className="bg-surface-container-highest text-primary px-6 py-3 text-label-sm font-label-md uppercase tracking-wider hover:bg-secondary-container transition-colors disabled:opacity-50"
+                                            className="bg-black text-white px-6 py-3 text-label-sm font-label-md uppercase tracking-wider cursor-pointer transition-colors disabled:opacity-50"
                                         >
                                             {isApplyingCoupon ? 'Applying...' : 'Apply'}
                                         </button>
@@ -1098,7 +1052,7 @@ export default function CheckoutPage() {
                                     <button 
                                         type="button" 
                                         onClick={handleRemoveCoupon}
-                                        className="text-xs text-secondary underline hover:text-primary transition-colors"
+                                        className="text-xs text-secondary underline hover:text-black transition-colors"
                                     >
                                         Remove
                                     </button>
@@ -1109,17 +1063,17 @@ export default function CheckoutPage() {
                             <div className="space-y-3 border-t border-secondary/10 pt-8">
                                 <div className="flex justify-between">
                                     <span className="text-body-md text-on-surface-variant">Subtotal</span>
-                                    <span className="text-body-md font-medium text-primary">{formatPrice(subtotal)}</span>
+                                    <span className="text-body-md font-medium text-black">{formatPrice(subtotal)}</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-body-md text-on-surface-variant">Shipping</span>
                                     {isFreeShipping ? (
-                                        <span className="text-body-md font-medium text-primary">
+                                        <span className="text-body-md font-medium text-black">
                                             <span className="line-through text-on-surface-variant/50 mr-1">{formatPrice(baseShippingCost)}</span>
                                             FREE
                                         </span>
                                     ) : (
-                                        <span className="text-body-md font-medium text-primary">{formatPrice(shippingCost)}</span>
+                                        <span className="text-body-md font-medium text-black">{formatPrice(shippingCost)}</span>
                                     )}
                                 </div>
                                 
@@ -1134,7 +1088,7 @@ export default function CheckoutPage() {
                                     <span className="text-base md:text-lg text-black font-bold">Total</span>
                                     <div className="text-right">
                                         <span className="text-label-sm font-label-sm text-on-surface-variant block">PKR</span>
-                                        <span className="text-headline-md font-headline-md text-secondary">{formatPrice(total)}</span>
+                                        <span className="text-headline-md font-headline-md text-black">{formatPrice(total)}</span>
                                     </div>
                                 </div>
                             </div>

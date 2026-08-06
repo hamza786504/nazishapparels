@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
-import nodemailer from 'nodemailer';
+import { sendEmail } from '@/lib/email';
 
 const CONTACT_TO = process.env.CONTACT_TO || 'hamzakhaliddev@gmail.com';
-const CONTACT_FROM = process.env.CONTACT_FROM || CONTACT_TO;
 
 const REQUIRED_FIELDS = ['name', 'email', 'subject', 'message'];
 
@@ -65,39 +64,30 @@ export async function POST(request) {
       .map(([key, value]) => `${key}: ${value}`)
       .join('\n');
 
-    const smtpHost = process.env.SMTP_HOST;
-    const smtpUser = process.env.SMTP_USER;
-    const smtpPass = process.env.SMTP_PASS;
-
-    if (!smtpHost || !smtpUser || !smtpPass) {
-      console.error(
-        'SMTP not configured: set SMTP_HOST, SMTP_USER and SMTP_PASS in .env.local to enable email sending.'
-      );
-      return NextResponse.json(
-        {
-          success: false,
-          error:
-            'Email delivery is not configured. The website owner needs to set up SMTP credentials.',
-        },
-        { status: 503 }
-      );
-    }
-
-    const transporter = nodemailer.createTransport({
-      host: smtpHost,
-      port: Number(process.env.SMTP_PORT) || 465,
-      secure: Number(process.env.SMTP_PORT) === 465 ? true : false,
-      auth: { user: smtpUser, pass: smtpPass },
-    });
-
-    await transporter.sendMail({
-      from: CONTACT_FROM,
+    const result = await sendEmail({
       to: CONTACT_TO,
       replyTo: body.email.trim(),
       subject: `Contact Inquiry: ${fields['Inquiry Type']} — ${fields['Full Name']}`,
       text,
       html,
     });
+
+    if (!result.sent) {
+      if (result.error === 'SMTP not configured') {
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              'Email delivery is not configured. The website owner needs to set up SMTP credentials.',
+          },
+          { status: 503 }
+        );
+      }
+      return NextResponse.json(
+        { success: false, error: 'There was a problem sending your message. Please try again.' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {

@@ -94,7 +94,7 @@ export default function ContactPage() {
   }, []);
 
   return (
-    <div className="bg-surface text-on-surface font-body-md overflow-x-hidden">
+    <div className="bg-white text-on-surface font-body-md w-full overflow-x-hidden">
       <style jsx global>{`
         .hero-gradient {
           background: linear-gradient(
@@ -110,20 +110,20 @@ export default function ContactPage() {
 
       <main>
         {/* Hero Section */}
-        <header className="relative min-h-[60vh] md:min-h-[70vh] flex items-center justify-center">
-            <Image
-              alt="NazishApparels Concierge"
-              className="object-cover"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuAfIKML1OXLUbGAoT3U5zg0Z2JDj4quhg7kkAXcTd9n4F1X_zFhKgcMn1dZhW6didVodIIOHeCTpww7l3SYgaOiuaTiq2sfxjolVidc2IalqujahETGX6nFrP1-xssgtfmSS2DbBXdJ1kJR59hRyqu024QRoUMPXxv4zeSCNBX_VbeO6BHfQgafFSwcr-oRZO12ThyrkTx8pqvB3Ri66y_YzzrB6cM30ujmTOTz9jL144ppr7Cq8aau3WFZrtYcafjYfq8ZkLldA3bK"
-              fill
-              sizes="100vw"
-              priority
-            />
-            <div className="absolute inset-0 bg-black/20" />
+        <header className="relative min-bg-white text-on-surface font-body-md-[60vh] md:min-h-[70vh] flex items-center justify-center">
+          <Image
+            alt="NazishApparels Concierge"
+            className="object-cover"
+            src="https://lh3.googleusercontent.com/aida-public/AB6AXuAfIKML1OXLUbGAoT3U5zg0Z2JDj4quhg7kkAXcTd9n4F1X_zFhKgcMn1dZhW6didVodIIOHeCTpww7l3SYgaOiuaTiq2sfxjolVidc2IalqujahETGX6nFrP1-xssgtfmSS2DbBXdJ1kJR59hRyqu024QRoUMPXxv4zeSCNBX_VbeO6BHfQgafFSwcr-oRZO12ThyrkTx8pqvB3Ri66y_YzzrB6cM30ujmTOTz9jL144ppr7Cq8aau3WFZrtYcafjYfq8ZkLldA3bK"
+            fill
+            sizes="100vw"
+            priority
+          />
+          <div className="absolute inset-0 bg-black/20" />
 
           <div className="relative z-10 max-w-[1440px] mx-auto px-6 md:px-16 text-center w-full ">
             <span className="font-label-md text-sm text-white uppercase tracking-[0.25em] block mb-6 drop-shadow-sm">
-              Connect With Our Concierge
+              Connect With Our Brand
             </span>
             <h1 className="font-display-lg font-bold text-3xl md:text-6xl text-white leading-[1.1] mb-8 drop-shadow-sm">
               Contact
@@ -136,12 +136,12 @@ export default function ContactPage() {
         </header>
 
         {/* Contact Form + Details */}
-        <section className="px-6 md:px-16 py-24 md:py-32 max-w-[1440px] mx-auto">
+        <section className="px-3 md:px-6 py-10 max-w-[1440px] mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 scroll-reveal">
             {/* Form */}
-            <div className="lg:col-span-7 bg-white p-8 md:p-14 border border-secondary/10 shadow-sm">
-              <h2 className="font-headline-md text-3xl md:text-4xl text-primary mb-12">
-                Correspondence
+            <div className="lg:col-span-7 bg-white p-5 md:p-8 border border-secondary/10 shadow-sm">
+              <h2 className="font-headline-md text-xl md:text-3xl text-black mb-6 font-bold">
+                Contact Us
               </h2>
               <form onSubmit={handleSubmit} className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -209,9 +209,9 @@ export default function ContactPage() {
                     required
                   />
                 </div>
-                <div className="pt-6">
+                <div className="pt-0">
                   <button
-                    className="group relative overflow-hidden bg-primary text-white px-12 py-5 font-label-md text-sm uppercase tracking-[0.2em] hover:scale-[1.02] transition-soft border border-secondary/20 disabled:opacity-70 disabled:cursor-not-allowed"
+                    className="group relative overflow-hidden bg-black text-white px-12 py-3 font-label-md text-sm uppercase tracking-[0.2em] hover:scale-[1.02] transition-soft border border-secondary/20 disabled:opacity-70 disabled:cursor-not-allowed"
                     type="submit"
                     disabled={isSubmitting}
                   >
@@ -219,8 +219,8 @@ export default function ContactPage() {
                       {isSubmitting
                         ? 'Submitting...'
                         : submitStatus === 'success'
-                        ? 'Thank You for Your Inquiry'
-                        : 'Submit Inquiry'}
+                          ? 'Thank You for Your Inquiry'
+                          : 'Contact'}
                     </span>
                     <div className="absolute inset-0 bg-secondary/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
                   </button>
@@ -230,35 +230,35 @@ export default function ContactPage() {
 
             {/* Client Services + Map */}
             <div className="lg:col-span-5 space-y-8">
-              <div className="bg-secondary-container/10 p-8 md:p-10 border border-secondary/10">
-                <h3 className="font-headline-sm text-2xl md:text-3xl text-primary mb-8">
+              <div className="bg-secondary-container/10 p-5 md:p-10 border border-secondary/10">
+                <h3 className="font-headline-sm text-xl md:text-2xl text-black mb-8">
                   Client Services
                 </h3>
                 <div className="space-y-8">
                   <div className="flex items-start gap-5">
-                    <Phone className="text-secondary w-8 h-8" />
+                    <Phone className="text-black w-6 h-6 md:w-8 md:h-8" />
                     <div>
-                      <p className="font-label-md text-base text-primary">Telephone Inquiries</p>
-                      <p className="text-on-surface-variant text-lg mt-1">+92 344 3413824</p>
+                      <p className="font-label-md text-sm md:text-base text-black">Telephone Inquiries</p>
+                      <p className="text-on-surface-variant text-sm md:text-base mt-1">+92 344 3413824</p>
                       <p className="text-xs text-on-surface-variant/60 mt-1">
                         Daily, 11:00 AM – 9:30 PM (PKT)
                       </p>
                     </div>
                   </div>
                   <div className="flex items-start gap-5">
-                    <Mail className="text-secondary w-8 h-8" />
+                    <Mail className="text-black w-6 h-6 md:w-8 md:h-8" />
                     <div>
-                      <p className="font-label-md text-base text-primary">Email Correspondence</p>
-                      <p className="text-on-surface-variant text-lg mt-1">
+                      <p className="font-label-md text-sm md:text-base text-black">Email Correspondence</p>
+                      <p className="text-on-surface-variant text-sm md:text-base mt-1">
                         nazishapparels@gmail.com
                       </p>
                     </div>
                   </div>
                   <div className="flex items-start gap-5">
-                    <MessageCircle className="text-secondary w-8 h-8" />
+                    <MessageCircle className="text-black w-6 h-6 md:w-8 md:h-8" />
                     <div>
-                      <p className="font-label-md text-base text-primary">WhatsApp Concierge</p>
-                      <p className="text-on-surface-variant text-lg mt-1">
+                      <p className="font-label-md text-sm md:text-base text-black">WhatsApp Concierge</p>
+                      <p className="text-on-surface-variant text-sm md:text-base mt-1">
                         Instant assistance available
                       </p>
                     </div>
@@ -266,45 +266,25 @@ export default function ContactPage() {
                 </div>
               </div>
 
-              <div className="relative h-72 md:h-80 w-full overflow-hidden border border-secondary/10 group shadow-sm">
-                <div className="absolute inset-0 bg-surface-variant">
-                  <Image
-                    className="object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:scale-105 transition-soft duration-700"
-                    alt="NazishApparels Flagship Location"
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuCxibklL4eAD0Lp2LItXM1VaGOLOekOPOO2vTg69Dimk9UlW-fjgRlvShlBKNJT8DPy76rbh8YLVdVNLz8YI8ljoYmgnDwE2Ro-OkM4Vvnu67jp3Dgk-jwDyiAwjUXsLGCyApJuAR2yde6fQ4l4DRkN5fZZEJndD80vMrjELp_gn5_MaVjfmgVLGL42hb9yka7Pq7aGEs2aELfeGZhzOEZ0WBpj3AGlPqqs1QRG82GoO33CYdE7IS2h0F7RRghFfdz-boQcu63iDsp7"
-                    fill
-                    sizes="(max-width: 1024px) 100vw, 50vw"
-                  />
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-primary/60 to-transparent" />
-                <div className="absolute bottom-6 left-6 text-white drop-shadow-md">
-                  <p className="font-headline-sm text-2xl">Flagship Atelier</p>
-                  <p className="font-label-md text-sm opacity-90">Lahore, Pakistan</p>
-                </div>
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                  <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center animate-pulse">
-                    <div className="w-4 h-4 bg-secondary rounded-full" />
-                  </div>
-                </div>
-              </div>
+            
             </div>
           </div>
         </section>
 
         {/* Our Ateliers */}
-        <section className="bg-surface-container-low py-24 md:py-32">
-          <div className="px-6 md:px-16 max-w-[1440px] mx-auto">
-            <div className="text-center mb-16 scroll-reveal">
-              <h2 className="font-display-lg text-4xl md:text-5xl lg:text-6xl text-primary mb-4">
+        <section className="bg-white pt-0 pb-10">
+          <div className="px-2 md:px-6 max-w-[1440px] mx-auto">
+            <div className="text-start mb-8 scroll-reveal">
+              <h2 className="font-display-lg text-xl md:text-2xl text-black font-bold mb-4">
                 Our Outlets
               </h2>
-              <div className="h-px w-24 bg-secondary mx-auto" />
+              <div className="h-px w-24 bg-black" />
             </div>
-            <div className="flex justify-center">
+            <div className="flex justify-start">
               {boutiques.map((boutique, index) => (
                 <div
                   key={boutique.city}
-                  className="max-w-[600px] w-full group bg-white p-6 md:p-8 border border-secondary/5 hover:border-secondary/30 transition-soft scroll-reveal shadow-sm hover:shadow-lg text-center"
+                  className="max-w-[400px] w-full group bg-white pt-2 ps-2 pe-2 pb-5 md:p-8 border border-secondary/5 hover:border-secondary/30 transition-soft scroll-reveal shadow-sm hover:shadow-lg text-center"
                   style={{ transitionDelay: `${index * 100}ms` }}
                 >
                   <div className="relative h-56 mb-8 overflow-hidden rounded-md">
@@ -316,20 +296,22 @@ export default function ContactPage() {
                       sizes="(max-width: 768px) 100vw, 400px"
                     />
                   </div>
-                  <h4 className="font-headline-sm text-2xl text-primary mb-6">
-                    {boutique.city}
-                  </h4>
-                  <div className="space-y-2 text-on-surface-variant text-sm md:text-base leading-relaxed">
-                    {boutique.address}
-                  </div>
-                  <p className="font-semibold text-primary mt-4 text-lg">
-                    Tel: {boutique.phone}
-                  </p>
-                  <div className="pt-6 mt-6 border-t border-outline-variant/30">
-                    <p className="text-xs uppercase tracking-widest text-secondary mb-1">
-                      Operating Hours
+                  <div className="px-3">
+                    <h4 className="font-headline-sm text-2xl text-black mb-6">
+                      {boutique.city}
+                    </h4>
+                    <div className="space-y-2 text-on-surface-variant text-sm md:text-base leading-relaxed">
+                      {boutique.address}
+                    </div>
+                    <p className="font-semibold text-black mt-4 text-lg">
+                      Tel: {boutique.phone}
                     </p>
-                    <p className="text-on-surface-variant">{boutique.hours}</p>
+                    <div className="pt-6 mt-6 border-t border-outline-variant/30">
+                      <p className="text-xs uppercase tracking-widest text-secondary mb-1">
+                        Operating Hours
+                      </p>
+                      <p className="text-on-surface-variant">{boutique.hours}</p>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -338,22 +320,17 @@ export default function ContactPage() {
         </section>
 
         {/* Bespoke CTA */}
-        <section className="py-24 md:py-32 px-6 text-center scroll-reveal">
+        <section className="py-0 px-2 md:px-6 text-center scroll-reveal">
           <div className="max-w-3xl mx-auto">
-            <Star className="text-secondary w-12 h-12 mb-8" fill="currentColor" />
-            <h3 className="font-display-lg text-4xl md:text-5xl text-primary mb-6">
+            <Star className="text-secondary mx-auto w-12 h-12 mb-8" fill="currentColor" />
+            <h3 className="font-display-lg text-2xl md:text-3xl text-black mb-6">
               Private Consultations
             </h3>
-            <p className="text-on-surface-variant text-lg md:text-xl mb-12 leading-relaxed">
+            <p className="text-on-surface-variant text-sm md:text-base mb-12 leading-relaxed">
               Envisioning a bespoke ensemble for a momentous occasion? Arrange a private consultation
               with our lead designers at a flagship atelier of your choosing.
             </p>
-            <Link
-              className="inline-block border border-primary text-primary px-12 py-5 font-label-md text-sm uppercase tracking-[0.2em] hover:bg-primary hover:text-white transition-soft"
-              href="#"
-            >
-              Schedule Your Visit
-            </Link>
+           
           </div>
         </section>
       </main>

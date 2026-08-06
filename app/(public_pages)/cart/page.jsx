@@ -142,7 +142,7 @@ const OrderSummary = ({ subtotal, tax, total, appliedCoupon, onRemoveCoupon }) =
 
         <div className="flex justify-between items-center">
           <span className="text-on-surface-variant font-body-md">Shipping Estimate</span>
-          <span className="text-on-surface-variant italic font-body-md">
+          <span className="text-right text-on-surface-variant italic font-body-md">
             Calculated at checkout
           </span>
         </div>
@@ -315,10 +315,10 @@ function Cart() {
                   onSizeChange={handleSizeChange}
                 />
               ))}
-              <div className="pt-6 flex justify-between items-center">
+              <div className="pt-1 md:pt-5 flex justify-between items-center">
                 <Link
                   className="text-sm text-black flex items-center group hover:text-secondary transition-colors"
-                  href="/collection/lawn"
+                  href="/collection/new-arrivals"
                 >
                   <ArrowLeft className="mr-2 transition-transform group-hover:-translate-x-1" />
                   CONTINUE SHOPPING
@@ -327,7 +327,7 @@ function Cart() {
             </div>
 
             {/* Order Summary sidebar */}
-            <aside className="w-full lg:w-[380px] lg:flex-shrink-0 lg:sticky">
+            <aside className="mt-3 md:mt-0 w-full lg:w-[380px] lg:flex-shrink-0 lg:sticky">
               <OrderSummary
                 subtotal={subtotal}
                 tax={tax}

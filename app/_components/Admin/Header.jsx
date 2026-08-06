@@ -518,18 +518,14 @@ function Header() {
                     <p className="text-body-sm text-on-surface-variant truncate">{adminData?.email || ''}</p>
                   </div>
                   <div className="py-1">
-                    <button className="w-full px-4 py-2.5 hover:bg-surface-container-high transition-colors flex items-center gap-3 text-left">
-                      <User className="w-4 h-4 text-on-surface-variant" />
-                      <span className="text-body-md">My Profile</span>
-                    </button>
-                    <button className="w-full px-4 py-2.5 hover:bg-surface-container-high transition-colors flex items-center gap-3 text-left">
+                    <Link href="/admin/orders" className="w-full px-4 py-2.5 hover:bg-surface-container-high transition-colors flex items-center gap-3 text-left">
                       <ShoppingBag className="w-4 h-4 text-on-surface-variant" />
                       <span className="text-body-md">Orders</span>
-                    </button>
-                    <button className="w-full px-4 py-2.5 hover:bg-surface-container-high transition-colors flex items-center gap-3 text-left">
+                    </Link>
+                    <Link href="/admin/settings" className="w-full px-4 py-2.5 hover:bg-surface-container-high transition-colors flex items-center gap-3 text-left">
                       <Settings className="w-4 h-4 text-on-surface-variant" />
                       <span className="text-body-md">Settings</span>
-                    </button>
+                    </Link>
                   </div>
                   <div className="border-t border-outline-variant py-1">
                     <button

@@ -9,10 +9,12 @@ import SizeChartModal from '../../../_components/SizeChartModal';
 import CategorySidebar from '../../../_components/CategorySidebar';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 export default function ProductPageClient({ initialProduct }) {
     const { addToCart } = useCart();
     const { isFavorite, toggleFavorite } = useFavorites();
+    const router = useRouter();
     const [product] = useState(initialProduct);
     const [relatedProducts, setRelatedProducts] = useState([]);
 
@@ -157,6 +159,11 @@ export default function ProductPageClient({ initialProduct }) {
             setBagAdded(true);
             setTimeout(() => setBagAdded(false), 2000);
         }, 1000);
+    };
+
+    const handleBuyNow = () => {
+        addToCart(product.slug, selectedSize, selectedColor, quantity, product);
+        router.push('/checkout');
     };
 
     // Review form handlers...
@@ -642,7 +649,10 @@ export default function ProductPageClient({ initialProduct }) {
                                         )}
                                     </button>
 
-                                    <button className="cursor-pointer w-full py-3.5 bg-white text-black text-sm uppercase tracking-widest rounded-full border border-black hover:bg-gray-50 transition-all">
+                                    <button
+                                        onClick={handleBuyNow}
+                                        className="cursor-pointer w-full py-3.5 bg-white text-black text-sm uppercase tracking-widest rounded-full border border-black hover:bg-gray-50 transition-all"
+                                    >
                                         Buy Now
                                     </button>
 

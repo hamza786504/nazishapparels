@@ -7,6 +7,7 @@ import {
   sessionCookie,
   sanitizeCustomer,
 } from '@/lib/customerAuth';
+import { sendEmail, buildWelcomeEmail } from '@/lib/email';
 
 // Register a storefront customer account and log them in (sets customer_token).
 // If a guest `customer` doc already exists for this email (created by a prior
@@ -82,6 +83,19 @@ export async function POST(request) {
     }
 
     const token = signCustomerToken({ ...customer, email: emailLower });
+
+    // Best-effort welcome email — never blocks registration on a mail failure.
+    try {
+      const { html, text } = buildWelcomeEmail({ firstName, email: emailLower });
+      await sendEmail({
+        to: emailLower,
+        subject: `Welcome to ${process.env.STORE_NAME || 'NazishApparels'}`,
+        html,
+        text,
+      });
+    } catch (mailErr) {
+      console.error('Welcome email failed:', mailErr);
+    }
 
     return new NextResponse(
       JSON.stringify({
