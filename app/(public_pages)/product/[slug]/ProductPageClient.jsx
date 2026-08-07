@@ -7,6 +7,7 @@ import { useFavorites } from '../../../store/favoritesContext';
 import ProductCard from '../../../_components/ProductCard';
 import SizeChartModal from '../../../_components/SizeChartModal';
 import CategorySidebar from '../../../_components/CategorySidebar';
+import { resolveColor } from '../../../../lib/colorUtils';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -571,7 +572,9 @@ export default function ProductPageClient({ initialProduct }) {
                                                 <button
                                                     key={color}
                                                     className={`w-10 h-10 rounded-full border-2 transition-all ${selectedColor === color ? 'border-black ring-2 ring-offset-2 ring-transparent' : 'border-outline-variant hover:border-black'}`}
-                                                    style={{ backgroundColor: color }}
+                                                    style={{ backgroundColor: resolveColor(color) }}
+                                                    title={color}
+                                                    aria-label={`Color: ${color}`}
                                                     onClick={() => setSelectedColor(color)}
                                                 />
                                             ))}

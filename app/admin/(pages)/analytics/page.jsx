@@ -1,4 +1,4 @@
-// app/analytics/page.jsx
+// app/admin/analytics/page.jsx
 'use client';
 
 import React, { useState } from 'react';
@@ -13,27 +13,49 @@ import {
   PieChart,
   Pie,
   Cell,
-  Legend,
   BarChart,
   Bar,
-  LineChart,
-  Line
 } from 'recharts';
-import { TrendingUp, TrendingDown, Download, PackageCheck, PackageX } from 'lucide-react';
+import {
+  TrendingUp,
+  TrendingDown,
+  Download,
+  DollarSign,
+  ShoppingCart,
+  Users,
+  MousePointerClick,
+  Package,
+  CheckCircle,
+  Clock,
+  AlertCircle,
+} from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import useSlotData from '../../../_components/Admin/DashboardSlots/useSlotData';
+
+// Theme-aware palette (fallbacks match the default admin palette so charts stay
+// consistent even before a custom theme is saved).
+const COLORS = {
+  primary: '#006c50',
+  secondary: '#5d5e60',
+  tertiary: '#8f3f37',
+  error: '#ba1a1a',
+  grid: '#eef1f5',
+  axis: '#3e4944',
+  tick: '#6e7a73',
+};
 
 const PKR = (val) => `Rs ${Number(val || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
 
 const CustomTooltip = ({ active, payload, label, formatter }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white shadow-xl rounded-lg p-4 border border-gray-100">
-        <p className="text-sm font-bold text-gray-900 mb-1">{label}</p>
+      <div className="bg-white shadow-xl rounded-lg p-4 border border-outline-variant">
+        <p className="text-sm font-bold text-on-surface mb-1">{label}</p>
         {payload.map((entry, index) => (
-          <p key={index} className="text-sm" style={{ color: entry.color }}>
-            {entry.name}: {formatter ? formatter(entry.value) : entry.value}
+          <p key={index} className="text-sm text-on-surface-variant">
+            <span style={{ color: entry.color || COLORS.primary }}>{entry.name}: </span>
+            {formatter ? formatter(entry.value) : entry.value}
           </p>
         ))}
       </div>
@@ -42,8 +64,6 @@ const CustomTooltip = ({ active, payload, label, formatter }) => {
   return null;
 };
 
-// Fixed-height stand-in shown while a chart/table's data is loading, so the
-// bento grid never reflows between the loading and loaded states.
 const ChartSkeleton = ({ height = 300 }) => (
   <div className="bg-surface-container-low animate-pulse rounded-lg w-full" style={{ height }} />
 );
@@ -54,6 +74,22 @@ const EmptyState = ({ message, height = 300 }) => (
     style={{ height }}
   >
     {message}
+  </div>
+);
+
+const Card = ({ children, className = '' }) => (
+  <div className={`bg-white rounded-xl border border-outline-variant p-3 md:p-lg shadow-sm ${className}`}>
+    {children}
+  </div>
+);
+
+const CardHeader = ({ title, subtitle, action }) => (
+  <div className="flex justify-between items-start mb-lg gap-3">
+    <div>
+      <h6 className="font-headline-md text-headline-md text-on-surface">{title}</h6>
+      {subtitle && <p className="text-body-sm text-on-surface-variant mt-1">{subtitle}</p>}
+    </div>
+    {action}
   </div>
 );
 
@@ -73,9 +109,25 @@ const statusBadge = (status) => {
   return styles[status] || 'bg-surface-variant text-on-surface-variant';
 };
 
+// Payment / fulfillment status badge (mirrors the dashboard OrderStatus slot).
+const getStatusBadge = (status) => {
+  const s = (status || '').toUpperCase();
+  const styles = {
+    PAID: 'bg-primary-container/10 text-primary',
+    PENDING: 'bg-surface-container-high text-on-surface-variant',
+    REFUNDED: 'bg-error-container/20 text-error',
+    FULFILLED: 'bg-primary-container/10 text-primary',
+    DELIVERED: 'bg-primary-container/10 text-primary',
+    UNFULFILLED: 'bg-surface-container-high text-on-surface-variant',
+    'PARTIALLY PAID': 'bg-surface-container-high text-on-surface-variant',
+    RETURNED: 'bg-error-container/20 text-error',
+    CANCELLED: 'bg-error-container/20 text-error',
+  };
+  return styles[s] || 'bg-surface-container-high text-on-surface-variant';
+};
+
 const AnalyticsPage = () => {
   const [activeTimeView, setActiveTimeView] = useState('Daily');
-  const [hoveredCard, setHoveredCard] = useState(null);
 
   const { data, loading, refreshing, lastUpdated, refetch } = useSlotData('/api/dashboard/stats', 20000);
 
@@ -86,161 +138,167 @@ const AnalyticsPage = () => {
   const monthlyRevenue = data?.monthlyRevenue || [];
   const categoryData = data?.categoryData || [];
   const revenueByStatus = data?.revenueByStatus || [];
+  const orderStatusBreakdown = data?.orderStatusBreakdown || {};
+  const fulfillmentBreakdown = data?.fulfillmentBreakdown || {};
   const topProducts = data?.topProductsByValue || [];
   const lowStockCount = data?.lowStockCount || 0;
+  const ordersCount = metricsData?.ordersCount || 0;
 
-  // "Daily" shows the last 15 days of real orders; "Monthly" shows the last 6 months.
-  // Both are genuinely available from the API — there's no separate weekly rollup,
-  // so the toggle only offers the granularities we can actually back with real data.
-  const trendChartData = activeTimeView === 'Daily'
-    ? salesTrendData
-    : monthlyRevenue.map((m) => ({ date: m.month, sales: m.revenue, orders: m.orders }));
+  // "Daily" shows the last 15 days of real orders; "Monthly" shows the last 6
+  // months. Both are backed by the API — no separate weekly rollup exists.
+  const trendChartData =
+    activeTimeView === 'Daily'
+      ? salesTrendData
+      : monthlyRevenue.map((m) => ({ date: m.month, sales: m.revenue, orders: m.orders }));
 
   const totalProductsInView = categoryData.reduce((sum, c) => sum + c.value, 0);
 
-  const metrics = metricsData ? [
-    {
-      title: 'Total Sales',
-      value: PKR(metricsData.totalSales),
-      change: `${metricsData.salesChange >= 0 ? '+' : ''}${metricsData.salesChange}%`,
-      positive: metricsData.salesChange >= 0,
-      comparison: 'Compared to previous 30 days',
-    },
-    {
-      title: 'Total Orders',
-      value: metricsData.ordersCount.toLocaleString(),
-      change: `${metricsData.ordersChange >= 0 ? '+' : ''}${metricsData.ordersChange}%`,
-      positive: metricsData.ordersChange >= 0,
-      comparison: 'Compared to previous 30 days',
-    },
-    {
-      title: 'Avg. Order Value',
-      value: PKR(metricsData.avgOrderValue),
-      change: `${metricsData.avgOrderChange >= 0 ? '+' : ''}${metricsData.avgOrderChange}%`,
-      positive: metricsData.avgOrderChange >= 0,
-      comparison: 'Per unique transaction',
-    },
-    {
-      title: 'Total Customers',
-      value: metricsData.customersCount.toLocaleString(),
-      change: `${metricsData.customersChange >= 0 ? '+' : ''}${metricsData.customersChange}%`,
-      positive: metricsData.customersChange >= 0,
-      comparison: `${metricsData.newCustomersCurrent} new in last 30 days`,
-    },
-    {
-      title: 'Total Products',
-      value: metricsData.productsCount.toLocaleString(),
-      change: lowStockCount > 0 ? `${lowStockCount} Low Stock` : 'All Stocked',
-      positive: lowStockCount === 0,
-      comparison: 'Across all collections',
-      icon: lowStockCount > 0 ? PackageX : PackageCheck,
-    },
-  ] : [];
+  const metrics = metricsData
+    ? [
+        {
+          title: 'Total Sales',
+          value: PKR(metricsData.totalSales),
+          change: `${metricsData.salesChange >= 0 ? '+' : ''}${metricsData.salesChange}%`,
+          positive: metricsData.salesChange >= 0,
+          comparison: 'vs previous 30 days',
+          iconKey: 'dollar',
+          bgColor: 'bg-primary-container/10',
+          textColor: 'text-primary',
+        },
+        {
+          title: 'Total Orders',
+          value: metricsData.ordersCount.toLocaleString(),
+          change: `${metricsData.ordersChange >= 0 ? '+' : ''}${metricsData.ordersChange}%`,
+          positive: metricsData.ordersChange >= 0,
+          comparison: 'vs previous 30 days',
+          iconKey: 'cart',
+          bgColor: 'bg-tertiary-container/10',
+          textColor: 'text-tertiary',
+        },
+        {
+          title: 'Avg. Order Value',
+          value: PKR(metricsData.avgOrderValue),
+          change: `${metricsData.avgOrderChange >= 0 ? '+' : ''}${metricsData.avgOrderChange}%`,
+          positive: metricsData.avgOrderChange >= 0,
+          comparison: 'per unique transaction',
+          iconKey: 'click',
+          bgColor: 'bg-secondary-container/30',
+          textColor: 'text-secondary',
+        },
+        {
+          title: 'Total Customers',
+          value: metricsData.customersCount.toLocaleString(),
+          change: `${metricsData.customersChange >= 0 ? '+' : ''}${metricsData.customersChange}%`,
+          positive: metricsData.customersChange >= 0,
+          comparison: `${metricsData.newCustomersCurrent} new in last 30 days`,
+          iconKey: 'users',
+          bgColor: 'bg-secondary-fixed/40',
+          textColor: 'text-secondary',
+        },
+        {
+          title: 'Total Products',
+          value: metricsData.productsCount.toLocaleString(),
+          change: lowStockCount > 0 ? `${lowStockCount} Low Stock` : 'All Stocked',
+          positive: lowStockCount === 0,
+          comparison: 'across all collections',
+          iconKey: 'package',
+          bgColor: 'bg-primary-fixed/30',
+          textColor: 'text-primary',
+        },
+      ]
+    : [];
+
+  const iconMap = {
+    dollar: DollarSign,
+    cart: ShoppingCart,
+    users: Users,
+    click: MousePointerClick,
+    package: Package,
+  };
 
   return (
-    <main className="px-lg pb-12 min-h-screen">
-      {/* Welcome Header */}
-      <div className="mb-8 flex justify-between items-end">
+    <div className="px-3 max-w-7xl mx-auto space-y-lg">
+      {/* Header */}
+      <div className="flex justify-between items-end flex-wrap gap-3">
         <div>
-          <h2 className="font-headline-lg text-headline-lg text-on-surface">
-            Analytics Overview
-          </h2>
-          <p className="font-body-md text-body-md text-on-surface-variant mt-1">
+          <h2 className="font-headline-lg text-headline-lg text-on-surface">Analytics Overview</h2>
+          <p className="text-body-sm text-on-surface-variant mt-1">
             Real-time performance and shop health data.
             {lastUpdated && <span className="ml-2 opacity-70">Updated: {lastUpdated}</span>}
           </p>
         </div>
-        <div className="flex gap-3">
-          <button
-            onClick={() => refetch(false)}
-            className="bg-surface-container hover:bg-surface-container-high px-6 py-2.5 rounded-lg font-label-md text-label-md text-on-surface transition-all flex items-center gap-2"
-          >
-            <Download size={16} className={refreshing ? 'animate-spin' : ''} />
-            Refresh Data
-          </button>
-        </div>
+       
       </div>
 
-      {/* Key Metrics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
-        {(loading || metrics.length === 0
-          ? Array.from({ length: 5 })
-          : metrics
-        ).map((metric, index) => (
-          <div
-            key={index}
-            className="card-surface p-6 flex flex-col justify-between hover:-translate-y-0.5 transition-all duration-200 cursor-pointer relative overflow-hidden min-h-[148px]"
-            onMouseEnter={() => setHoveredCard(index)}
-            onMouseLeave={() => setHoveredCard(null)}
-          >
-            {metric ? (
-              <div className="relative z-10">
-                <div className="flex justify-between items-start">
-                  <span className="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">
-                    {metric.title}
-                  </span>
-                  <span
-                    className={`px-2 py-0.5 rounded text-[10px] font-bold flex items-center gap-1 whitespace-nowrap ${
-                      metric.positive
-                        ? 'text-primary bg-primary-container/10'
-                        : 'text-error bg-error-container'
-                    }`}
-                  >
-                    {metric.icon ? (
-                      <metric.icon size={12} />
-                    ) : metric.positive ? (
-                      <TrendingUp size={12} />
+      {/* Key Metrics */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-md">
+        {(loading || metrics.length === 0 ? Array.from({ length: 5 }) : metrics).map((metric, index) => {
+          const Icon = metric?.iconKey ? iconMap[metric.iconKey] : DollarSign;
+          return (
+            <div
+              key={index}
+              className="bg-white p-3 md:p-lg rounded-xl border border-outline-variant shadow-sm hover:shadow-md transition-all"
+            >
+              {metric ? (
+                <>
+                  <div className="flex justify-between items-start mb-md">
+                    <div>
+                      <p className="font-label-md text-label-md text-on-surface-variant">{metric.title}</p>
+                      <h5 className="font-headline-lg text-headline-lg text-on-surface mt-xs">{metric.value}</h5>
+                      <p className="text-body-sm text-on-surface-variant mt-xs">{metric.comparison}</p>
+                    </div>
+                    <div className={`p-sm rounded-lg ${metric.bgColor} ${metric.textColor}`}>
+                      <Icon size={20} />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-xs">
+                    {metric.positive ? (
+                      <TrendingUp size={16} className="text-primary" />
                     ) : (
-                      <TrendingDown size={12} />
+                      <TrendingDown size={16} className="text-error" />
                     )}
-                    {metric.change}
-                  </span>
+                    <span className={`font-label-md ${metric.positive ? 'text-primary' : 'text-error'}`}>
+                      {metric.change}
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <div className="space-y-3 animate-pulse">
+                  <div className="h-3 w-20 bg-surface-container-high rounded" />
+                  <div className="h-7 w-28 bg-surface-container-high rounded mt-2" />
+                  <div className="h-3 w-32 bg-surface-container-high rounded" />
                 </div>
-                <div className="mt-4">
-                  <h3 className="font-display-lg text-display-lg">{metric.value}</h3>
-                  <p className="text-[11px] text-on-surface-variant mt-1">
-                    {metric.comparison}
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-3 animate-pulse">
-                <div className="h-3 w-20 bg-surface-container-high rounded" />
-                <div className="h-7 w-28 bg-surface-container-high rounded mt-2" />
-                <div className="h-3 w-32 bg-surface-container-high rounded" />
-              </div>
-            )}
-          </div>
-        ))}
+              )}
+            </div>
+          );
+        })}
       </div>
 
-      {/* Charts Layout (Bento Style) */}
-      <div className="grid grid-cols-12 gap-6">
-        {/* Large Area Chart */}
-        <div className="card-surface p-6 col-span-12 lg:col-span-8 flex flex-col">
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h4 className="font-headline-md text-headline-md">Sales Over Time</h4>
-              <p className="text-sm text-on-surface-variant mt-1">
-                Revenue trend for the selected period
-              </p>
-            </div>
-            <div className="flex gap-2 bg-surface-container rounded-lg p-1">
-              {timeViews.map((view) => (
-                <button
-                  key={view}
-                  className={`text-[11px] font-bold px-4 py-2 rounded-md transition-all ${
-                    activeTimeView === view
-                      ? 'bg-primary text-white shadow-sm'
-                      : 'text-on-surface-variant hover:bg-surface-container-high'
-                  }`}
-                  onClick={() => setActiveTimeView(view)}
-                >
-                  {view}
-                </button>
-              ))}
-            </div>
-          </div>
+      {/* Bento Charts */}
+      <div className="grid grid-cols-12 gap-3 md:gap-lg">
+        {/* Sales Over Time */}
+        <Card className="col-span-12 lg:col-span-8 flex flex-col">
+          <CardHeader
+            title="Sales Over Time"
+            subtitle="Revenue trend for the selected period"
+            action={
+              <div className="flex gap-1 bg-surface-container rounded-lg p-1">
+                {timeViews.map((view) => (
+                  <button
+                    key={view}
+                    className={`text-[11px] font-bold px-4 py-2 rounded-md transition-all ${
+                      activeTimeView === view
+                        ? 'bg-primary text-white shadow-sm'
+                        : 'text-on-surface-variant hover:bg-surface-container-high'
+                    }`}
+                    onClick={() => setActiveTimeView(view)}
+                  >
+                    {view}
+                  </button>
+                ))}
+              </div>
+            }
+          />
           <div className="flex-grow min-h-[350px]">
             {loading ? (
               <ChartSkeleton height={350} />
@@ -248,28 +306,25 @@ const AnalyticsPage = () => {
               <EmptyState message="No orders yet — this chart will populate as sales come in." height={350} />
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart
-                  data={trendChartData}
-                  margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-                >
+                <AreaChart data={trendChartData} margin={{ top: 10, right: 24, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#006c50" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#006c50" stopOpacity={0} />
+                      <stop offset="5%" stopColor={COLORS.primary} stopOpacity={0.3} />
+                      <stop offset="95%" stopColor={COLORS.primary} stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <CartesianGrid strokeDasharray="3 3" stroke={COLORS.grid} />
                   <XAxis
                     dataKey="date"
-                    tick={{ fontSize: 12, fill: '#64748b' }}
+                    tick={{ fontSize: 12, fill: COLORS.tick }}
                     tickLine={false}
-                    axisLine={{ stroke: '#e2e8f0' }}
+                    axisLine={{ stroke: COLORS.grid }}
                     interval={activeTimeView === 'Daily' ? 2 : 0}
                   />
                   <YAxis
-                    tick={{ fontSize: 12, fill: '#64748b' }}
+                    tick={{ fontSize: 12, fill: COLORS.tick }}
                     tickLine={false}
-                    axisLine={{ stroke: '#e2e8f0' }}
+                    axisLine={{ stroke: COLORS.grid }}
                     tickFormatter={(value) => `Rs ${value}`}
                   />
                   <Tooltip content={<CustomTooltip formatter={PKR} />} />
@@ -277,23 +332,23 @@ const AnalyticsPage = () => {
                     type="monotone"
                     dataKey="sales"
                     name="Revenue"
-                    stroke="#006c50"
+                    stroke={COLORS.primary}
                     strokeWidth={3}
                     fillOpacity={1}
                     fill="url(#colorSales)"
-                    dot={{ r: 4, fill: '#006c50', strokeWidth: 2, stroke: '#fff' }}
-                    activeDot={{ r: 8, fill: '#006c50', strokeWidth: 3, stroke: '#fff' }}
+                    dot={{ r: 4, fill: COLORS.primary, strokeWidth: 2, stroke: '#fff' }}
+                    activeDot={{ r: 8, fill: COLORS.primary, strokeWidth: 3, stroke: '#fff' }}
                   />
                 </AreaChart>
               </ResponsiveContainer>
             )}
           </div>
-        </div>
+        </Card>
 
-        {/* Products by Collection Donut */}
-        <div className="card-surface p-6 col-span-12 lg:col-span-4 flex flex-col">
-          <h4 className="font-headline-md text-headline-md mb-6">Products by Collection</h4>
-          <div className="relative flex-grow flex items-center justify-center">
+        {/* Products by Collection */}
+        <Card className="col-span-12 lg:col-span-4 flex flex-col">
+          <CardHeader title="Products by Collection" subtitle="Distribution across collections" />
+          <div className="relative flex-grow flex items-center justify-center min-h-[300px]">
             {loading ? (
               <ChartSkeleton height={300} />
             ) : categoryData.length === 0 ? (
@@ -315,41 +370,39 @@ const AnalyticsPage = () => {
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip />
+                    <Tooltip content={<CustomTooltip formatter={(v) => `${v} products`} />} />
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <span className="text-[10px] text-on-surface-variant font-bold uppercase">
+                  <span className="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider">
                     Total Products
                   </span>
-                  <span className="text-headline-lg font-headline-lg">{totalProductsInView}</span>
+                  <span className="font-headline-lg text-headline-lg">{totalProductsInView}</span>
                 </div>
               </>
             )}
           </div>
           {!loading && categoryData.length > 0 && (
-            <div className="mt-6 space-y-3">
+            <div className="mt-lg space-y-3">
               {categoryData.map((source, index) => (
-                <div key={index} className="flex items-center justify-between group hover:bg-surface-container p-2 rounded-lg transition-colors cursor-pointer">
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-2 rounded-lg hover:bg-surface-container transition-colors"
+                >
                   <div className="flex items-center gap-3">
-                    <span
-                      className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: source.color }}
-                    ></span>
-                    <span className="font-body-sm text-body-sm">{source.name}</span>
+                    <span className="w-3 h-3 rounded-full" style={{ backgroundColor: source.color }} />
+                    <span className="font-body-sm text-body-sm text-on-surface">{source.name}</span>
                   </div>
-                  <span className="font-label-md text-label-md font-bold">{source.value}</span>
+                  <span className="font-label-md text-label-md font-bold text-on-surface">{source.value}</span>
                 </div>
               ))}
             </div>
           )}
-        </div>
+        </Card>
 
         {/* Revenue by Payment Status */}
-        <div className="card-surface p-6 col-span-12 lg:col-span-6">
-          <div className="flex justify-between items-center mb-6">
-            <h4 className="font-headline-md text-headline-md">Revenue by Payment Status</h4>
-          </div>
+        <Card className="col-span-12 lg:col-span-6">
+          <CardHeader title="Revenue by Payment Status" subtitle="Revenue grouped by payment state" />
           {loading ? (
             <ChartSkeleton height={300} />
           ) : revenueByStatus.length === 0 ? (
@@ -357,52 +410,85 @@ const AnalyticsPage = () => {
           ) : (
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={revenueByStatus}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="status" tick={{ fontSize: 12, fill: '#64748b' }} />
-                <YAxis tick={{ fontSize: 12, fill: '#64748b' }} tickFormatter={(value) => `Rs ${value}`} />
+                <CartesianGrid strokeDasharray="3 3" stroke={COLORS.grid} />
+                <XAxis dataKey="status" tick={{ fontSize: 12, fill: COLORS.tick }} tickLine={false} axisLine={{ stroke: COLORS.grid }} />
+                <YAxis tick={{ fontSize: 12, fill: COLORS.tick }} tickLine={false} axisLine={{ stroke: COLORS.grid }} tickFormatter={(value) => `Rs ${value}`} />
                 <Tooltip content={<CustomTooltip formatter={PKR} />} />
-                <Bar dataKey="revenue" name="Revenue" fill="#006c50" radius={[8, 8, 0, 0]} maxBarSize={60} />
+                <Bar dataKey="revenue" name="Revenue" fill={COLORS.primary} radius={[8, 8, 0, 0]} maxBarSize={60} />
               </BarChart>
             </ResponsiveContainer>
           )}
-        </div>
+        </Card>
 
-        {/* Daily Order Volume */}
-        <div className="card-surface p-6 col-span-12 lg:col-span-6">
-          <div className="flex justify-between items-center mb-6">
-            <h4 className="font-headline-md text-headline-md">Daily Order Volume</h4>
-          </div>
-          {loading ? (
-            <ChartSkeleton height={300} />
-          ) : salesTrendData.length === 0 ? (
-            <EmptyState message="No orders yet." height={300} />
-          ) : (
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={salesTrendData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="date" tick={{ fontSize: 12, fill: '#64748b' }} interval={2} />
-                <YAxis tick={{ fontSize: 12, fill: '#64748b' }} allowDecimals={false} />
-                <Tooltip content={<CustomTooltip formatter={(v) => `${v} orders`} />} />
-                <Line
-                  type="monotone"
-                  dataKey="orders"
-                  name="Orders"
-                  stroke="#5d5e60"
-                  strokeWidth={3}
-                  dot={{ r: 4, fill: '#5d5e60' }}
-                  activeDot={{ r: 8 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          )}
-        </div>
-
-        {/* Top Products Table */}
-        <div className="card-surface col-span-12 overflow-hidden">
-          <div className="px-6 py-4 flex justify-between items-center border-b border-outline-variant">
+        {/* Order Status Breakdown */}
+        <Card className="col-span-12 lg:col-span-6">
+          <CardHeader title="Order Status" subtitle="Payment & fulfillment breakdown" />
+          <div className="space-y-md">
             <div>
-              <h4 className="font-headline-md text-headline-md">Top Products by Inventory Value</h4>
-              <p className="text-sm text-on-surface-variant mt-1">
+              <p className="font-label-md text-label-md text-on-surface-variant mb-sm uppercase tracking-wider">Payment</p>
+              <div className="space-y-2">
+                {Object.entries(orderStatusBreakdown).length > 0 ? (
+                  Object.entries(orderStatusBreakdown).map(([status, count]) => (
+                    <div key={status} className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${getStatusBadge(status)}`}>
+                          {status === 'Paid' ? <CheckCircle size={12} /> : status === 'Refunded' ? <AlertCircle size={12} /> : <Clock size={12} />}
+                          {status}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-24 h-2 bg-surface-container-high rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-primary rounded-full"
+                            style={{ width: `${ordersCount > 0 ? (count / ordersCount) * 100 : 0}%` }}
+                          />
+                        </div>
+                        <span className="font-label-md text-on-surface w-8 text-right">{count}</span>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-body-sm text-on-surface-variant">No orders yet</p>
+                )}
+              </div>
+            </div>
+            <div>
+              <p className="font-label-md text-label-md text-on-surface-variant mb-sm uppercase tracking-wider">Fulfillment</p>
+              <div className="space-y-2">
+                {Object.entries(fulfillmentBreakdown).length > 0 ? (
+                  Object.entries(fulfillmentBreakdown).map(([status, count]) => (
+                    <div key={status} className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${getStatusBadge(status)}`}>
+                          {status === 'Fulfilled' || status === 'Delivered' ? <CheckCircle size={12} /> : status === 'Returned' || status === 'Cancelled' ? <AlertCircle size={12} /> : <Clock size={12} />}
+                          {status}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-24 h-2 bg-surface-container-high rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-tertiary rounded-full"
+                            style={{ width: `${ordersCount > 0 ? (count / ordersCount) * 100 : 0}%` }}
+                          />
+                        </div>
+                        <span className="font-label-md text-on-surface w-8 text-right">{count}</span>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-body-sm text-on-surface-variant">No orders yet</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Top Products by Inventory Value */}
+        <Card className="col-span-12 overflow-hidden p-0">
+          <div className="px-3 md:px-lg py-4 flex justify-between items-center border-b border-outline-variant">
+            <div>
+              <h4 className="font-headline-md text-headline-md text-on-surface">Top Products by Inventory Value</h4>
+              <p className="text-body-sm text-on-surface-variant mt-1">
                 Price × stock on hand — highest tied-up value first
               </p>
             </div>
@@ -414,38 +500,26 @@ const AnalyticsPage = () => {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-surface-container-low border-b border-outline-variant">
-                  <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">
-                    Product
-                  </th>
-                  <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">
-                    SKU
-                  </th>
-                  <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider text-right">
-                    Price
-                  </th>
-                  <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider text-right">
-                    Inventory
-                  </th>
-                  <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider text-right">
-                    Inventory Value
-                  </th>
-                  <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider text-right">
-                    Status
-                  </th>
+                  <th className="px-3 md:px-lg py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Product</th>
+                  <th className="px-3 md:px-lg py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">SKU</th>
+                  <th className="px-3 md:px-lg py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider text-right">Price</th>
+                  <th className="px-3 md:px-lg py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider text-right">Inventory</th>
+                  <th className="px-3 md:px-lg py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider text-right">Inventory Value</th>
+                  <th className="px-3 md:px-lg py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider text-right">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-outline-variant">
                 {loading ? (
                   Array.from({ length: 3 }).map((_, i) => (
                     <tr key={i}>
-                      <td className="px-6 py-4" colSpan={6}>
+                      <td className="px-3 md:px-lg py-4" colSpan={6}>
                         <div className="h-12 bg-surface-container-low animate-pulse rounded-lg" />
                       </td>
                     </tr>
                   ))
                 ) : topProducts.length === 0 ? (
                   <tr>
-                    <td className="px-6 py-10 text-center text-on-surface-variant" colSpan={6}>
+                    <td className="px-3 md:px-lg py-10 text-center text-on-surface-variant" colSpan={6}>
                       No products yet — add products to see them ranked here.
                     </td>
                   </tr>
@@ -454,7 +528,7 @@ const AnalyticsPage = () => {
                     const stock = stockBadge(product.inventory);
                     return (
                       <tr key={product._id} className="hover:bg-surface-container-low transition-colors duration-150">
-                        <td className="px-6 py-4">
+                        <td className="px-3 md:px-lg py-4">
                           <div className="flex items-center gap-4">
                             <div className="relative w-12 h-12 rounded-lg bg-surface-container-highest overflow-hidden shadow-sm shrink-0">
                               <Image
@@ -466,22 +540,22 @@ const AnalyticsPage = () => {
                               />
                             </div>
                             <div>
-                              <p className="font-body-md text-body-md font-bold">{product.title}</p>
+                              <p className="font-body-md text-body-md text-on-surface font-bold">{product.title}</p>
                               <p className="text-[11px] text-on-surface-variant">{product.productType || 'General'}</p>
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 font-body-sm text-body-sm text-on-surface-variant">
+                        <td className="px-3 md:px-lg py-4 font-body-sm text-body-sm text-on-surface-variant">
                           <span className="bg-surface-container px-2 py-1 rounded text-xs">{product.SKU || '—'}</span>
                         </td>
-                        <td className="px-6 py-4 font-body-sm text-body-sm text-right font-bold">{PKR(product.price)}</td>
-                        <td className="px-6 py-4 text-right">
+                        <td className="px-3 md:px-lg py-4 font-body-sm text-body-sm text-right font-bold text-on-surface">{PKR(product.price)}</td>
+                        <td className="px-3 md:px-lg py-4 text-right">
                           <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-label-md text-[10px] font-bold ${stock.className}`}>
                             {product.inventory} · {stock.label}
                           </span>
                         </td>
-                        <td className="px-6 py-4 font-body-md text-body-md text-right font-bold">{PKR(product.inventoryValue)}</td>
-                        <td className="px-6 py-4 text-right">
+                        <td className="px-3 md:px-lg py-4 font-body-md text-body-md text-right font-bold text-on-surface">{PKR(product.inventoryValue)}</td>
+                        <td className="px-3 md:px-lg py-4 text-right">
                           <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-label-md text-[10px] font-bold ${statusBadge(product.status)}`}>
                             {product.status}
                           </span>
@@ -493,9 +567,9 @@ const AnalyticsPage = () => {
               </tbody>
             </table>
           </div>
-        </div>
+        </Card>
       </div>
-    </main>
+    </div>
   );
 };
 

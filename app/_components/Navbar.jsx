@@ -461,7 +461,7 @@ export default function Navbar() {
           <div className="flex flex-col px-2 md:px-5 pb-0 py-1.5">
 
             {/* Row 1: Logo & Right Actions */}
-            <div className="flex justify-between items-center w-full gap-2">
+            <div className="flex justify-between pb-1 items-center w-full gap-2">
 
               {/* Brand Logo */}
               <div className="flex-shrink-0 flex items-center">

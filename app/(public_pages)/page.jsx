@@ -27,28 +27,24 @@ export default async function Home() {
     return (
         <>
             {/* Main content - scrollable */}
-            <div className="flex-1 min-w-0 overflow-y-auto px-2 md:px-5 md:pt-5">
-                <div className="lg:rounded-3xl overflow-hidden relative w-full aspect-[21/9] sm:aspect-[24/9]">
-                    <Image
-                        src="/banner.png"
-                        alt="NazishApparels Featured Collection"
-                        fill
-                        priority
-                        sizes="(max-width: 768px) 100vw, 1200px"
-                        className="object-cover"
-                    />
+            <div className="flex-1 min-w-0 overflow-y-auto">
+                {/* Hero - full width, edge to edge */}
+                <div className="relative w-full overflow-hidden rounded-3xl">
+                    <HeroCarousel />
                 </div>
 
-                <div className="px-0 md:px-3 lg:px-0 pb-8">
-                    <NewArrivals />
+                <div className="px-2 md:px-5 md:pt-0">
+                    <div className="px-0 md:px-3 lg:px-0 pb-8">
+                        <NewArrivals />
 
-                    <LazySection minHeight="200px">
-                        <HandcraftedCategories />
-                    </LazySection>
+                        <LazySection minHeight="200px">
+                            <HandcraftedCategories />
+                        </LazySection>
 
-                    <LazySection minHeight="400px">
-                        <FeaturedProductsSection initialProducts={initialProducts} />
-                    </LazySection>
+                        <LazySection minHeight="400px">
+                            <FeaturedProductsSection initialProducts={initialProducts} />
+                        </LazySection>
+                    </div>
                 </div>
             </div>
         </>

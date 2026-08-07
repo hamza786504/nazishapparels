@@ -98,7 +98,7 @@ export default function NewArrivals() {
                                         loading={index < 2 ? 'eager' : 'lazy'}
                                     />
                                     <div className="absolute inset-0 bg-gradient-to-t from-primary/60 via-transparent to-transparent opacity-80" />
-                                    <div className="absolute bottom-6 left-6">
+                                    <div className="absolute bottom-3 left-3 sm:bottom-6 sm:left-6">
                                         <span className="text-sm text-white">{product.title}</span>
                                         <div className="h-0.5 w-0 bg-secondary transition-all duration-500 group-hover/card:w-full mt-1" />
                                     </div>
