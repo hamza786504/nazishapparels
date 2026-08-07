@@ -44,21 +44,21 @@ export default function AboutPage() {
   const milestones = [
     {
       year: '1994',
-      title: 'The Founding Atelier',
+      title: 'Establishment of the Atelier',
       description:
-        'Established as an exclusive bridal atelier in Lahore, dedicated to crafting hand‑embroidered trousseaus for a discerning, invitation‑only clientele.',
+        'Established as a premier bridal atelier in Lahore, specializing in the bespoke creation of hand-embroidered trousseaus for a select, discerning clientele.',
     },
     {
       year: '2008',
-      title: 'Prêt‑à‑Porter Debut',
+      title: 'Inception of Prêt-à-Porter',
       description:
-        'Introduced our first ready‑to‑wear collection, artfully merging heritage craftsmanship with the dynamic rhythm of the modern Pakistani woman.',
+        'Introduced our inaugural ready-to-wear collection, deliberately marrying traditional craftsmanship with the sensibilities of the contemporary Pakistani woman.',
     },
     {
       year: '2024',
-      title: 'A Global Legacy',
+      title: 'International Expansion',
       description:
-        'Today, NazishApparels stands as an international emblem of luxury, delivering to over twenty countries while upholding the philosophy of ‘Heritage in every thread’.',
+        'Presently, NazishApparels is recognized as a global luxury brand, serving patrons in more than twenty countries while remaining committed to the ethos of ‘Heritage in every thread’.',
     },
   ];
 
@@ -84,7 +84,7 @@ export default function AboutPage() {
   ];
 
   return (
-    <div className="bg-surface text-on-surface font-body-md overflow-x-hidden">
+    <div className="bg-white text-on-surface font-body-md overflow-x-hidden">
       <style jsx global>{`
         .reveal-animation {
           opacity: 0;
@@ -120,18 +120,18 @@ export default function AboutPage() {
           <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/50 to-transparent" />
         </div>
 
-        <div className="relative z-10 max-w-[1440px] mx-auto px-6 md:px-16 w-full">
+        <div className="relative z-10 max-w-[1440px] mx-auto px-5 md:px-10 w-full">
           <div className="max-w-2xl">
             <span className="font-label-md text-white text-sm md:text-base text-secondary uppercase tracking-[0.25em] block mb-6">
               Established 1994
             </span>
-            <h1 className="font-display-lg text-5xl md:text-7xl lg:text-8xl text-primary leading-[1.1] mb-8">
+            <h1 className="font-display-lg text-5xl md:text-6xl text-primary leading-[1.1] mb-8">
               The Art of <br />
               <span className="italic text-secondary-fixed">Timeless Heritage</span>
             </h1>
-            <p className="font-body-lg text-white text-lg md:text-xl text-on-surface-variant leading-relaxed">
-              NazishApparels transcends the boundaries of a fashion house; it is a guardian of
-              centuries‑old Eastern traditions, seamlessly woven into the silhouette of the
+            <p className="font-body-lg text-white text-sm md:text-lg text-on-surface-variant leading-relaxed">
+              NazishApparels represents more than a conventional fashion house; it stands as a dedicated guardian
+              of time-honored Eastern traditions, meticulously integrated into the aesthetic of the
               contemporary woman.
             </p>
           </div>
@@ -139,18 +139,18 @@ export default function AboutPage() {
       </header>
 
       {/* Our Heritage */}
-      <section className="py-24 md:py-32 bg-surface">
-        <div className="max-w-[1440px] mx-auto px-6 md:px-16">
+      <section className="py-10 bg-white">
+        <div className="max-w-[1440px] mx-auto px-2 md:px-3">
           <div className="editorial-line mb-16" />
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
             <div className="lg:col-span-4 self-center">
-              <h2 className="font-headline-md text-3xl md:text-4xl text-primary mb-6">
+              <h2 className="font-headline-md font-bold text-3xl md:text-4xl text-black mb-6">
                 Our Heritage
               </h2>
-              <p className="text-on-surface-variant mb-8 leading-relaxed text-base md:text-lg">
-                Our narrative originates deep within artisanal ateliers, where the cadence of the loom
-                and the precision of the needle echo generations of mastery. Each fabric we select and
-                every stitch we place pays tribute to the virtuosos of Eastern craftsmanship.
+              <p className="text-on-surface-variant mb-8 leading-relaxed text-sm md:text-base">
+                Our history is rooted in the esteemed tradition of artisanal craftsmanship, where the rhythmic movement
+                of the loom and the precision of the needle represent generations of mastery. Each selected textile and
+                precise stitch serves as a tribute to the exceptional artisans of Eastern couture.
               </p>
               <div className="flex items-center gap-3 text-secondary font-label-md">
                 <Sparkles className="text-secondary" />
@@ -182,10 +182,10 @@ export default function AboutPage() {
       </section>
 
       {/* The Journey */}
-      <section className="py-24 md:py-32 bg-surface-container-lowest">
-        <div className="max-w-[1440px] mx-auto px-6 md:px-16">
+      <section className="py-10 bg-surface-container-lowest">
+        <div className="max-w-[1440px] mx-auto px-2 md:px-3">
           <div className="text-center mb-20">
-            <h2 className="font-headline-md text-3xl md:text-4xl text-primary">
+            <h2 className="font-headline-md text-3xl md:text-4xl text-black">
               The Journey
             </h2>
             <div className="w-20 h-px bg-secondary mx-auto mt-5" />
@@ -200,14 +200,14 @@ export default function AboutPage() {
                   isRevealed(`milestone-${index}`) ? 'revealed' : ''
                 }`}
               >
-                <div className="font-display-lg text-5xl md:text-6xl text-secondary-fixed-dim shrink-0 leading-none">
+                <div className="font-display-lg text-xl md:text-4xl text-secondary-fixed-dim shrink-0 leading-none">
                   {milestone.year}
                 </div>
                 <div className="pt-1">
-                  <h3 className="font-headline-sm text-2xl md:text-3xl mb-3">
+                  <h3 className="font-headline-sm text-xl md:text-2xl mb-3">
                     {milestone.title}
                   </h3>
-                  <p className="text-on-surface-variant text-base md:text-lg leading-relaxed">
+                  <p className="text-on-surface-variant text-sm md:text-base leading-relaxed">
                     {milestone.description}
                   </p>
                 </div>
@@ -217,17 +217,17 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* The Souls Behind the Silk */}
-      <section className="py-24 md:py-32 bg-surface">
-        <div className="max-w-[1440px] mx-auto px-6 md:px-16">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end mb-16">
-            <h2 className="font-display-lg text-4xl md:text-5xl lg:text-6xl text-primary leading-tight">
-              The Souls <br />
-              Behind the Silk
+      {/* The Custodians of Craftsmanship */}
+      <section className="py-10 bg-white">
+        <div className="max-w-[1440px] mx-auto px-2 md:px-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center mb-16">
+            <h2 className="font-display-lg text-4xl text-black font-bold leading-tight">
+              The Custodians <br />
+              of Craftsmanship
             </h2>
             <p className="text-on-surface-variant text-base md:text-lg">
-              Our excellence is the shared breath of over two hundred artisans, weavers, and
-              designers who regard each garment as a canvas of living history.
+              Our commitment to excellence is realized through the collective dedication of over two hundred master
+              artisans, weavers, and designers, each of whom approaches a garment as a testament to living history.
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
@@ -245,7 +245,7 @@ export default function AboutPage() {
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                   />
                 </div>
-                <h4 className="font-label-md text-lg text-primary tracking-wide">
+                <h4 className="font-label-md text-lg text-black tracking-wide">
                   {artisan.name}
                 </h4>
                 <p className="text-sm text-on-surface-variant mt-1 uppercase tracking-wider">
@@ -258,12 +258,12 @@ export default function AboutPage() {
       </section>
 
       {/* Flagship Atelier */}
-      <section className="py-24 md:py-32 bg-primary text-on-primary">
-        <div className="max-w-[1440px] mx-auto px-6 md:px-16 text-center">
-          <h2 className="font-display-lg text-4xl md:text-5xl lg:text-6xl mb-8">
+      <section className="py-10 bg-primary text-on-primary">
+        <div className="max-w-[1440px] mx-auto px-2 md:px-3 text-center">
+          <h2 className="font-display-lg text-lg md:text-4xl">
             Our Flagship Atelier
           </h2>
-          <div className="h-px w-24 bg-secondary mx-auto mb-14" />
+          <div className="h-px w-24 bg-secondary mx-auto my-5" />
           <div className="flex justify-center">
             <div className="max-w-[600px] w-full bg-on-primary/5 p-8 md:p-12 border border-on-primary/10 rounded-sm backdrop-blur-sm">
               <h3 className="font-headline-md text-3xl text-secondary-fixed mb-6">
@@ -275,12 +275,12 @@ export default function AboutPage() {
                 Lahore, 54000
               </p>
               <p className="text-on-primary/90 mt-6 leading-relaxed text-base md:text-lg">
-                The original residence of NazishApparels, now home to our private bridal lounge and
-                heritage archive. An invitation to experience bespoke luxury at its finest.
+                The principal residence of NazishApparels, which now houses our private bridal suite and
+                heritage archives. We invite you to experience the pinnacle of bespoke luxury.
               </p>
               <div className="pt-8">
                 <Link
-                  className="inline-block border border-secondary-fixed text-secondary-fixed px-10 py-4 font-label-md uppercase tracking-[0.2em] text-sm hover:bg-secondary-fixed hover:text-primary transition-all duration-300"
+                  className="inline-block border border-secondary-fixed text-secondary-fixed px-10 py-4 font-label-md uppercase tracking-[0.2em] text-sm hover:bg-secondary-fixed hover:text-black transition-all duration-300"
                   href="/contact"
                 >
                   Request an Appointment
