@@ -92,16 +92,6 @@ function Header() {
   const profileRef     = useRef(null);
   const pollRef        = useRef(null);
 
-  // Mock product data for search
-  const mockProducts = [
-    { id: 1, name: 'Handmade Ceramic Vase',   price: '$45.00', category: 'Home Decor'   },
-    { id: 2, name: 'Organic Cotton T-Shirt',  price: '$29.99', category: 'Apparel'      },
-    { id: 3, name: 'Bamboo Cutting Board',    price: '$34.50', category: 'Kitchen'      },
-    { id: 4, name: 'Leather Wallet',          price: '$59.00', category: 'Accessories'  },
-    { id: 5, name: 'Scented Candle Set',      price: '$24.99', category: 'Home Decor'   },
-    { id: 6, name: 'Wooden Phone Stand',      price: '$19.99', category: 'Electronics'  },
-  ];
-
   // ── fetch unread count (lightweight) ─────────────────────────────────────
   const fetchUnreadCount = useCallback(async () => {
     try {
@@ -193,14 +183,24 @@ function Header() {
 
   // ── search debounce ───────────────────────────────────────────────────────
   useEffect(() => {
-    const t = setTimeout(() => {
-      if (searchQuery.trim().length > 0) {
+    const t = setTimeout(async () => {
+      const q = searchQuery.trim();
+      if (q.length > 0) {
         setIsSearching(true);
-        const filtered = mockProducts.filter(p =>
-          p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          p.category.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-        setSearchResults(filtered);
+        try {
+          const res = await fetch(`/api/products?q=${encodeURIComponent(q)}&limit=8`);
+          const data = await res.json();
+          setSearchResults((data.products || []).map((p) => ({
+            id: p._id,
+            slug: p.slug,
+            name: p.title,
+            price: p.price != null ? `Rs ${Number(p.price).toLocaleString()}` : '',
+            category: p.productType || p.collectionId?.name || p.category || 'Product',
+            image: p.images?.[0] || null,
+          })));
+        } catch {
+          setSearchResults([]);
+        }
         setShowSearchResults(true);
         setIsSearching(false);
       } else {
@@ -242,8 +242,8 @@ function Header() {
     }
   };
 
-  const handleProductClick = (id) => {
-    router.push(`/products/${id}`);
+  const handleProductClick = (slug) => {
+    router.push(`/product/${slug}`);
     setShowSearchResults(false);
     setSearchQuery('');
   };
@@ -318,11 +318,15 @@ function Header() {
                     {searchResults.map((p) => (
                       <button
                         key={p.id}
-                        onClick={() => handleProductClick(p.id)}
+                        onClick={() => handleProductClick(p.slug)}
                         className="w-full px-4 py-2 hover:bg-surface-container-high transition-colors flex items-center gap-3 text-left"
                       >
-                        <div className="w-10 h-10 bg-surface-container rounded-lg flex items-center justify-center flex-shrink-0">
-                          <Package className="w-5 h-5 text-on-surface-variant" />
+                        <div className="w-10 h-10 bg-surface-container rounded-lg overflow-hidden flex items-center justify-center flex-shrink-0">
+                          {p.image ? (
+                            <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <Package className="w-5 h-5 text-on-surface-variant" />
+                          )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-body-md font-medium truncate">{p.name}</p>
@@ -556,7 +560,7 @@ function Header() {
           <aside className="fixed top-0 left-0 w-64 h-full bg-surface-container-low dark:bg-surface-container-lowest border-r border-outline-variant z-50 lg:hidden flex flex-col animate-slide-in">
             <div className="p-4 border-b border-outline-variant flex justify-between items-center">
               <div>
-                <h1 className="text-headline-md font-headline-md font-bold text-on-surface">Merchant Admin</h1>
+                <h1 className="text-headline-md font-headline-md font-bold text-on-surface">Admin</h1>
                 <p className="text-body-sm text-on-surface-variant">Manage your store</p>
               </div>
               {/* Close button — dismisses the drawer on mobile */}

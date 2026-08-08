@@ -19,6 +19,7 @@ import {
   MdPrint,
   MdDoneAll,
   MdTrackChanges,
+  MdClose,
 } from 'react-icons/md';
 
 const getStatusBadge = (status) => {
@@ -63,6 +64,26 @@ const OrderDetailPage = () => {
   const [trackingCarrier, setTrackingCarrier] = useState('');
   const [trackingNumber, setTrackingNumber] = useState('');
   const [savingTracking, setSavingTracking] = useState(false);
+
+  // Customer edit modal
+  const [showCustomerModal, setShowCustomerModal] = useState(false);
+  const [savingCustomer, setSavingCustomer] = useState(false);
+  const [customerForm, setCustomerForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+  });
+
+  // Shipping address edit modal
+  const [showAddressModal, setShowAddressModal] = useState(false);
+  const [savingAddress, setSavingAddress] = useState(false);
+  const [addressForm, setAddressForm] = useState({
+    address: '',
+    apartment: '',
+    city: '',
+    postalCode: '',
+    country: '',
+  });
 
   useEffect(() => {
     if (!id) return;
@@ -266,6 +287,94 @@ const OrderDetailPage = () => {
       alert(err.message);
     } finally {
       setSavingTracking(false);
+    }
+  };
+
+  const openCustomerModal = () => {
+    setCustomerForm({
+      name: customer.name || '',
+      email: order.email || customer.email || '',
+      phone: order.phone || '',
+    });
+    setShowCustomerModal(true);
+  };
+
+  const handleSaveCustomer = async () => {
+    setSavingCustomer(true);
+    try {
+      // Keep the nested customer object intact; the order's top-level email/phone
+      // are the values shown in the admin Customer card.
+      const res = await fetch(`/api/orders/${order._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customer: { ...(customer || {}), name: customerForm.name.trim() },
+          email: customerForm.email.trim(),
+          phone: customerForm.phone.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || data.error || 'Failed to update customer');
+      }
+      setOrder({
+        ...order,
+        customer: { ...(customer || {}), name: customerForm.name.trim() },
+        email: customerForm.email.trim(),
+        phone: customerForm.phone.trim(),
+      });
+      setShowCustomerModal(false);
+    } catch (err) {
+      console.error('Save customer error:', err);
+      alert(err.message);
+    } finally {
+      setSavingCustomer(false);
+    }
+  };
+
+  const openAddressModal = () => {
+    setAddressForm({
+      address: order.address || '',
+      apartment: order.apartment || '',
+      city: order.city || '',
+      postalCode: order.postalCode || '',
+      country: order.country || '',
+    });
+    setShowAddressModal(true);
+  };
+
+  const handleSaveAddress = async () => {
+    setSavingAddress(true);
+    try {
+      const res = await fetch(`/api/orders/${order._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          address: addressForm.address.trim(),
+          apartment: addressForm.apartment.trim(),
+          city: addressForm.city.trim(),
+          postalCode: addressForm.postalCode.trim(),
+          country: addressForm.country.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || data.error || 'Failed to update shipping address');
+      }
+      setOrder({
+        ...order,
+        address: addressForm.address.trim(),
+        apartment: addressForm.apartment.trim(),
+        city: addressForm.city.trim(),
+        postalCode: addressForm.postalCode.trim(),
+        country: addressForm.country.trim(),
+      });
+      setShowAddressModal(false);
+    } catch (err) {
+      console.error('Save address error:', err);
+      alert(err.message);
+    } finally {
+      setSavingAddress(false);
     }
   };
 
@@ -709,9 +818,14 @@ const OrderDetailPage = () => {
               <div className="bg-surface-container-lowest border border-outline-variant shadow-sm rounded p-lg">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="font-headline-md text-headline-md">Customer</h3>
-                  <Link className="text-primary font-label-md text-label-md hover:underline" href="#">
+                  <button
+                    type="button"
+                    onClick={openCustomerModal}
+                    className="text-primary font-label-md text-label-md hover:underline flex items-center gap-1"
+                  >
+                    <MdEdit size={15} />
                     Edit
-                  </Link>
+                  </button>
                 </div>
                 <div className="flex items-center gap-4 mb-4">
                   <div className="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center font-bold text-secondary">
@@ -740,7 +854,15 @@ const OrderDetailPage = () => {
               <div className="bg-surface-container-lowest border border-outline-variant shadow-sm rounded p-lg">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="font-headline-md text-headline-md">Shipping Address</h3>
-                  <MdEdit className="text-on-surface-variant cursor-pointer" size={18} />
+                  <button
+                    type="button"
+                    onClick={openAddressModal}
+                    className="text-primary font-label-md text-label-md hover:underline flex items-center gap-1"
+                    aria-label="Edit shipping address"
+                  >
+                    <MdEdit size={15} />
+                    Edit
+                  </button>
                 </div>
                 <div className="font-body-md text-body-md text-on-surface-variant leading-relaxed">
                   {shippingLines.length > 0 ? (
@@ -832,6 +954,186 @@ const OrderDetailPage = () => {
             </div>
           </div>
         </div>
+
+        {/* Customer Edit Modal */}
+        {showCustomerModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40" onClick={() => setShowCustomerModal(false)}>
+            <div
+              className="bg-white rounded-xl shadow-2xl w-full max-w-[600px] overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between px-6 py-4 border-b border-outline-variant">
+                <h3 className="font-headline-md text-headline-md font-bold">Edit Customer</h3>
+                <button
+                  type="button"
+                  onClick={() => setShowCustomerModal(false)}
+                  className="p-1 text-on-surface-variant hover:text-on-surface rounded-full hover:bg-surface-container-low"
+                  aria-label="Close"
+                >
+                  <MdClose size={20} />
+                </button>
+              </div>
+              <div className="p-6 space-y-4">
+                <div>
+                  <label className="block font-label-md text-label-md font-bold text-on-surface-variant mb-1">
+                    Name
+                  </label>
+                  <input
+                    type="text"
+                    value={customerForm.name}
+                    onChange={(e) => setCustomerForm({ ...customerForm, name: e.target.value })}
+                    className="w-full p-3 border border-outline-variant rounded-lg font-body-md text-body-md focus:border-primary focus:ring-1 focus:ring-primary"
+                    placeholder="Customer name"
+                  />
+                </div>
+                <div>
+                  <label className="block font-label-md text-label-md font-bold text-on-surface-variant mb-1">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    value={customerForm.email}
+                    onChange={(e) => setCustomerForm({ ...customerForm, email: e.target.value })}
+                    className="w-full p-3 border border-outline-variant rounded-lg font-body-md text-body-md focus:border-primary focus:ring-1 focus:ring-primary"
+                    placeholder="customer@example.com"
+                  />
+                </div>
+                <div>
+                  <label className="block font-label-md text-label-md font-bold text-on-surface-variant mb-1">
+                    Phone
+                  </label>
+                  <input
+                    type="tel"
+                    value={customerForm.phone}
+                    onChange={(e) => setCustomerForm({ ...customerForm, phone: e.target.value })}
+                    className="w-full p-3 border border-outline-variant rounded-lg font-body-md text-body-md focus:border-primary focus:ring-1 focus:ring-primary"
+                    placeholder="Phone number"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 px-6 py-4 border-t border-outline-variant">
+                <button
+                  type="button"
+                  onClick={() => setShowCustomerModal(false)}
+                  className="px-5 py-2.5 border border-outline rounded-lg font-label-md text-label-md font-bold text-on-surface hover:bg-surface-container-low transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveCustomer}
+                  disabled={savingCustomer}
+                  className="px-6 py-2.5 bg-primary text-on-primary rounded-lg font-label-md text-label-md font-bold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2"
+                >
+                  {savingCustomer ? 'Saving…' : 'Save Changes'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Shipping Address Edit Modal */}
+        {showAddressModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40" onClick={() => setShowAddressModal(false)}>
+            <div
+              className="bg-white rounded-xl shadow-2xl w-full max-w-[600px] overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between px-6 py-4 border-b border-outline-variant">
+                <h3 className="font-headline-md text-headline-md font-bold">Edit Shipping Address</h3>
+                <button
+                  type="button"
+                  onClick={() => setShowAddressModal(false)}
+                  className="p-1 text-on-surface-variant hover:text-on-surface rounded-full hover:bg-surface-container-low"
+                  aria-label="Close"
+                >
+                  <MdClose size={20} />
+                </button>
+              </div>
+              <div className="p-6 space-y-4">
+                <div>
+                  <label className="block font-label-md text-label-md font-bold text-on-surface-variant mb-1">
+                    Street Address
+                  </label>
+                  <input
+                    type="text"
+                    value={addressForm.address}
+                    onChange={(e) => setAddressForm({ ...addressForm, address: e.target.value })}
+                    className="w-full p-3 border border-outline-variant rounded-lg font-body-md text-body-md focus:border-primary focus:ring-1 focus:ring-primary"
+                    placeholder="House, street"
+                  />
+                </div>
+                <div>
+                  <label className="block font-label-md text-label-md font-bold text-on-surface-variant mb-1">
+                    Apartment / Suite
+                  </label>
+                  <input
+                    type="text"
+                    value={addressForm.apartment}
+                    onChange={(e) => setAddressForm({ ...addressForm, apartment: e.target.value })}
+                    className="w-full p-3 border border-outline-variant rounded-lg font-body-md text-body-md focus:border-primary focus:ring-1 focus:ring-primary"
+                    placeholder="Apt, floor, building"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-label-md text-label-md font-bold text-on-surface-variant mb-1">
+                      City
+                    </label>
+                    <input
+                      type="text"
+                      value={addressForm.city}
+                      onChange={(e) => setAddressForm({ ...addressForm, city: e.target.value })}
+                      className="w-full p-3 border border-outline-variant rounded-lg font-body-md text-body-md focus:border-primary focus:ring-1 focus:ring-primary"
+                      placeholder="City"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-label-md text-label-md font-bold text-on-surface-variant mb-1">
+                      Postal Code
+                    </label>
+                    <input
+                      type="text"
+                      value={addressForm.postalCode}
+                      onChange={(e) => setAddressForm({ ...addressForm, postalCode: e.target.value })}
+                      className="w-full p-3 border border-outline-variant rounded-lg font-body-md text-body-md focus:border-primary focus:ring-1 focus:ring-primary"
+                      placeholder="Postal code"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block font-label-md text-label-md font-bold text-on-surface-variant mb-1">
+                    Country
+                  </label>
+                  <input
+                    type="text"
+                    value={addressForm.country}
+                    onChange={(e) => setAddressForm({ ...addressForm, country: e.target.value })}
+                    className="w-full p-3 border border-outline-variant rounded-lg font-body-md text-body-md focus:border-primary focus:ring-1 focus:ring-primary"
+                    placeholder="Country"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 px-6 py-4 border-t border-outline-variant">
+                <button
+                  type="button"
+                  onClick={() => setShowAddressModal(false)}
+                  className="px-5 py-2.5 border border-outline rounded-lg font-label-md text-label-md font-bold text-on-surface hover:bg-surface-container-low transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveAddress}
+                  disabled={savingAddress}
+                  className="px-6 py-2.5 bg-primary text-on-primary rounded-lg font-label-md text-label-md font-bold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2"
+                >
+                  {savingAddress ? 'Saving…' : 'Save Changes'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
 
       

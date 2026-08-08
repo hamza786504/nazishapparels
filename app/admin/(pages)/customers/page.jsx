@@ -232,6 +232,14 @@ const CustomersPage = () => {
                       <td className="p-4 text-right font-bold text-on-surface">Rs {customer.totalSpent?.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }) || '0'}</td>
                       <td className="p-4 text-right">
                         <div className="flex justify-end gap-2">
+                          <Link
+                            href={`/admin/customers/edit/${customer._id}`}
+                            className="p-2 text-on-surface-variant hover:text-primary transition-colors"
+                            aria-label={`Edit ${customer.firstName} ${customer.lastName}`}
+                            title="Edit customer"
+                          >
+                            <Edit2 size={16} />
+                          </Link>
                           <button
                             onClick={() => handleDeleteCustomer(customer._id)}
                             className="p-2 text-on-surface-variant hover:text-error transition-colors"

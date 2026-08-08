@@ -1,5 +1,6 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import Link from 'next/link';
 import Image from 'next/image';
 
 // Cache-busting: bump these when the banner files change so browsers and the
@@ -8,35 +9,77 @@ const slides = [
   {
     id: 0,
     image: '/banner.png?v=2',
+    href: '/collection/new-arrivals',
   },
   {
     id: 1,
     image: '/banner-2.png?v=2',
+    href: '/collection/new-arrivals',
   },
 ];
 
+const SWIPE_THRESHOLD = 48;
+
 export default function HeroCarousel() {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const touchStartX = useRef(null);
+  const touchStartY = useRef(null);
+  const touchDragging = useRef(false);
 
+  const isCarousel = slides.length > 1;
+
+  const goToSlide = useCallback((index) => {
+    setCurrentSlide(((index % slides.length) + slides.length) % slides.length);
+  }, []);
+
+  const nextSlide = useCallback(() => {
+    goToSlide(currentSlide + 1);
+  }, [currentSlide, goToSlide]);
+
+  const prevSlide = useCallback(() => {
+    goToSlide(currentSlide - 1);
+  }, [currentSlide, goToSlide]);
+
+  // Autoplay timer, reset whenever the slide changes (manual swipe or auto).
   useEffect(() => {
-    if (slides.length <= 1) return;
+    if (!isCarousel) return;
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 6000);
     return () => clearInterval(interval);
-  }, []);
+  }, [currentSlide, isCarousel]);
 
-  const isCarousel = slides.length > 1;
-  const goToSlide = (index) => setCurrentSlide(index);
-  const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
-  const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % slides.length);
+  const handleTouchStart = (e) => {
+    const t = e.touches[0];
+    touchStartX.current = t.clientX;
+    touchStartY.current = t.clientY;
+    touchDragging.current = true;
+  };
+
+  const handleTouchEnd = (e) => {
+    if (!touchDragging.current || touchStartX.current === null) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - touchStartX.current;
+    const dy = t.clientY - touchStartY.current;
+    touchStartX.current = null;
+    touchStartY.current = null;
+    touchDragging.current = false;
+
+    // Only treat as a swipe when the horizontal movement clearly dominates,
+    // so vertical page-scrolling isn't hijacked.
+    if (Math.abs(dx) < SWIPE_THRESHOLD || Math.abs(dx) < Math.abs(dy) * 1.2) return;
+    if (dx < 0) nextSlide();
+    else prevSlide();
+  };
 
   return (
-    <div className="p-4 pb-0 ">
+    <div className="p-4 pb-0">
       <div
         id="controls-carousel rounded-2xl overflow-hidden"
         style={{ position: 'relative', width: '100%' }}
         data-carousel="static"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
       >
         {/* Carousel wrapper – aspect-ratio handles height */}
         <div
@@ -48,16 +91,21 @@ export default function HeroCarousel() {
           }}
         >
           {slides.map((slide, index) => (
-            <div
+            <Link
               key={slide.id}
+              href={slide.href}
+              aria-label="Shop New Arrivals"
               style={{
                 position: 'absolute',
                 inset: 0,
                 opacity: index === currentSlide ? 1 : 0,
                 transition: 'opacity 0.8s ease-in-out',
                 zIndex: index === currentSlide ? 1 : 0,
+                pointerEvents: index === currentSlide ? 'auto' : 'none',
+                display: 'block',
               }}
               aria-hidden={index !== currentSlide}
+              tabIndex={index === currentSlide ? 0 : -1}
             >
               <Image
                 src={slide.image}
@@ -70,7 +118,6 @@ export default function HeroCarousel() {
                   display: 'block',
                 }}
               />
-
 
               {/* Text content */}
               <div
@@ -121,7 +168,7 @@ export default function HeroCarousel() {
                   {slide.description}
                 </p>
               </div>
-            </div>
+            </Link>
           ))}
 
           {/* Slide indicators */}
@@ -134,7 +181,7 @@ export default function HeroCarousel() {
                 transform: 'translateX(-50%)',
                 display: 'flex',
                 gap: '0.625rem',
-                zIndex: 10,
+                zIndex: 20,
               }}
             >
               {slides.map((_, index) => (
@@ -173,7 +220,7 @@ export default function HeroCarousel() {
               position: 'absolute',
               top: 0,
               left: 0,
-              zIndex: 10,
+              zIndex: 20,
               height: '100%',
               display: 'flex',
               alignItems: 'center',
@@ -184,7 +231,7 @@ export default function HeroCarousel() {
               cursor: 'pointer',
             }}
           >
-            {/* ... same SVG and hover effects ... */}
+            <ChevronButton dir="left" />
           </button>
         )}
 
@@ -198,7 +245,7 @@ export default function HeroCarousel() {
               position: 'absolute',
               top: 0,
               right: 0,
-              zIndex: 10,
+              zIndex: 20,
               height: '100%',
               display: 'flex',
               alignItems: 'center',
@@ -209,7 +256,7 @@ export default function HeroCarousel() {
               cursor: 'pointer',
             }}
           >
-            {/* ... same SVG and hover effects ... */}
+            <ChevronButton dir="right" />
           </button>
         )}
 
@@ -224,5 +271,31 @@ export default function HeroCarousel() {
       `}</style>
       </div>
     </div>
+  );
+}
+
+function ChevronButton({ dir }) {
+  return (
+    <span
+      className="w-10 h-10 flex items-center justify-center rounded-full bg-black/25 text-white backdrop-blur-sm transition-transform hover:bg-black/40"
+      style={{ pointerEvents: 'none' }}
+    >
+      <svg
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        {dir === 'left' ? (
+          <path d="m15 18-6-6 6-6" />
+        ) : (
+          <path d="m9 18 6-6-6-6" />
+        )}
+      </svg>
+    </span>
   );
 }

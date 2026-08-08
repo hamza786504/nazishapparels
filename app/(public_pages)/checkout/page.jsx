@@ -6,8 +6,11 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { FaWhatsapp } from 'react-icons/fa';
 import { CheckCircle, Loader, ChevronDown, Truck, Landmark, Upload, ArrowLeft, Lock } from 'lucide-react';
+import Select from 'react-select';
+import Flags from 'country-flag-icons/react/3x2';
 import { useCart } from '../../store/cartContext';
 import { useAuth } from '../../store/authContext';
+import { COUNTRIES, DEFAULT_COUNTRY, DEFAULT_DIAL_CODE } from '../../../lib/countryData';
 
 const DEFAULT_SHIPPING_CONFIG = {
     cod: true,
@@ -22,13 +25,89 @@ const DEFAULT_SHIPPING_CONFIG = {
     ],
 };
 
-const countries = [
-    'Country/Region',
-    'Pakistan',
-    'United Arab Emirates',
-    'United Kingdom',
-    'USA',
-];
+// react-select option helpers / styles shared by the country + dial-code pickers.
+const countryOptions = COUNTRIES.map((c) => ({
+    value: c.name,
+    label: c.name,
+    code: c.code,
+    dialCode: c.dialCode,
+}));
+const dialCodeOptions = COUNTRIES.map((c) => ({
+    value: c.dialCode,
+    label: `${c.dialCode} ${c.name}`,
+    code: c.code,
+}));
+
+const flag = (code) => {
+    const Flag = Flags[code];
+    return Flag ? <Flag style={{ width: 18, height: 13, marginRight: 8, borderRadius: 2 }} /> : null;
+};
+
+// The menus are rendered through a portal to document.body (see menuPortalTarget
+// on the Selects below), so a single high z-index keeps them above every section
+// on the page and lets them escape any overflow clipping.
+const selectStyles = (hasError) => ({
+    control: (base, state) => ({
+        ...base,
+        background: 'rgb(var(--surface-container-low, 247 243 242))',
+        border: 'none',
+        borderBottom: `2px solid ${hasError ? 'rgb(var(--error, 186 26 26))' : state.isFocused ? 'rgb(var(--secondary, 95 118 70))' : 'rgb(var(--outline-variant, 202 196 194))'}`,
+        borderRadius: 0,
+        boxShadow: 'none',
+        minHeight: '56px',
+        padding: '0 8px',
+        cursor: 'pointer',
+        fontSize: '15px',
+        '&:hover': { borderBottomColor: state.isFocused ? 'rgb(var(--secondary, 95 118 70))' : 'rgb(var(--outline-variant, 202 196 194))' },
+    }),
+    valueContainer: (base) => ({ ...base, padding: '0', fontSize: '15px' }),
+    input: (base) => ({ ...base, color: 'rgb(var(--on-surface, 29 27 32))', margin: 0, fontSize: '15px' }),
+    singleValue: (base) => ({ ...base, color: 'rgb(var(--on-surface, 29 27 32))', display: 'flex', alignItems: 'center' }),
+    placeholder: (base) => ({ ...base, color: 'rgb(var(--outline-variant, 202 196 194))', fontSize: '15px' }),
+    indicatorsContainer: (base) => ({ ...base, color: 'rgb(var(--on-surface-variant, 73 69 79))' }),
+    dropdownIndicator: (base) => ({ ...base, color: 'rgb(var(--on-surface-variant, 73 69 79))', padding: '0 4px' }),
+    clearIndicator: (base) => ({ ...base, color: 'rgb(var(--on-surface-variant, 73 69 79))' }),
+    indicatorSeparator: () => ({ display: 'none' }),
+    menu: (base) => ({
+        ...base,
+        position: 'absolute',
+        zIndex: 9999,
+        marginTop: 6,
+        borderRadius: 12,
+        border: '1px solid rgb(var(--outline-variant, 202 196 194))',
+        boxShadow: '0 16px 40px rgba(0,0,0,0.16)',
+        overflow: 'hidden',
+        background: 'rgb(var(--surface-container-lowest, 255 255 255))',
+    }),
+    menuList: (base) => ({ ...base, maxHeight: 280, padding: '6px', overflowX: 'hidden' }),
+    option: (base, state) => ({
+        ...base,
+        display: 'flex',
+        alignItems: 'center',
+        fontSize: '12px',
+        padding: '8px 10px',
+        cursor: 'pointer',
+        borderRadius: 8,
+        background: state.isFocused ? 'rgb(var(--surface-container-high, 236 230 229))' : 'transparent',
+        color: 'rgb(var(--on-surface, 29 27 32))',
+        whiteSpace: 'nowrap',
+        ':active': { background: 'rgb(var(--secondary-container, 222 235 210))' },
+    }),
+    noOptionsMessage: (base) => ({ ...base, fontSize: '12px', padding: '8px', color: 'rgb(var(--on-surface-variant, 73 69 79))' }),
+});
+
+const menuPortal = typeof document !== 'undefined' ? document.body : undefined;
+
+// Split a stored phone value into a dial code + local number so saved-address
+// numbers keep working when rendered with the searchable country-code picker.
+const parseStoredPhone = (raw) => {
+    if (!raw) return { dialCode: DEFAULT_DIAL_CODE, phone: '' };
+    const s = String(raw).replace(/\s+/g, '');
+    const uniqueCodes = [...new Set(COUNTRIES.map((c) => c.dialCode))].sort((a, b) => b.length - a.length);
+    const hit = uniqueCodes.find((d) => s.startsWith(d) && s.length > d.length);
+    if (hit) return { dialCode: hit, phone: s.slice(hit.length) };
+    return { dialCode: DEFAULT_DIAL_CODE, phone: s };
+};
 
 export default function CheckoutPage() {
     const { cartItems, clearCart, appliedCoupon, applyCoupon, removeCoupon } = useCart();
@@ -44,9 +123,10 @@ export default function CheckoutPage() {
         address: '',
         apartment: '',
         city: '',
-        country: 'Country/Region',
+        country: DEFAULT_COUNTRY,
         postalCode: '',
         phone: '',
+        phoneDialCode: DEFAULT_DIAL_CODE,
         discountCode: '',
         shippingMethod: 'standard',
         paymentMethod: 'cod',
@@ -92,8 +172,12 @@ export default function CheckoutPage() {
 
     // Map a saved address country value to one of the checkout country options.
     const toCheckoutCountry = (c) => {
-        if (c === 'United States') return 'USA';
-        return c || 'Country/Region';
+        if (!c) return DEFAULT_COUNTRY;
+        const lower = String(c).toLowerCase();
+        if (lower === 'united states' || lower === 'usa') return 'United States';
+        if (lower === 'united arab emirates') return 'United Arab Emirates';
+        if (lower === 'united kingdom' || lower === 'uk') return 'United Kingdom';
+        return c;
     };
 
     // When the customer is logged in, load any saved addresses from their
@@ -109,6 +193,7 @@ export default function CheckoutPage() {
                 setSavedAddresses(addrs);
                 // Auto-select the default (or first) address and fill the form.
                 const preferred = addrs.find((a) => a.isDefault) || addrs[0];
+                const storedPhone = parseStoredPhone(preferred?.phone);
                 setSelectedAddressKey(preferred?._key || null);
                 setFormData((prev) => ({
                     ...prev,
@@ -120,7 +205,8 @@ export default function CheckoutPage() {
                     city: preferred?.city || prev.city,
                     country: toCheckoutCountry(preferred?.country),
                     postalCode: preferred?.postalCode || prev.postalCode,
-                    phone: preferred?.phone || prev.phone,
+                    phone: storedPhone.phone || prev.phone,
+                    phoneDialCode: storedPhone.dialCode || prev.phoneDialCode,
                 }));
             })
             .catch(() => {})
@@ -134,6 +220,7 @@ export default function CheckoutPage() {
 
     // Fill the shipping form from a saved address when the user picks one.
     const selectSavedAddress = (addr) => {
+        const storedPhone = parseStoredPhone(addr.phone);
         setSelectedAddressKey(addr._key);
         setFormData((prev) => ({
             ...prev,
@@ -144,7 +231,8 @@ export default function CheckoutPage() {
             city: addr.city || prev.city,
             country: toCheckoutCountry(addr.country),
             postalCode: addr.postalCode || prev.postalCode,
-            phone: addr.phone || prev.phone,
+            phone: storedPhone.phone,
+            phoneDialCode: storedPhone.dialCode,
         }));
         setErrors((prev) => ({
             ...prev,
@@ -257,7 +345,7 @@ export default function CheckoutPage() {
         if (formData.firstName || formData.lastName) {
             lines.push(`Name: ${`${formData.firstName} ${formData.lastName}`.trim()}`);
         }
-        if (formData.phone) lines.push(`Phone: ${formData.phone}`);
+        if (formData.phone) lines.push(`Phone: ${formData.phoneDialCode || ''}${formData.phone}`);
         if (formData.email) lines.push(`Email: ${formData.email}`);
         lines.push('');
         lines.push('*Order Items:*');
@@ -324,10 +412,13 @@ export default function CheckoutPage() {
         if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required.';
         if (!formData.address.trim()) newErrors.address = 'Address is required.';
         if (!formData.city.trim()) newErrors.city = 'City is required.';
-        if (formData.country === 'Country/Region') newErrors.country = 'Please select a country.';
+        if (!formData.country || formData.country === 'Country/Region') newErrors.country = 'Please select a country.';
         if (!formData.phone.trim()) newErrors.phone = 'Phone number is required.';
-        else if (!/^[+\d\s\-()]{7,}$/.test(formData.phone))
-            newErrors.phone = 'Please enter a valid phone number.';
+        else {
+            const fullPhone = `${formData.phoneDialCode || ''}${formData.phone}`.replace(/[^+\d]/g, '');
+            if (!/^\+?\d{7,15}$/.test(fullPhone))
+                newErrors.phone = 'Please enter a valid phone number.';
+        }
         if (cartItems.length === 0) newErrors.cart = 'Your cart is empty.';
 
         // Validate password fields only for new (guest) accounts
@@ -338,6 +429,12 @@ export default function CheckoutPage() {
             if (!formData.confirmPassword) newErrors.confirmPassword = 'Please confirm your password.';
             else if (formData.password !== formData.confirmPassword)
                 newErrors.confirmPassword = 'Passwords do not match.';
+        }
+
+        // Existing accounts must enter their password; it's verified against
+        // the account before the order is allowed through.
+        if (!isLoggedIn && accountType === 'existing') {
+            if (!formData.password) newErrors.password = 'Password is required.';
         }
         // Bank Deposit receipt proof — required only when Bank Deposit is the
         // selected method. How it's proven is set by the admin's
@@ -372,6 +469,26 @@ export default function CheckoutPage() {
 
         setIsSubmitting(true);
         try {
+            // Existing account: verify email + password BEFORE the order can be
+            // placed. On success this sets the session cookie, so the orders API
+            // will treat the checkout as a logged-in customer.
+            if (!isLoggedIn && accountType === 'existing') {
+                const loginRes = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: formData.email, password: formData.password }),
+                });
+                const loginData = await loginRes.json();
+                if (!loginRes.ok || !loginData.success) {
+                    const message =
+                        loginRes.status === 401
+                            ? 'Invalid email or password. Please check your credentials.'
+                            : loginData.error || 'Invalid email or password.';
+                    setErrors({ submit: message });
+                    return;
+                }
+            }
+
             const orderPayload = {
                 customer: {
                     name: `${formData.firstName} ${formData.lastName}`.trim(),
@@ -379,7 +496,7 @@ export default function CheckoutPage() {
                     avatar: `${formData.firstName[0]}${formData.lastName[0]}`.toUpperCase(),
                 },
                 email: formData.email,
-                phone: formData.phone,
+                phone: `${formData.phoneDialCode || ''}${formData.phone}`.replace(/[^+\d]/g, ''),
                 address: formData.address,
                 apartment: formData.apartment,
                 city: formData.city,
@@ -559,6 +676,22 @@ export default function CheckoutPage() {
                                         </>
                                     )}
 
+                                    {/* Password field for existing account */}
+                                    {!isLoggedIn && accountType === 'existing' && (
+                                        <div className="relative group">
+                                            <input
+                                                className={`w-full bg-surface-container-low border-none border-b-2 focus:ring-0 py-4 px-4 transition-all duration-300 placeholder:text-outline-variant text-body-md focus:scale-[1.01] ${errors.password ? 'border-b-2 border-error' : 'border-outline-variant focus:border-secondary'}`}
+                                                id="password"
+                                                name="password"
+                                                type="password"
+                                                placeholder="Enter your password"
+                                                value={formData.password}
+                                                onChange={handleInputChange}
+                                            />
+                                            {errors.password && <p className="text-error text-[11px] mt-1 px-1">{errors.password}</p>}
+                                        </div>
+                                    )}
+
                                     <div className="flex items-center gap-3 py-2">
                                         <input
                                             className="w-4 h-4 rounded-none border-secondary text-secondary focus:ring-secondary/20"
@@ -709,18 +842,32 @@ export default function CheckoutPage() {
                                         {errors.city && <p className="text-error text-[11px] mt-1 px-1">{errors.city}</p>}
                                     </div>
                                     <div className="relative">
-                                        <select
-                                            className={`w-full bg-surface-container-low border-none border-b-2 focus:ring-0 py-4 px-4 appearance-none transition-all duration-300 text-on-surface-variant focus:scale-[1.01] ${errors.country ? 'border-b-2 border-error' : 'border-outline-variant focus:border-secondary'}`}
+                                        <Select
                                             id="country"
                                             name="country"
-                                            value={formData.country}
-                                            onChange={handleInputChange}
-                                        >
-                                            {countries.map((country) => (
-                                                <option key={country} value={country}>{country}</option>
-                                            ))}
-                                        </select>
-                                        <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant" />
+                                            inputId="country"
+                                            options={countryOptions}
+                                            value={countryOptions.find((o) => o.value === formData.country) || null}
+                                            onChange={(opt) => {
+                                                setFormData((prev) => ({ ...prev, country: opt?.value || '' }));
+                                                setErrors((prev) => ({ ...prev, country: '' }));
+                                            }}
+                                            placeholder="Select country"
+                                            isClearable={false}
+                                            isSearchable
+                                            getOptionLabel={(o) => o.label}
+                                            formatOptionLabel={(o, { context }) => (
+                                                <span className="flex items-center">
+                                                    {flag(o.code)}
+                                                    <span className="truncate">{o.label}</span>
+                                                </span>
+                                            )}
+                                            components={{ DropdownIndicator: () => <ChevronDown className="pointer-events-none text-on-surface-variant" /> }}
+                                            styles={selectStyles(!!errors.country)}
+                                            menuPosition="absolute"
+                                            menuPortalTarget={menuPortal}
+                                            aria-label="Country"
+                                        />
                                         {errors.country && <p className="text-error text-[11px] mt-1 px-1">{errors.country}</p>}
                                     </div>
                                     <div>
@@ -734,15 +881,56 @@ export default function CheckoutPage() {
                                         />
                                     </div>
                                     <div>
-                                        <input
-                                            className={`w-full bg-surface-container-low border-none border-b-2 focus:ring-0 py-4 px-4 transition-all duration-300 focus:scale-[1.01] ${errors.phone ? 'border-b-2 border-error' : 'border-outline-variant focus:border-secondary'}`}
-                                            id="phone"
-                                            placeholder="Phone"
-                                            type="tel"
-                                            name="phone"
-                                            value={formData.phone}
-                                            onChange={handleInputChange}
-                                        />
+                                        <div className={`flex items-stretch bg-surface-container-low border-b-2 transition-all duration-300 focus-within:scale-[1.01] ${errors.phone ? 'border-error' : 'border-outline-variant focus-within:border-secondary'}`}>
+                                            <Select
+                                                id="phoneDialCode"
+                                                name="phoneDialCode"
+                                                inputId="phoneDialCode"
+                                                options={dialCodeOptions}
+                                                value={dialCodeOptions.find((o) => o.value === formData.phoneDialCode) || null}
+                                                onChange={(opt) => setFormData((prev) => ({ ...prev, phoneDialCode: opt?.value || DEFAULT_DIAL_CODE }))}
+                                                isClearable={false}
+                                                isSearchable
+                                                getOptionLabel={(o) => o.label}
+                                                formatOptionLabel={(o, { context }) => (
+                                                    <span className="flex items-center">
+                                                        {flag(o.code)}
+                                                        <span className="truncate">{context === 'menu' ? o.label : o.value}</span>
+                                                    </span>
+                                                )}
+                                                components={{ DropdownIndicator: () => <ChevronDown className="pointer-events-none text-on-surface-variant" /> }}
+                                                styles={{
+                                                    ...selectStyles(!!errors.phone),
+                                                    control: (base, state) => ({
+                                                        ...selectStyles(!!errors.phone).control(base, state),
+                                                        minWidth: 96,
+                                                        minHeight: '56px',
+                                                        borderBottom: 'none',
+                                                        padding: '0 4px 0 8px',
+                                                    }),
+                                                    valueContainer: (base) => ({ ...base, padding: '0', fontSize: '15px' }),
+                                                    // Give the menu its own comfortable width instead of inheriting
+                                                    // the narrow control, which caused a horizontal scrollbar.
+                                                    menu: (base) => ({
+                                                        ...selectStyles(!!errors.phone).menu(base),
+                                                        minWidth: 230,
+                                                        width: 'max-content',
+                                                    }),
+                                                }}
+                                                menuPosition="absolute"
+                                                menuPortalTarget={menuPortal}
+                                                aria-label="Phone country code"
+                                            />
+                                            <input
+                                                className={`w-full min-w-0 bg-transparent focus:ring-0 py-4 px-2 transition-all duration-300 text-body-md ${errors.phone ? '' : ''}`}
+                                                id="phone"
+                                                placeholder="Phone number"
+                                                type="tel"
+                                                name="phone"
+                                                value={formData.phone}
+                                                onChange={handleInputChange}
+                                            />
+                                        </div>
                                         {errors.phone && <p className="text-error text-[11px] mt-1 px-1">{errors.phone}</p>}
                                     </div>
                                 </div>
