@@ -4,10 +4,19 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { X } from 'lucide-react';
+import { useSiteSettings } from '../store/siteSettingsContext';
 
 // Product images are always full URLs (Sanity CDN), so just pass them through
 // next/image's loader unchanged (same approach as ProductCard.jsx).
 const passthroughLoader = ({ src }) => src;
+
+// Defaults used when the admin hasn't saved any recentPurchase adapter config.
+const DEFAULT_SETTINGS = {
+  enabled: true,
+  position: 'bottom-left',
+  minDelaySeconds: 6,
+  maxDelaySeconds: 14,
+};
 
 // Mock buyers — same Pakistani-city flavor as the rest of the site's demo data.
 const MOCK_BUYERS = [
@@ -27,14 +36,19 @@ const TIME_AGO_OPTIONS = ['Just now', '2 minutes ago', '5 minutes ago', '8 minut
 
 const INITIAL_DELAY_MS = 4000;
 const VISIBLE_DURATION_MS = 6000;
-const MIN_GAP_MS = 6000;
-const MAX_GAP_MS = 14000;
 
 function randomFrom(arr) {
     return arr[Math.floor(Math.random() * arr.length)];
 }
 
 export default function RecentPurchasePopup() {
+    const settings = useSiteSettings();
+    // Context settings come from the server layout and can be stale (ISR /
+    // unstable_cache). We verify against the live settings API on mount so a
+    // just-disabled adapter stops showing immediately instead of waiting for the
+    // server cache to expire.
+    const contextAdapter = { ...DEFAULT_SETTINGS, ...(settings?.adapters?.recentPurchase || {}) };
+    const [adapter, setAdapter] = useState(contextAdapter);
     const [products, setProducts] = useState([]);
     const [notification, setNotification] = useState(null);
     const [visible, setVisible] = useState(false);
@@ -42,6 +56,33 @@ export default function RecentPurchasePopup() {
 
     useEffect(() => {
         let cancelled = false;
+        fetch('/api/settings/general', { cache: 'no-store' })
+            .then((res) => res.json())
+            .then((data) => {
+                if (!cancelled && data?.success) {
+                    setAdapter({ ...DEFAULT_SETTINGS, ...(data.settings?.adapters?.recentPurchase || {}) });
+                }
+            })
+            .catch(() => {
+                // Keep the context value — the API is a best-effort freshness check.
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
+    useEffect(() => {
+        let cancelled = false;
+
+        // Adapter is turned off — no products, no popups.
+        if (!adapter.enabled) {
+            setNotification(null);
+            setVisible(false);
+            setProducts([]);
+            return () => {
+                cancelled = true;
+            };
+        }
 
         fetch('/api/products?status=active')
             .then((res) => res.json())
@@ -57,10 +98,13 @@ export default function RecentPurchasePopup() {
         return () => {
             cancelled = true;
         };
-    }, []);
+    }, [adapter.enabled]);
 
     useEffect(() => {
         if (products.length === 0) return undefined;
+
+        const minGapMs = Math.max(1000, (Number(adapter.minDelaySeconds) || DEFAULT_SETTINGS.minDelaySeconds) * 1000);
+        const maxGapMs = Math.max(minGapMs, (Number(adapter.maxDelaySeconds) || DEFAULT_SETTINGS.maxDelaySeconds) * 1000);
 
         const scheduleNext = (delay) => {
             timerRef.current = setTimeout(() => {
@@ -76,7 +120,7 @@ export default function RecentPurchasePopup() {
 
                 timerRef.current = setTimeout(() => {
                     setVisible(false);
-                    scheduleNext(MIN_GAP_MS + Math.random() * (MAX_GAP_MS - MIN_GAP_MS));
+                    scheduleNext(minGapMs + Math.random() * (maxGapMs - minGapMs));
                 }, VISIBLE_DURATION_MS);
             }, delay);
         };
@@ -84,15 +128,18 @@ export default function RecentPurchasePopup() {
         scheduleNext(INITIAL_DELAY_MS);
 
         return () => clearTimeout(timerRef.current);
-    }, [products]);
+    }, [products, adapter.minDelaySeconds, adapter.maxDelaySeconds]);
 
     if (!notification) return null;
 
     const { product, buyer, quantity, timeAgo } = notification;
+    const positionClass = adapter.position === 'bottom-right'
+        ? 'right-1'
+        : 'left-1';
 
     return (
         <div
-            className={`fixed bottom-1 left-1 z-[90] w-[300px] max-w-[calc(100vw-2rem)] transition-all duration-500 ${
+            className={`fixed bottom-1 ${positionClass} z-[90] w-[300px] max-w-[calc(100vw-2rem)] transition-all duration-500 ${
                 visible ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-4 pointer-events-none'
             }`}
         >

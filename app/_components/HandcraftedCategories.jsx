@@ -135,17 +135,14 @@ export default function HandcraftedCategories() {
                 </div>
             </div>
 
-            <div className="overflow-x-auto no-scrollbar">
+            <div ref={carouselRef} onScroll={updateArrows} className="overflow-x-auto no-scrollbar">
                 <div className="relative group">
                     {/* 2-row grid with horizontal scroll */}
                     {/* don't need full width */}
                     <div
-                        ref={carouselRef}
                         id="category-carousel"
-                        onScroll={updateArrows}
                         className="grid md:grid-rows-1 grid-rows-2 grid-flow-col inline-grid gap-4 w-auto overflow-x-auto no-scrollbar pb-4 scroll-smooth carousel-container"
-                    >
-                        {categories.map((cat) => (
+                    >                        {categories.map((cat) => (
                             <Link
                                 key={cat.name}
                                 className="category-item w-36 group/cat text-center overflow-hidden rounded-full select-none"

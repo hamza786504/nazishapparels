@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Loader2, Check, Smartphone, MessageCircle, Plus, Trash2, Search, X } from 'lucide-react';
+import { Loader2, Check, Smartphone, MessageCircle, Plus, Trash2, Search, X, BellRing } from 'lucide-react';
 import Button from '../../../../_components/Admin/Button';
 
-// Mock list of adapters we could have. Right now only WhatsApp is fully implemented.
+// Adapters we ship. Each one has a definition (card on the left) and a config
+// modal. WhatsApp Chat and the Recent Purchase popup are fully implemented.
 const ADAPTER_DEFINITIONS = [
   {
     id: 'whatsapp',
@@ -14,19 +15,34 @@ const ADAPTER_DEFINITIONS = [
     color: 'text-[#25D366]',
     bg: 'bg-[#25D366]/10'
   },
-  // We can add more adapters here in the future
+  {
+    id: 'recentPurchase',
+    name: 'Recent Purchase Popup',
+    description: 'Show a social-proof "someone just purchased" popup on the storefront.',
+    icon: BellRing,
+    color: 'text-primary',
+    bg: 'bg-primary/10'
+  },
 ];
+
+const DEFAULT_ADAPTERS = {
+  whatsapp: {
+    enabled: false,
+    phoneNumber: '',
+    position: 'bottom-right',
+    presets: [],
+  },
+  recentPurchase: {
+    enabled: true,
+    position: 'bottom-left',
+    minDelaySeconds: 6,
+    maxDelaySeconds: 14,
+  },
+};
 
 export default function AdaptersSettingsPage() {
   const [formData, setFormData] = useState({
-    adapters: {
-      whatsapp: {
-        enabled: false,
-        phoneNumber: '',
-        position: 'bottom-right',
-        presets: [],
-      }
-    }
+    adapters: DEFAULT_ADAPTERS,
   });
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -41,13 +57,10 @@ export default function AdaptersSettingsPage() {
         const res = await fetch('/api/settings/general', { credentials: 'include' });
         const result = await res.json();
         if (result.success && result.settings) {
-          const adapters = result.settings.adapters || {
-            whatsapp: {
-              enabled: false,
-              phoneNumber: '',
-              position: 'bottom-right',
-              presets: [],
-            }
+          const stored = result.settings.adapters || {};
+          const adapters = {
+            whatsapp: { ...DEFAULT_ADAPTERS.whatsapp, ...(stored.whatsapp || {}) },
+            recentPurchase: { ...DEFAULT_ADAPTERS.recentPurchase, ...(stored.recentPurchase || {}) },
           };
           setFormData({ adapters });
         }
@@ -340,6 +353,75 @@ export default function AdaptersSettingsPage() {
                           <Plus className="w-4 h-4" />
                           Add
                         </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {selectedAdapter === 'recentPurchase' && (
+                  <>
+                    {/* Enable Toggle */}
+                    <div className="flex items-center justify-between p-4 bg-surface-container-low rounded border border-[#C9CCCF]">
+                      <div>
+                        <h4 className="font-label-md text-on-surface">Enable Widget</h4>
+                        <p className="text-body-sm text-on-surface-variant mt-1">
+                          Show the social-proof "recent purchase" popup on the storefront.
+                        </p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          className="sr-only peer"
+                          checked={formData.adapters.recentPurchase.enabled}
+                          onChange={(e) => updateAdapterField('recentPurchase', 'enabled', e.target.checked)}
+                        />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                      </label>
+                    </div>
+
+                    {/* Position */}
+                    <div>
+                      <label className="block font-label-md text-on-surface-variant mb-2">
+                        Widget Position
+                      </label>
+                      <select
+                        className="w-full px-3 py-2 text-body-md border border-[#C9CCCF] rounded focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition-all bg-white"
+                        value={formData.adapters.recentPurchase.position}
+                        onChange={(e) => updateAdapterField('recentPurchase', 'position', e.target.value)}
+                      >
+                        <option value="bottom-left">Bottom Left</option>
+                        <option value="bottom-right">Bottom Right</option>
+                      </select>
+                      <p className="text-body-sm text-on-surface-variant mt-2 italic">
+                        Bottom right overlaps the WhatsApp button — pick one corner per widget.
+                      </p>
+                    </div>
+
+                    {/* Delay between popups */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block font-label-md text-on-surface-variant mb-2">
+                          Min Gap Between Popups (seconds)
+                        </label>
+                        <input
+                          type="number"
+                          min={1}
+                          className="w-full px-3 py-2 text-body-md border border-[#C9CCCF] rounded focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition-all"
+                          value={formData.adapters.recentPurchase.minDelaySeconds}
+                          onChange={(e) => updateAdapterField('recentPurchase', 'minDelaySeconds', Number(e.target.value) || 6)}
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-label-md text-on-surface-variant mb-2">
+                          Max Gap Between Popups (seconds)
+                        </label>
+                        <input
+                          type="number"
+                          min={1}
+                          className="w-full px-3 py-2 text-body-md border border-[#C9CCCF] rounded focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition-all"
+                          value={formData.adapters.recentPurchase.maxDelaySeconds}
+                          onChange={(e) => updateAdapterField('recentPurchase', 'maxDelaySeconds', Number(e.target.value) || 14)}
+                        />
                       </div>
                     </div>
                   </>

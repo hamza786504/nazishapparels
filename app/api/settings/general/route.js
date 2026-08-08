@@ -85,6 +85,12 @@ const DEFAULT_SETTINGS = {
       position: 'bottom-right',
       presets: [],
     },
+    recentPurchase: {
+      enabled: true,
+      position: 'bottom-left',
+      minDelaySeconds: 6,
+      maxDelaySeconds: 14,
+    },
   },
 };
 

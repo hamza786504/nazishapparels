@@ -73,9 +73,9 @@ export default function HeroCarousel() {
   };
 
   return (
-    <div className="p-4 pb-0">
+    <div className="md:p-4 pb-0">
       <div
-        id="controls-carousel rounded-2xl overflow-hidden"
+        id="controls-carousel md:rounded-2xl overflow-hidden"
         style={{ position: 'relative', width: '100%' }}
         data-carousel="static"
         onTouchStart={handleTouchStart}
@@ -83,7 +83,7 @@ export default function HeroCarousel() {
       >
         {/* Carousel wrapper – aspect-ratio handles height */}
         <div
-          className="hero-banner rounded-2xl overflow-hidden"
+          className="hero-banner md:rounded-2xl overflow-hidden"
           style={{
             position: 'relative',
             width: '100%',
@@ -213,6 +213,7 @@ export default function HeroCarousel() {
         {/* Previous button */}
         {isCarousel && (
           <button
+          className='px-0'
             type="button"
             aria-label="Previous slide"
             onClick={prevSlide}
@@ -225,7 +226,7 @@ export default function HeroCarousel() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              padding: '0 1rem',
+              
               background: 'transparent',
               border: 'none',
               cursor: 'pointer',
@@ -239,6 +240,7 @@ export default function HeroCarousel() {
         {isCarousel && (
           <button
             type="button"
+            className='px-0'
             aria-label="Next slide"
             onClick={nextSlide}
             style={{
@@ -250,7 +252,6 @@ export default function HeroCarousel() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              padding: '0 1rem',
               background: 'transparent',
               border: 'none',
               cursor: 'pointer',
@@ -277,7 +278,7 @@ export default function HeroCarousel() {
 function ChevronButton({ dir }) {
   return (
     <span
-      className="w-10 h-10 flex items-center justify-center rounded-full bg-black/25 text-white backdrop-blur-sm transition-transform hover:bg-black/40"
+      className="w-10 h-10 flex items-center justify-center bg-black/25 text-white backdrop-blur-sm transition-transform hover:bg-black/40"
       style={{ pointerEvents: 'none' }}
     >
       <svg

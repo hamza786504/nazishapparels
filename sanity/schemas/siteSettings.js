@@ -102,6 +102,18 @@ export const siteSettings = defineType({
             defineField({ name: 'presets', title: 'Preset Messages', type: 'array', of: [{ type: 'string' }] }),
           ],
         }),
+        defineField({
+          name: 'recentPurchase',
+          title: 'Recent Purchase Popup',
+          type: 'object',
+          description: 'Show a social-proof "someone just purchased" popup on the storefront.',
+          fields: [
+            defineField({ name: 'enabled', title: 'Enabled', type: 'boolean' }),
+            defineField({ name: 'position', title: 'Position', type: 'string', options: { list: ['bottom-left', 'bottom-right'] } }),
+            defineField({ name: 'minDelaySeconds', title: 'Min Gap Between Popups (seconds)', type: 'number' }),
+            defineField({ name: 'maxDelaySeconds', title: 'Max Gap Between Popups (seconds)', type: 'number' }),
+          ],
+        }),
       ],
     }),
   ],
