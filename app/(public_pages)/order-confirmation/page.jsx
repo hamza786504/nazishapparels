@@ -57,7 +57,7 @@ export default function OrderConfirmationPage() {
                 `*Items Ordered:*\n${itemsText || 'No items'}`;
 
             const encodedMessage = encodeURIComponent(message);
-            const whatsappUrl = `https://wa.me/92326612073?text=${encodedMessage}`;
+            const whatsappUrl = `https://wa.me/+923124190029?text=${encodedMessage}`;
             window.location.href = whatsappUrl;
         }, 3000);
 
