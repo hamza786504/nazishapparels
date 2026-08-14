@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { sendEmail } from '@/lib/email';
 
-const CONTACT_TO = process.env.CONTACT_TO || 'hamzakhaliddev@gmail.com';
+const CONTACT_TO = process.env.CONTACT_TO || 'nazishapparelspk@gmail.com';
 
 const REQUIRED_FIELDS = ['name', 'email', 'subject', 'message'];
 

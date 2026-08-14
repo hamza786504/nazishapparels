@@ -6,6 +6,7 @@ const SECTIONS = [
     { collectionSlug: 'new-arrivals', title: 'New Arrivals' },
     { collectionSlug: 'chiffon', title: 'Chiffon' },
     { collectionSlug: 'lawn', title: 'Lawn' },
+    { collectionSlug: 'hands-bag', title: 'Bags' },
     { collectionSlug: 'stiched', title: 'Stiched' },
     { collectionSlug: '2pc', title: '2PC' },
     { collectionSlug: '3pc', title: '3PC' },

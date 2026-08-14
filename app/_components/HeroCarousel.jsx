@@ -16,6 +16,11 @@ const slides = [
     image: '/banner-2.png?v=2',
     href: '/collection/new-arrivals',
   },
+  {
+    id: 2,
+    image: '/banner-3.png?v=2',
+    href: '/collection/new-arrivals',
+  },
 ];
 
 const SWIPE_THRESHOLD = 48;

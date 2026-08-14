@@ -29,7 +29,7 @@ export default async function Home() {
             {/* Main content - scrollable */}
             <div className="flex-1 min-w-0 overflow-y-auto">
                 {/* Hero - full width, edge to edge */}
-                <div className="relative w-full overflow-hidden rounded-3xl">
+                <div className="relative w-full overflow-hidden md:rounded-3xl">
                     <HeroCarousel />
                 </div>
 
