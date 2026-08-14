@@ -316,7 +316,7 @@ export async function POST(request) {
             items: order.items || body.items || [],
           },
         });
-        await sendEmail({
+        sendEmail({
           to: recipient.toLowerCase(),
           subject: `Your ${process.env.STORE_NAME || 'NazishApparels'} order ${order.orderId} is confirmed`,
           html,

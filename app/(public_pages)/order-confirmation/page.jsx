@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../store/authContext';
@@ -37,6 +37,32 @@ export default function OrderConfirmationPage() {
             setTracking(false);
         }
     }, [order, refresh, router]);
+
+    useEffect(() => {
+        if (typeof window === 'undefined' || !order) return;
+        
+        const timer = setTimeout(() => {
+            const itemsText = (order.items || []).map((item, index) => {
+                const productUrl = `${window.location.origin}/product/${item.slug}`;
+                return `${index + 1}. *${item.title}*\n   Size: ${item.size || 'One Size'}\n   Color: ${item.color || 'Default'}\n   Qty: ${item.quantity}\n   Price: Rs. ${Number(item.price).toLocaleString()}\n   Link: ${productUrl}`;
+            }).join('\n\n');
+
+            const message = `*New Order Placed on NazishApparels* 🛍️\n\n` +
+                `*Order ID:* ${order.orderId}\n` +
+                `*Total Bill:* Rs. ${Number(order.total).toLocaleString()}\n\n` +
+                `*Client Details:*\n` +
+                `• Name: ${order.name}\n` +
+                `• Phone: ${order.phone || '—'}\n` +
+                `• Address: ${order.address || '—'}\n\n` +
+                `*Items Ordered:*\n${itemsText || 'No items'}`;
+
+            const encodedMessage = encodeURIComponent(message);
+            const whatsappUrl = `https://wa.me/92326612073?text=${encodedMessage}`;
+            window.location.href = whatsappUrl;
+        }, 3000);
+
+        return () => clearTimeout(timer);
+    }, [order]);
 
     return (
         <div className="bg-background text-on-surface font-body-md selection:bg-secondary-fixed selection:text-on-secondary-fixed flex-1 min-w-0 overflow-x-hidden overflow-y-auto">

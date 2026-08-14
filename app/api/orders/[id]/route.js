@@ -43,7 +43,7 @@ export async function PUT(request, { params }) {
         const recipient = order.email || order.customer?.email;
         if (recipient) {
           const { html, text } = buildOrderCancellationEmail({ order });
-          await sendEmail({
+          sendEmail({
             to: recipient.toLowerCase(),
             subject: `Your ${process.env.STORE_NAME || 'NazishApparels'} order ${order.orderId} has been cancelled`,
             html,

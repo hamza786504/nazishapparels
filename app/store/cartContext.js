@@ -77,6 +77,7 @@ function cartReducer(state, action) {
                 newCartItems.push({
                     id: cartItemId,
                     productId: storeProduct._id || storeProduct.id,
+                    slug: productSlug,
                     title: storeProduct.title,
                     price: storeProduct.price || storeProduct.priceNumeric,
                     quantity: quantity || 1,

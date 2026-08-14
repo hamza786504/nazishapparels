@@ -547,10 +547,19 @@ export default function CheckoutPage() {
                     total,
                     name: `${formData.firstName} ${formData.lastName}`.trim(),
                     email: formData.email,
+                    phone: `${formData.phoneDialCode || ''}${formData.phone}`.replace(/[^+\d]/g, ''),
                     address: [formData.address, formData.apartment, formData.city, formData.country]
                         .filter(Boolean)
                         .join(', '),
                     shippingMethod: selectedMethod?.name || 'Standard Shipping',
+                    items: cartItems.map((item) => ({
+                        slug: item.slug || '',
+                        title: item.title,
+                        size: item.size,
+                        color: item.color,
+                        quantity: item.quantity,
+                        price: item.price,
+                    })),
                 })
             );
             router.replace('/order-confirmation');

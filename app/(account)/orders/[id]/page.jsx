@@ -45,6 +45,7 @@ export default function OrderDetail() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [cancelling, setCancelling] = useState(false);
+    const [showConfirm, setShowConfirm] = useState(false);
 
     useEffect(() => {
         if (!isAuthenticated || !id) return;
@@ -98,7 +99,12 @@ export default function OrderDetail() {
 
     const handleCancelOrder = async () => {
         if (!order) return;
-        if (!window.confirm('Are you sure you want to cancel this order?')) return;
+        if (!showConfirm) {
+            setShowConfirm(true);
+            // Auto reset confirmation state after 4 seconds if not clicked again
+            setTimeout(() => setShowConfirm(false), 4000);
+            return;
+        }
         setCancelling(true);
         try {
             const res = await fetch(`/api/orders/${order._id}`, {
@@ -115,6 +121,7 @@ export default function OrderDetail() {
             alert(err.message);
         } finally {
             setCancelling(false);
+            setShowConfirm(false);
         }
     };
 
@@ -174,10 +181,14 @@ export default function OrderDetail() {
                                     <button
                                         onClick={handleCancelOrder}
                                         disabled={cancelling}
-                                        className="inline-flex items-center gap-2 border border-error text-error px-4 py-1.5 font-label-md text-label-md font-bold hover:bg-error-container/10 transition-colors rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className={`inline-flex items-center gap-2 border px-4 py-1.5 font-label-md text-label-md font-bold transition-all rounded disabled:opacity-50 disabled:cursor-not-allowed ${
+                                            showConfirm
+                                                ? 'bg-red-600 text-white border-red-600 hover:bg-red-700 animate-pulse'
+                                                : 'border-error text-error hover:bg-error-container/10'
+                                        }`}
                                     >
                                         <XCircle className="w-4 h-4" />
-                                        {cancelling ? 'Cancelling…' : 'Cancel Order'}
+                                        {cancelling ? 'Cancelling…' : showConfirm ? 'Confirm Cancellation' : 'Cancel Order'}
                                     </button>
                                 )}
                             </div>
