@@ -8,42 +8,34 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 const categories = [
     {
         name: 'New Arrivals',
-        //  image:
-        //  'https://lh3.googleusercontent.com/aida-public/AB6AXuAwHhdg66Yq_NMjsR6kN6j8AfUsr_XOMnrg83jzZk6f72hed8JY1f-vLfZQAg6gjt7hT9L9YPeSOJcOIiMd8Kegz2k9TkwgtqPCUsQgUeEF8JkMM3r6ZMMRg_zxDC-_pmgci6s4U-Ycj7ggYcMUbacTTCGJyN9z1_2G2aWxS2JpDglOKM41vEYTramXOIKpkTVhWbvIuegw1kk3V3C9wjCz34fICWnUedCS-K-TMebrNsJXKTWlhh2X1RPt4_lpZ85_h8iofyk8mADG',
         image: '/newarrivals-collection.JPG',
         link: "/newsarrivals"
     },
     {
         name: 'Lawn',
-        // image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDB5_nbeSUuvzHimPlmt_cFINZO84DWow_zEg7MJm_BQQbTjjhy7F03EhL-7bgSuwtjSfSSHsDxZEHRFb-Xaotz6gxraZtv0D4M9Q1F4MvDi2IbE1V-hZxQqbdA7JRa0yWCYwseh3Nfp7kFBh15ZQcEHjwmK6rHSKnDBPHYErlBzTUaVMno9cPvZfsCNtBW0K1LlglV2797B7u8cmb7nEScTag_M8BuWtRSmxM7DVfuqT7V2Plwk2_h5b5vCr7EMfbl-k66ai8j8LYR',
         image: '/lawn-collection.JPG',
         link: "/lawn"
     },
     {
         name: 'Chiffon',
         link: '/chiffon',
-        // image:
-        //     'https://lh3.googleusercontent.com/aida-public/AB6AXuCq7uFdoJG2NPDDZ1W_wAIQzAvdMC-iUt0gKhypef8UPIDSI8nwLgAixDrthJn_CtwtNhmFs65_w3cKx-B7P3FFZ72UjzOocFWhRIgLe3kDEkBTrJBvr923MfOsXlpWRzBewDFU3u-YFnkce0TADI7Xb_bd7wzf0H0gBqxNcs_2AzekAvFWt3kkVdTC4JztBvZJaNsQ9x5J40TZr1Oxq6HaRFwA50JP3zHIeZ7hNtsCMB1cpcOH7F4XvURv7sBbU-lS5JnITbu87j5w',
-        image:
-            '/chiffon-collection.JPG',
+        image: '/chiffon-collection.JPG',
     },
     {
         name: '2PC',
         link: '/2pc',
-        // image:
-        //     'https://lh3.googleusercontent.com/aida-public/AB6AXuCq7uFdoJG2NPDDZ1W_wAIQzAvdMC-iUt0gKhypef8UPIDSI8nwLgAixDrthJn_CtwtNhmFs65_w3cKx-B7P3FFZ72UjzOocFWhRIgLe3kDEkBTrJBvr923MfOsXlpWRzBewDFU3u-YFnkce0TADI7Xb_bd7wzf0H0gBqxNcs_2AzekAvFWt3kkVdTC4JztBvZJaNsQ9x5J40TZr1Oxq6HaRFwA50JP3zHIeZ7hNtsCMB1cpcOH7F4XvURv7sBbU-lS5JnITbu87j5w',
-        image:
-            '/2pc-collection.JPG',
+        image: '/2pc-collection.JPG',
     },
     {
         name: '3PC',
         link: '/3pc',
-        // image:
-        //     'https://lh3.googleusercontent.com/aida-public/AB6AXuCq7uFdoJG2NPDDZ1W_wAIQzAvdMC-iUt0gKhypef8UPIDSI8nwLgAixDrthJn_CtwtNhmFs65_w3cKx-B7P3FFZ72UjzOocFWhRIgLe3kDEkBTrJBvr923MfOsXlpWRzBewDFU3u-YFnkce0TADI7Xb_bd7wzf0H0gBqxNcs_2AzekAvFWt3kkVdTC4JztBvZJaNsQ9x5J40TZr1Oxq6HaRFwA50JP3zHIeZ7hNtsCMB1cpcOH7F4XvURv7sBbU-lS5JnITbu87j5w',
-        image:
-            '/3pc-collection.JPG',
+        image: '/3pc-collection.JPG',
     },
-
+    {
+        name: 'Bags',
+        link: '/hands-bag',
+        image: 'https://cdn.sanity.io/images/kb41e1az/production/b63a5bf3764dacd65840844a65bd309148a5fc1d-1204x1600.jpg',
+    },
     {
         name: 'Stiched',
         image: '/stiched-collection.JPG',
@@ -146,7 +138,7 @@ export default function HandcraftedCategories() {
                             <Link
                                 key={cat.name}
                                 className="category-item w-36 group/cat text-center overflow-hidden rounded-full select-none"
-                                href={`/collection/${cat.link.toLowerCase().replace(/\s+/g, '-')}`}
+                                href={`/collection/${cat.link.toLowerCase().replace(/^\//, '').replace(/\s+/g, '-')}`}
                             >
                                 <div className="relative aspect-square rounded-[50%] overflow-hidden border border-secondary/20 transition-all duration-500 group-hover/cat:border-secondary shadow-sm">
                                     <Image

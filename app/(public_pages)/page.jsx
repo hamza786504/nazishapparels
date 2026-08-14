@@ -22,7 +22,7 @@ export const metadata = {
 };
 
 export default async function Home() {
-    const initialProducts = await getShowcaseProducts('chiffon');
+    const initialProducts = await getShowcaseProducts('new-arrivals');
 
     return (
         <>
